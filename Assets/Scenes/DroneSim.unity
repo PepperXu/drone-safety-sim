@@ -1283,6 +1283,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 657638890}
+  - component: {fileID: 657638891}
   m_Layer: 0
   m_Name: ControlUIGroup
   m_TagString: Untagged
@@ -1307,6 +1308,19 @@ Transform:
   - {fileID: 313897543}
   m_Father: {fileID: 1561024527}
   m_LocalEulerAnglesHint: {x: 50.39, y: 0, z: 0}
+--- !u!114 &657638891
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 657638889}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f53a5d86cecdd846bc9840ef9cd08f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  FPVCamera: {fileID: 1219880602}
 --- !u!1 &679510155
 GameObject:
   m_ObjectHideFlags: 0
@@ -40910,6 +40924,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 984106104}
+  - component: {fileID: 984106105}
   m_Layer: 0
   m_Name: DroneBase
   m_TagString: DroneBase
@@ -40937,6 +40952,19 @@ Transform:
   - {fileID: 1371011766}
   m_Father: {fileID: 679510156}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &984106105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 984106103}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43fe963c13e07ff4294dd237e64aca7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ui_updater: {fileID: 657638891}
 --- !u!1 &1069757167
 GameObject:
   m_ObjectHideFlags: 0
@@ -41298,6 +41326,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6aa38d3fb817a634d824171ee2e261aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  inputLatency: 0
+  signalReceivingLatency: 0
+  cameraLatency: 1.5
+  FPVCamera: {fileID: 1661648276}
+  destRT: {fileID: 8400000, guid: 12774f3c24bd0444bb082935a46d0016, type: 2}
 --- !u!114 &1371011770
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -41324,7 +41357,6 @@ GameObject:
   - component: {fileID: 1379757939}
   - component: {fileID: 1379757938}
   - component: {fileID: 1379757943}
-  - component: {fileID: 1379757942}
   m_Layer: 9
   m_Name: DroneParent
   m_TagString: Player
@@ -41440,18 +41472,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &1379757942
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1379757936}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 43fe963c13e07ff4294dd237e64aca7e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1379757943
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -41994,7 +42014,6 @@ GameObject:
   - component: {fileID: 1661648271}
   - component: {fileID: 1661648276}
   - component: {fileID: 1661648275}
-  - component: {fileID: 1661648274}
   - component: {fileID: 1661648273}
   - component: {fileID: 1661648272}
   m_Layer: 0
@@ -42079,14 +42098,6 @@ MonoBehaviour:
   offset: {x: 0, y: 0, z: 0}
   temp: 0.3
   rpLimitRatio: 0.2
---- !u!81 &1661648274
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1661648270}
-  m_Enabled: 1
 --- !u!124 &1661648275
 Behaviour:
   m_ObjectHideFlags: 0
@@ -42127,7 +42138,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 5000
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -42136,8 +42147,8 @@ Camera:
     serializedVersion: 2
     m_Bits: 55
   m_RenderingPath: -1
-  m_TargetTexture: {fileID: 8400000, guid: 630b7ea53d80efe4da2331ea7f2ce242, type: 2}
-  m_TargetDisplay: 1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 7
   m_TargetEye: 3
   m_HDR: 1
   m_AllowMSAA: 1

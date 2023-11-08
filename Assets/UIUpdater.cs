@@ -2,10 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DroneManager : MonoBehaviour
+public class UIUpdater : MonoBehaviour
 {
-    
-    [SerializeField] private UIUpdater ui_updater;
     // Start is called before the first frame update
     void Start()
     {
@@ -17,4 +15,6 @@ public class DroneManager : MonoBehaviour
     {
         
     }
+
+
 }
