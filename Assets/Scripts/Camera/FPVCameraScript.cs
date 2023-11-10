@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Camera))]
 public class FPVCameraScript : MonoBehaviour {
 
 	public Transform droneTransform;
@@ -9,10 +10,17 @@ public class FPVCameraScript : MonoBehaviour {
 	[Range(0,1)] public float temp;
 	[Range(0,1)] public float rpLimitRatio;
 
+	Camera camera;
+	float targetFrameRate = 30f;
+	float frameTime = 0f;
+	bool rendering = true;
+
 
 	// Use this for initialization
 	void Start () {
-		
+		camera = GetComponent<Camera>();
+		camera.enabled = false;
+		StartCoroutine(RenderCamera(targetFrameRate));
 	}
 	
 	// Update is called once per frame
@@ -39,5 +47,17 @@ public class FPVCameraScript : MonoBehaviour {
 //		transform.position = new Vector3 (droneTransform.position.x, droneTransform.position.y, droneTransform.position.z + 0.45f);
 		transform.rotation = Quaternion.Slerp (transform.rotation, target, temp);
 //			Vector3.SmoothDamp(transform.position, drone.transform.TransformPoint(behindPosition) + Vector3.up * Input.GetAxis("Vertical"), ref velocityCameraFollow, .1f);
+	}
+
+	IEnumerator RenderCamera(float targetFrameRate){
+		while(rendering){
+			yield return new WaitForEndOfFrame();
+			frameTime += Time.deltaTime;
+			if(frameTime >= (1f/targetFrameRate)){
+				camera.Render();
+				Communication.cameraImageReceived = true;
+				frameTime = 0f;
+			}
+		}
 	}
 }

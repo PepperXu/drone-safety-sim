@@ -27,10 +27,9 @@ public class Communication : MonoBehaviour
     RenderTexture renderTexture;
     [SerializeField] RenderTexture destRT;
 
-    int bufferSize = 128;
+    int bufferSize = 45;
     Frame[] storedFrames;
-
-    bool cameraSignalReceived = true;
+    public static bool cameraImageReceived = true;
 
     int currentFrameIndex = 0;
     int renderedFrameBufferIndex = 0;
@@ -56,14 +55,16 @@ public class Communication : MonoBehaviour
     IEnumerator LaggedTransferCameraCommand(){
         yield return new WaitForEndOfFrame();
     }
-    IEnumerator LaggedTransferCameraImages(){
-        
-        while(cameraSignalReceived){
+    IEnumerator LaggedTransferCameraImages(){   
+        while(true){
             yield return new WaitForEndOfFrame();
-            storedFrames[currentFrameIndex % bufferSize].Capture(renderTexture);
-            for ( ; storedFrames[renderedFrameBufferIndex].capturedTime < ( Time.time - cameraLatency ) ; renderedFrameBufferIndex = ( renderedFrameBufferIndex + 1 ) % bufferSize ) ;
-            Graphics.Blit(storedFrames[renderedFrameBufferIndex].frameTexture, destRT);
-            currentFrameIndex++;
+            if(cameraImageReceived){
+                storedFrames[currentFrameIndex % bufferSize].Capture(renderTexture);
+                for ( ; storedFrames[renderedFrameBufferIndex].capturedTime < ( Time.time - cameraLatency ) ; renderedFrameBufferIndex = ( renderedFrameBufferIndex + 1 ) % bufferSize ) ;
+                Graphics.Blit(storedFrames[renderedFrameBufferIndex].frameTexture, destRT);
+                currentFrameIndex++;
+                cameraImageReceived = false;
+            }
         }
     }
 
