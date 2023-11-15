@@ -6,6 +6,27 @@ TagManager:
   tags:
   - Motor
   - DroneBase
+  - target
+  - ground
+  - agent
+  - wall
+  - stone
+  - pyramid
+  - iWall
+  - pit
+  - banana
+  - block
+  - goal
+  - redGoal
+  - orangeGoal
+  - redBlock
+  - orangeBlock
+  - walkableSurface
+  - switchOff
+  - blueAgent
+  - blueGoal
+  - ball
+  - badBanana
   layers:
   - Default
   - TransparentFX
@@ -42,4 +63,13 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Yaw
+    uniqueID: 3702464817
+    locked: 0
+  - name: Roll
+    uniqueID: 1289564757
+    locked: 0
+  - name: Pitch
+    uniqueID: 84789945
     locked: 0
