@@ -15,7 +15,7 @@ public class ControlVisUpdater : MonoBehaviour
 
     private float dis2ground;
 
-    private Vector3[] predictedPoints;
+    public Vector3[] predictedPoints;
 
     void Update(){
         transform.position = droneParent.position;
@@ -35,12 +35,15 @@ public class ControlVisUpdater : MonoBehaviour
     }
 
     void UpdateFutureTrajectory(){
-        if(predictedPoints.Length > 0){
-            futureTrajectory.gameObject.SetActive(true);
-            futureTrajectory.SetPositions(predictedPoints);
-        } else {
-            futureTrajectory.SetPositions(new Vector3[0]);
+        List<Vector3> trajectory = new List<Vector3>
+        {
+            Vector3.zero
+        };
+        foreach(Vector3 predictedPoint in predictedPoints){
+            trajectory.Add(predictedPoint);
         }
+        futureTrajectory.positionCount = trajectory.Count;
+        futureTrajectory.SetPositions(trajectory.ToArray());
     }
 
 }
