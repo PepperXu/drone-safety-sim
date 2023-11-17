@@ -29,8 +29,8 @@ public class DroneManager : MonoBehaviour
     private VisType[] safeVis;
     private VisType[] misVis;
 
-    private FlightState currentFlightState = FlightState.Landed;
-    private SystemState currentSystemState = SystemState.Healthy;
+    public static FlightState currentFlightState = FlightState.Landed;
+    public static SystemState currentSystemState = SystemState.Healthy;
 
     private StateFinder.Pose originalPose;
 
@@ -70,9 +70,11 @@ public class DroneManager : MonoBehaviour
                 currentFlightState = FlightState.Hovering;
                 ic.EnableControl(true);
             }
+            controlVisUpdater.SetControlVisActive(false);
         }
 
         if(currentFlightState != FlightState.TakingOff && currentFlightState != FlightState.Landed){
+            controlVisUpdater.SetControlVisActive(true);
             if(currentSystemState == SystemState.Healthy){
                 foreach(VisType vis in safeVis){
                     vis.gameObject.SetActive(false);
