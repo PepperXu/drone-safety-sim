@@ -52,7 +52,8 @@ public class ControlVisUpdater : MonoBehaviour
             Vector3.zero
         };
         foreach(Vector3 predictedPoint in predictedPoints){
-            trajectory.Add(predictedPoint);
+            Vector3 localPoint = transform.InverseTransformDirection(predictedPoint);
+            trajectory.Add(localPoint);
         }
         futureTrajectory.positionCount = trajectory.Count;
         futureTrajectory.SetPositions(trajectory.ToArray());
