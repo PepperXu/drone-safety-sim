@@ -23,6 +23,15 @@ public class InputControl : MonoBehaviour {
 			abs_height += Input.GetAxisRaw("Throttle") * 0.1f;
 
 			vc.desired_height = abs_height;
+
+            if (Input.GetButtonDown("Switch"))
+            {
+				if (DroneManager.currentControlType == DroneManager.ControlType.Autonomous)
+					DroneManager.currentControlType = DroneManager.ControlType.Manual;
+				else
+					DroneManager.currentControlType = DroneManager.ControlType.Autonomous;
+
+			}
 		}
 	}
 

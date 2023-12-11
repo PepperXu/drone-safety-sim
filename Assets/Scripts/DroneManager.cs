@@ -19,6 +19,12 @@ public class DroneManager : MonoBehaviour
         Emergency
     }
 
+    public enum ControlType
+    {
+        Autonomous,
+        Manual
+    }
+
     [SerializeField] private UIUpdater uiUpdater;
     [SerializeField] private ControlVisUpdater controlVisUpdater;
     [SerializeField] private WorldVisUpdater worldVisUpdater;
@@ -31,6 +37,7 @@ public class DroneManager : MonoBehaviour
 
     public static FlightState currentFlightState = FlightState.Landed;
     public static SystemState currentSystemState = SystemState.Healthy;
+    public static ControlType currentControlType = ControlType.Manual;
 
     private StateFinder.Pose originalPose;
 
@@ -75,7 +82,7 @@ public class DroneManager : MonoBehaviour
 
         if(currentFlightState != FlightState.TakingOff && currentFlightState != FlightState.Landed){
             controlVisUpdater.SetControlVisActive(true);
-            if(currentSystemState == SystemState.Healthy){
+            if(currentControlType == ControlType.Autonomous){
                 foreach(VisType vis in safeVis){
                     vis.gameObject.SetActive(false);
                 }
