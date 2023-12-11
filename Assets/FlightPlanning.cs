@@ -116,11 +116,25 @@ public class FlightPlanning : MonoBehaviour
     public void GenerateFlightTrajectory()
     {
         enablePlanning = false;
-        Vector3[] currectSurfaceVertices = new Vector3[4];
+        Vector3[] currentSurfaceVertices = new Vector3[4];
         for(int i = 0; i < 4; i++)
-            currectSurfaceVertices[i] = surfaceVerts[currentSelectedSurfaceIndex, i];
+            currentSurfaceVertices[i] = surfaceVerts[currentSelectedSurfaceIndex, i];
+        Vector3 horizontalOffset = currentSurfaceVertices[1] - currentSurfaceVertices[0];
         List<Vector3> path = new List<Vector3>();
-        
+        bool flipped = false;
+        for(Vector3 v = currentSurfaceVertices[0]; v.y < currentSurfaceVertices[3].y; v += Vector3.up * 2.5f)
+        {
+            if (!flipped)
+            {
+                path.Add(v);
+                path.Add(v + horizontalOffset);
+            } else
+            {
+                path.Add(v + horizontalOffset);
+                path.Add(v);
+            }
+            flipped = !flipped;
+        }
 
     }
 
