@@ -86,7 +86,7 @@ public class DroneAgent: Agent {
 		minZ = rend.bounds.min.z;
 
 
-        initialPos = new Vector3(transform.position.x, velocityControl.initial_height, transform.position.z);
+        initialPos = new Vector3(transform.position.x, velocityControl.take_off_height, transform.position.z);
         initialRot = new Quaternion(transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w);
 
         endBounds = currEndRegion.GetComponent<Renderer> ().bounds;

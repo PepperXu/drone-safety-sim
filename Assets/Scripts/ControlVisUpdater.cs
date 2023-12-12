@@ -7,8 +7,9 @@ using UnityEngine.UI;
 public class ControlVisUpdater : MonoBehaviour
 {
     private bool visActive = false;
-    [SerializeField] private LineRenderer dis2groundVis;
-    [SerializeField] private LineRenderer futureTrajectory;
+    [SerializeField] private VisType dis2groundVis;
+    [SerializeField] private VisType futureTrajectory;
+    [SerializeField] private VisType attitude;
     [SerializeField] private Image cwise_Pitch_f, cwise_Pitch_b, acwise_Pitch_f, acwise_Pitch_b, cwise_Roll_l, cwise_Roll_r, acwise_Roll_l, acwise_Roll_r;
 
     [SerializeField] private LayerMask realObstacleLayerMask;
@@ -24,9 +25,17 @@ public class ControlVisUpdater : MonoBehaviour
         transform.eulerAngles = new Vector3(0f, droneParent.eulerAngles.y, 0f);
         if (visActive)
         {
+            dis2groundVis.showVisualization = true;
+            futureTrajectory.showVisualization = true;
+            attitude.showVisualization = true;
             UpdateDistance2Ground();
             UpdateFutureTrajectory();
             UpdateAttitudeVis();
+        } else
+        {
+            dis2groundVis.showVisualization = false;
+            futureTrajectory.showVisualization = false;
+            attitude.showVisualization = false;
         }
     }
 
@@ -35,9 +44,13 @@ public class ControlVisUpdater : MonoBehaviour
         RaycastHit hit;
         if(Physics.Raycast(rayDown, out hit, float.MaxValue, realObstacleLayerMask)){
             dis2ground = hit.distance;
-            dis2groundVis.SetPosition(1, transform.InverseTransformPoint(hit.point));
-            dis2groundVis.transform.GetChild(0).position = hit.point + (transform.position-hit.point).normalized*0.01f;
-            dis2groundVis.transform.GetChild(1).GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2ground*10f)/10f + " m";
+            LineRenderer lr = dis2groundVis.transform.GetComponentInChildren<LineRenderer>();
+            if (lr)
+            {
+                lr.SetPosition(1, transform.InverseTransformPoint(hit.point));
+                lr.transform.GetChild(0).position = hit.point + (transform.position - hit.point).normalized * 0.01f;
+                lr.transform.GetChild(1).GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2ground * 10f) / 10f + " m";
+            }
         }
     }
 
@@ -46,17 +59,23 @@ public class ControlVisUpdater : MonoBehaviour
         visActive = active;
     }
 
-    void UpdateFutureTrajectory(){
+    void UpdateFutureTrajectory()
+    {
         List<Vector3> trajectory = new List<Vector3>
         {
             Vector3.zero
         };
-        foreach(Vector3 predictedPoint in predictedPoints){
+        foreach (Vector3 predictedPoint in predictedPoints)
+        {
             Vector3 localPoint = transform.InverseTransformDirection(predictedPoint);
             trajectory.Add(localPoint);
         }
-        futureTrajectory.positionCount = trajectory.Count;
-        futureTrajectory.SetPositions(trajectory.ToArray());
+        LineRenderer lr = futureTrajectory.transform.GetComponentInChildren<LineRenderer>();
+        if (lr)
+        {
+            lr.positionCount = trajectory.Count;
+            lr.SetPositions(trajectory.ToArray());
+        }
     }
 
     void UpdateAttitudeVis()

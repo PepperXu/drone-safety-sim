@@ -31,4 +31,12 @@ public class VisType : MonoBehaviour
     {
         visRoot.gameObject.SetActive((globalVisType == visType || visType == VisualizationType.Both) && showVisualization);
     }
+
+    public static void SwitchVisType()
+    {
+        if (globalVisType == VisualizationType.MissionOnly)
+            globalVisType = VisualizationType.SafetyOnly;
+        else
+            globalVisType = VisualizationType.MissionOnly;
+    }
 }

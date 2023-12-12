@@ -22,12 +22,14 @@ public class VelocityControl : MonoBehaviour {
     private float max_roll = 0.175f; // 10 Degrees in radians, otherwise small-angle approximation dies
     private float max_alpha = 10.0f;
     //must set this
-    public float desired_height = 4.0f;
+    public float desired_height = 0.0f;
     public float desired_vx = 0.0f;
     public float desired_vy = 0.0f;
     public float desired_yaw = 0.0f;
     //must set this
-    public float initial_height = 4.0f;
+    public float take_off_height = 4.0f;
+
+    public float groundOffset = 0.211f;
 
     private float previous_desired_height;
     [HideInInspector]
@@ -35,18 +37,82 @@ public class VelocityControl : MonoBehaviour {
 
     private bool wait = false;
     private bool flag = true;
+    public bool take_off_flag = false;
 
     private float speedScale = 500.0f;
 
+    private float landedHeight = 0f;
+
+    private Rigidbody rb;
+    [SerializeField] LayerMask realObstacleLayerMask;
+
+
     // Use this for initialization
     void Start () {
-        state.GetState ();
-        Rigidbody rb = GetComponent<Rigidbody> ();
-        Vector3 desiredForce = new Vector3 (0.0f, gravity * state.Mass, 0.0f);
-        rb.AddForce (desiredForce, ForceMode.Acceleration);
+        state.GetState();
+        rb = GetComponent<Rigidbody>();
+        rb.isKinematic = true;
+        rb.useGravity = false;
+        landedHeight = transform.position.y;
+        desired_height = landedHeight;   
+    }
+
+    void TakeOff()
+    {
+        if (DroneManager.currentFlightState != DroneManager.FlightState.Landed)
+            return;
+        
+        desired_height = landedHeight + take_off_height;
+        rb.isKinematic = false;
+        rb.useGravity = true;
+        Vector3 desiredForce = new Vector3(0.0f, gravity * state.Mass, 0.0f);
+        rb.AddForce(desiredForce, ForceMode.Acceleration);
+        DroneManager.currentFlightState = DroneManager.FlightState.TakingOff;
     }
 
     // Update is called once per frame
+    private void Update()
+    {
+        if (take_off_flag)
+        {
+            take_off_flag = false;
+            TakeOff();
+        }
+
+        if (DroneManager.currentFlightState == DroneManager.FlightState.Navigating || DroneManager.currentFlightState == DroneManager.FlightState.Hovering || DroneManager.currentFlightState == DroneManager.FlightState.Landing)
+        {
+            Ray rayDown = new Ray(transform.position, Vector3.down);
+            RaycastHit hit;
+            if (Physics.Raycast(rayDown, out hit, float.MaxValue, realObstacleLayerMask))
+            {
+                float dis2ground = hit.distance;
+                if (DroneManager.currentFlightState != DroneManager.FlightState.Landing)
+                {
+                    if (dis2ground < 1f)
+                    {
+                        DroneManager.currentFlightState = DroneManager.FlightState.Landing;
+                        desired_height = transform.position.y - dis2ground + groundOffset;
+                        desired_vx = 0f;
+                        desired_vy = 0f;
+                        desired_yaw = 0f;
+                    }
+                } else
+                {
+                    if(dis2ground <= groundOffset + 0.005f)
+                    {
+                        landedHeight = transform.position.y;
+                        desired_height = landedHeight;
+                        DroneManager.currentFlightState = DroneManager.FlightState.Landed;
+                        rb.isKinematic = true;
+                        rb.useGravity = false;
+                    }
+                }
+            }
+        }
+
+
+    }
+
     void FixedUpdate () {
         state.GetState ();
         
@@ -94,8 +160,6 @@ public class VelocityControl : MonoBehaviour {
         Vector3 desiredTorque = Vector3.Scale (desiredAlpha, state.Inertia);
         Vector3 desiredForce = new Vector3 (0.0f, desiredThrust * state.Mass, 0.0f);
 
-        Rigidbody rb = GetComponent<Rigidbody>();
-
         rb.AddRelativeTorque (desiredTorque, ForceMode.Acceleration);
         rb.AddRelativeForce (desiredForce , ForceMode.Acceleration);
 
@@ -126,7 +190,7 @@ public class VelocityControl : MonoBehaviour {
         desired_vx = 0.0f;
         desired_vy = 0.0f;
         desired_yaw = 0.0f;
-        desired_height = initial_height;
+        desired_height = landedHeight;
 
         state.Reset ();
     

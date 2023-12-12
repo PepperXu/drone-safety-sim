@@ -19,6 +19,7 @@ public class FlightPlanning : MonoBehaviour
     private bool selectingSurface = false;
     private bool enablePlanning = true;
     private float verticalStep = 2.5f;
+    private float distToSurface = 2.5f;
     private float waypointMaxDist = 10f;
     
 
@@ -149,29 +150,33 @@ public class FlightPlanning : MonoBehaviour
         Vector3 horizontalOffset = currentSurfaceVertices[1] - currentSurfaceVertices[0];
         List<Vector3> path = new List<Vector3>();
         bool flipped = false;
+        Vector3 surfaceNormal = (surfaceVerts[currentSelectedSurfaceIndex, 0] - surfaceVerts[(currentSelectedSurfaceIndex + 3) % 4, 0]).normalized;
         for (Vector3 v = currentSurfaceVertices[0]; v.y < currentSurfaceVertices[3].y; v += Vector3.up * verticalStep)
         {
-            if (!flipped)
+            if (v.y > 5f)
             {
-                path.Add(v);
-                path.Add(v + horizontalOffset);
+                if (!flipped)
+                {
+                    path.Add(v + surfaceNormal * distToSurface);
+                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset);
+                }
+                else
+                {
+                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset);
+                    path.Add(v + surfaceNormal * distToSurface);
+                }
+                flipped = !flipped;
             }
-            else
-            {
-                path.Add(v + horizontalOffset);
-                path.Add(v);
-            }
-            flipped = !flipped;
         }
         if (flipped)
         {
-            path.Add(currentSurfaceVertices[2]);
-            path.Add(currentSurfaceVertices[3]);
+            path.Add(currentSurfaceVertices[2] + surfaceNormal * distToSurface);
+            path.Add(currentSurfaceVertices[3] + surfaceNormal * distToSurface);
         }
         else
         {
-            path.Add(currentSurfaceVertices[3]);
-            path.Add(currentSurfaceVertices[2]);
+            path.Add(currentSurfaceVertices[3] + surfaceNormal * distToSurface);
+            path.Add(currentSurfaceVertices[2] + surfaceNormal * distToSurface);
         }
 
 

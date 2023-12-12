@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class InputControl : MonoBehaviour {
 
-	private bool controlEnabled = false;
+	private bool inputEnabled = false;
 	public VelocityControl vc;
 
 	private float abs_height = 1;
@@ -16,37 +16,47 @@ public class InputControl : MonoBehaviour {
 	
 	// Update is called once per frame
 	void FixedUpdate () {
-		if(controlEnabled){
-			vc.desired_vx = Input.GetAxisRaw ("Pitch")*4.0f;
-			vc.desired_vy = Input.GetAxisRaw ("Roll")*4.0f;
-			vc.desired_yaw = Input.GetAxisRaw ("Yaw")*2f;
-			abs_height += Input.GetAxisRaw("Throttle") * 0.1f;
+		if (Input.GetButtonDown("TakeOff"))
+		{
+			vc.take_off_flag = true;
+		}
 
+		if (Input.GetButtonDown("Switch"))
+		{
+			VisType.SwitchVisType();
+		}
+
+		if (inputEnabled){
+			
+			float vx = Input.GetAxisRaw ("Pitch")*4.0f;
+			float vy = Input.GetAxisRaw ("Roll")*4.0f;
+			float yaw = Input.GetAxisRaw ("Yaw")*2f;
+			float height_diff = Input.GetAxisRaw("Throttle") * 0.1f;
+
+			if (vx > 0.01f || vy > 0.01f || yaw > 0.01f || height_diff > 0.01f)
+            {
+				DroneManager.autopilot_flag = false;
+            }
+
+			vc.desired_vx = vx;
+			vc.desired_vy = vy;
+			vc.desired_yaw = yaw;
+			abs_height += height_diff;
 			vc.desired_height = abs_height;
 
             if (Input.GetButtonDown("AutoPilot"))
             {
-				if (DroneManager.currentControlType == DroneManager.ControlType.Autonomous)
-					DroneManager.currentControlType = DroneManager.ControlType.Manual;
-				else
-					DroneManager.currentControlType = DroneManager.ControlType.Autonomous;
-
+				DroneManager.autopilot_flag = true;
 			}
 
-			if (Input.GetButtonDown("Switch"))
-			{
-				if (VisType.globalVisType == VisType.VisualizationType.MissionOnly)
-					VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
-				else
-					VisType.globalVisType = VisType.VisualizationType.MissionOnly;
-
-			}
-
-
+            if (Input.GetButtonDown("RTH"))
+            {
+				
+            }
 		}
 	}
 
 	public void EnableControl(bool enabled){
-		controlEnabled = enabled;
+		inputEnabled = enabled;
 	}
 }

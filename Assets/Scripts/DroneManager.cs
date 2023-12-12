@@ -10,7 +10,8 @@ public class DroneManager : MonoBehaviour
         Landed,
         TakingOff,
         Hovering,
-        Navigating
+        Navigating,
+        Landing
     }
 
     public enum SystemState{
@@ -18,6 +19,8 @@ public class DroneManager : MonoBehaviour
         Warning,
         Emergency
     }
+
+
 
     public enum ControlType
     {
@@ -43,6 +46,8 @@ public class DroneManager : MonoBehaviour
 
     private bool controlActive = false;
 
+    public static bool autopilot_flag = false, rth_flag = false;
+
     [SerializeField] float predictStepLength = 1f;
     [SerializeField] int predictSteps = 3;
 
@@ -51,23 +56,25 @@ public class DroneManager : MonoBehaviour
     {
         state.GetState();
         originalPose = state.pose;
-        currentFlightState = FlightState.TakingOff;
+        currentFlightState = FlightState.Landed;
         VisType.globalVisType = VisType.VisualizationType.MissionOnly;
+        controlVisUpdater.SetControlVisActive(false);
     }
 
     // Update is called once per frame
     void Update()
     {
         if(currentFlightState == FlightState.TakingOff){
-            if(Mathf.Abs(state.Altitude - vc.initial_height)< 0.1f){
+            if(Mathf.Abs(state.Altitude - vc.desired_height)< 0.1f){
                 currentFlightState = FlightState.Hovering;
                 ic.EnableControl(true);
             }
-            controlVisUpdater.SetControlVisActive(false);
         }
 
-        if(currentFlightState != FlightState.TakingOff && currentFlightState != FlightState.Landed){
+        if(currentFlightState == FlightState.Navigating || currentFlightState == FlightState.Hovering){
             controlVisUpdater.SetControlVisActive(true);
+
+            currentControlType = autopilot_flag ? ControlType.Autonomous : ControlType.Manual;
 
             if(currentFlightState == FlightState.Navigating){
                 if(Vector3.Magnitude(state.pose.WorldAcceleration) < 0.1f && Vector3.Magnitude(state.pose.WorldVelocity) < 0.1f){
@@ -90,9 +97,13 @@ public class DroneManager : MonoBehaviour
                     controlVisUpdater.predictedPoints = new Vector3[0];
                 }
             }
+        } else
+        {
+            ic.EnableControl(false);
+            if(currentFlightState == FlightState.Landing)
+                controlVisUpdater.SetControlVisActive(false);
         }
 
-        
     }
 
     void PredictFutureTrajectory(){

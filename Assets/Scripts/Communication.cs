@@ -27,7 +27,7 @@ public class Communication : MonoBehaviour
     RenderTexture renderTexture;
     [SerializeField] RenderTexture destRT;
 
-    int bufferSize = 1;
+    int bufferSize = 16;
     Frame[] storedFrames;
     public static bool cameraImageReceived = true;
 
@@ -37,15 +37,23 @@ public class Communication : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        storedFrames = new Frame[bufferSize];
-        renderTexture = new RenderTexture( 1920, 1080, 24 );
-        FPVCamera.targetTexture = renderTexture;
-        StartCoroutine(LaggedTransferCameraImages());
+        
+        if (cameraLatency > 0f)
+        {
+            storedFrames = new Frame[bufferSize];
+            renderTexture = new RenderTexture(960, 540, 16);
+            FPVCamera.targetTexture = renderTexture;
+            StartCoroutine(LaggedTransferCameraImages());
+        } else
+        {
+            FPVCamera.targetTexture = destRT;
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
+        
         //Debug.Log(RenderTexture.active);
     }
 
