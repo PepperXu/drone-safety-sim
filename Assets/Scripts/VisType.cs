@@ -29,6 +29,6 @@ public class VisType : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        visRoot.gameObject.SetActive(globalVisType == visType && showVisualization);
+        visRoot.gameObject.SetActive((globalVisType == visType || visType == VisualizationType.Both) && showVisualization);
     }
 }

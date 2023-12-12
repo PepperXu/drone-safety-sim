@@ -70,7 +70,7 @@ public class DroneManager : MonoBehaviour
             controlVisUpdater.SetControlVisActive(true);
 
             if(currentFlightState == FlightState.Navigating){
-                if(Vector3.Magnitude(state.pose.WorldVelocity) < 0.1f && Vector3.Magnitude(state.pose.WorldVelocity) < 0.01f){
+                if(Vector3.Magnitude(state.pose.WorldAcceleration) < 0.1f && Vector3.Magnitude(state.pose.WorldVelocity) < 0.1f){
                     currentFlightState = FlightState.Hovering;
                 } else {
                     if(vc.desired_vx == 0 && vc.desired_vy == 0 && vc.desired_yaw == 0 && vc.height_diff == 0){ 
@@ -99,20 +99,25 @@ public class DroneManager : MonoBehaviour
         List<Vector3> trajectory = new List<Vector3>();
         if(controlActive){
             Vector3 travelOffset = Vector3.zero;
+            float futureTimer = 0;
             for(int i = 0; i < predictSteps; i++){
-                travelOffset += state.pose.WorldVelocity * predictStepLength + 0.5f * state.pose.WorldAcceleration * predictStepLength * predictStepLength;
+                futureTimer += predictStepLength;
+                travelOffset = state.pose.WorldVelocity * futureTimer + 0.5f * state.pose.WorldAcceleration * futureTimer * futureTimer;
                 trajectory.Add(travelOffset);
             }
         } else {
             Vector3 travelOffset = Vector3.zero;
-            for(int i = 0; i < predictSteps; i++){
-                if(state.pose.WorldVelocity.magnitude - state.pose.WorldAcceleration.magnitude * predictStepLength <= 0f){
+            float futureTimer = 0;
+            for (int i = 0; i < predictSteps; i++){
+                futureTimer += predictStepLength;
+                if ((state.pose.WorldVelocity.magnitude - state.pose.WorldAcceleration.magnitude * futureTimer) <= 0f){
                     float timeUntilStop = state.pose.WorldVelocity.magnitude/state.pose.WorldAcceleration.magnitude;
                     travelOffset += state.pose.WorldVelocity * timeUntilStop + 0.5f * state.pose.WorldAcceleration * timeUntilStop * timeUntilStop;
                     trajectory.Add(travelOffset);
                     break;
                 } else {
-                    travelOffset += state.pose.WorldVelocity * predictStepLength + 0.5f * state.pose.WorldAcceleration * predictStepLength * predictStepLength;
+                    travelOffset += state.pose.WorldVelocity * futureTimer + 0.5f * state.pose.WorldAcceleration * futureTimer * futureTimer;
+                    trajectory.Add(travelOffset);
                 }
             }
         }

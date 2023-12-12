@@ -24,7 +24,7 @@ public class InputControl : MonoBehaviour {
 
 			vc.desired_height = abs_height;
 
-            if (Input.GetButtonDown("Switch"))
+            if (Input.GetButtonDown("AutoPilot"))
             {
 				if (DroneManager.currentControlType == DroneManager.ControlType.Autonomous)
 					DroneManager.currentControlType = DroneManager.ControlType.Manual;
@@ -32,6 +32,17 @@ public class InputControl : MonoBehaviour {
 					DroneManager.currentControlType = DroneManager.ControlType.Autonomous;
 
 			}
+
+			if (Input.GetButtonDown("Switch"))
+			{
+				if (VisType.globalVisType == VisType.VisualizationType.MissionOnly)
+					VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
+				else
+					VisType.globalVisType = VisType.VisualizationType.MissionOnly;
+
+			}
+
+
 		}
 	}
 
