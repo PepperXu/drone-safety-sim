@@ -38,11 +38,7 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
-
 *.log
 *.dwlt
-
 .idea/
-*.log
-UserSettings/Layouts/default-2022.dwlt
-*.dwlt
+
