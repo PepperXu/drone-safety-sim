@@ -8,6 +8,8 @@ public class FlightPlanning : MonoBehaviour
 {
     private BoxCollider boxCollider;
     private Vector3[] flightTrajectory;
+    [SerializeField] LineRenderer pathVisualization;
+    [SerializeField] GameObject waypoint;
     private Vector3 boundCenter, boundExtends;
     private int currentHoveringSurfaceIndex = -1, currentSelectedSurfaceIndex = -1;
     private Vector3[,] surfaceVerts = new Vector3[4,4];
@@ -17,6 +19,8 @@ public class FlightPlanning : MonoBehaviour
     private bool selectingSurface = false;
     private bool enablePlanning = true;
     private float verticalStep = 2.5f;
+    private float waypointMaxDist = 5f;
+    
 
     // Start is called before the first frame update
     void Start()
@@ -122,7 +126,7 @@ public class FlightPlanning : MonoBehaviour
         Vector3 horizontalOffset = currentSurfaceVertices[1] - currentSurfaceVertices[0];
         List<Vector3> path = new List<Vector3>();
         bool flipped = false;
-        for(Vector3 v = currentSurfaceVertices[0]; v.y < currentSurfaceVertices[3].y; v += Vector3.up * 2.5f)
+        for(Vector3 v = currentSurfaceVertices[0]; v.y < currentSurfaceVertices[3].y; v += Vector3.up * verticalStep)
         {
             if (!flipped)
             {
@@ -135,6 +139,47 @@ public class FlightPlanning : MonoBehaviour
             }
             flipped = !flipped;
         }
+        if (flipped)
+        {
+            path.Add(currentSurfaceVertices[2]);
+            path.Add(currentSurfaceVertices[3]);
+        } else
+        {
+            path.Add(currentSurfaceVertices[3]);
+            path.Add(currentSurfaceVertices[2]);
+        }
+
+
+        int i = 0;
+
+        while (i < path.Count) 
+        {
+            GameObject wp = Instantiate(waypoint, pathVisualization.transform) as GameObject;
+            wp.transform.position = path[i];
+
+            
+            if(i == path.Count - 1)
+            {
+                break;
+            } else
+            {
+                Vector3 currentTrajectoryPoint = path[i];
+                Vector3 nextTrajectoryPoint = path[i+1];
+                Vector3 nextTrajectoryPointDirection = (nextTrajectoryPoint - currentTrajectoryPoint).normalized;
+                while (Vector3.Distance(currentTrajectoryPoint, nextTrajectoryPoint) > waypointMaxDist)
+                {
+                    currentTrajectoryPoint += nextTrajectoryPointDirection * waypointMaxDist;
+                    path.Insert(i+1, currentTrajectoryPoint);
+                    wp = Instantiate(waypoint, pathVisualization.transform) as GameObject;
+                    wp.transform.position = currentTrajectoryPoint;
+                }
+            }
+            i++;
+        }
+        flightTrajectory = path.ToArray();
+        pathVisualization.positionCount = flightTrajectory.Length;
+        pathVisualization.SetPositions(flightTrajectory);
+
 
     }
 

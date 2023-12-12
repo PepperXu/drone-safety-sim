@@ -32,8 +32,8 @@ public class DroneManager : MonoBehaviour
     [SerializeField] private VelocityControl vc;
     [SerializeField] private InputControl ic;
     
-    private VisType[] safeVis;
-    private VisType[] misVis;
+    //private VisType[] safeVis;
+    //private VisType[] misVis;
 
     public static FlightState currentFlightState = FlightState.Landed;
     public static SystemState currentSystemState = SystemState.Healthy;
@@ -52,21 +52,7 @@ public class DroneManager : MonoBehaviour
         state.GetState();
         originalPose = state.pose;
         currentFlightState = FlightState.TakingOff;
-        List<VisType> safeVisTemp = new List<VisType>(), missionVisTemp = new List<VisType>();
-        foreach(VisType vis in Resources.FindObjectsOfTypeAll<VisType>()){
-            if(vis.visType == VisType.VisualizationType.SafetyOnly){
-                safeVisTemp.Add(vis);
-            }
-            else if(vis.visType == VisType.VisualizationType.MissionOnly){
-                missionVisTemp.Add(vis);
-            }
-            else if(vis.visType == VisType.VisualizationType.Both){
-                safeVisTemp.Add(vis);
-                missionVisTemp.Add(vis);
-            }
-        }
-        safeVis = safeVisTemp.ToArray();
-        misVis = missionVisTemp.ToArray();
+        VisType.globalVisType = VisType.VisualizationType.MissionOnly;
     }
 
     // Update is called once per frame
@@ -82,21 +68,6 @@ public class DroneManager : MonoBehaviour
 
         if(currentFlightState != FlightState.TakingOff && currentFlightState != FlightState.Landed){
             controlVisUpdater.SetControlVisActive(true);
-            if(currentControlType == ControlType.Autonomous){
-                foreach(VisType vis in safeVis){
-                    vis.gameObject.SetActive(false);
-                }
-                foreach(VisType vis in misVis){
-                    vis.gameObject.SetActive(true);
-                }
-            } else {
-                foreach(VisType vis in misVis){
-                    vis.gameObject.SetActive(false);
-                }
-                foreach(VisType vis in safeVis){
-                    vis.gameObject.SetActive(true);
-                }
-            }
 
             if(currentFlightState == FlightState.Navigating){
                 if(Vector3.Magnitude(state.pose.WorldVelocity) < 0.1f && Vector3.Magnitude(state.pose.WorldVelocity) < 0.01f){
