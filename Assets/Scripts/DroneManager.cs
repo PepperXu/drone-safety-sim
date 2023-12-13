@@ -14,6 +14,14 @@ public class DroneManager : MonoBehaviour
         Landing
     }
 
+    public enum MissionState{
+        MovingToFlightZone, //When landed, or just take off
+        Inspecting, //When in flight zone
+        //Transiting,
+        Returning //When path completed or RTH is triggered.
+
+    }
+
     public enum SystemState{
         Healthy,
         Warning,
@@ -41,15 +49,22 @@ public class DroneManager : MonoBehaviour
     public static FlightState currentFlightState = FlightState.Landed;
     public static SystemState currentSystemState = SystemState.Healthy;
     public static ControlType currentControlType = ControlType.Manual;
+    public static MissionState currentMissionState = MissionState.MovingToFlightZone;
 
     private StateFinder.Pose originalPose;
 
     private bool controlActive = false;
 
-    public static bool autopilot_flag = false, rth_flag = false;
+    public static bool autopilot_flag = false, autopilot_stop_flag = false, rth_flag = false;
 
     [SerializeField] float predictStepLength = 1f;
     [SerializeField] int predictSteps = 3;
+
+    [SerializeField] FlightPlanning flightPlanning;
+
+    [SerializeField] Transform contingencyBuffer;
+
+
 
     // Start is called before the first frame update
     void Start()
@@ -57,6 +72,8 @@ public class DroneManager : MonoBehaviour
         state.GetState();
         originalPose = state.pose;
         currentFlightState = FlightState.Landed;
+        currentMissionState = MissionState.MovingToFlightZone;
+        currentControlType = ControlType.Manual;
         VisType.globalVisType = VisType.VisualizationType.MissionOnly;
         controlVisUpdater.SetControlVisActive(false);
     }
@@ -104,6 +121,31 @@ public class DroneManager : MonoBehaviour
                 controlVisUpdater.SetControlVisActive(false);
         }
 
+        if(currentMissionState == MissionState.MovingToFlightZone){
+            if(InContingencyBuffer()){
+                currentMissionState = MissionState.Inspecting;
+            }
+        } else if (currentMissionState == MissionState.Inspecting){
+            if(autopilot_flag){
+                if(flightPlanning.isPathPlanned()){
+                    EngageAutoPilot();
+                    currentControlType = ControlType.Autonomous;
+                }
+                autopilot_flag = false;
+            }
+            if(!InContingencyBuffer()){
+                currentSystemState = SystemState.Warning;
+                DisengageAutoPilot();
+                currentControlType = ControlType.Manual;
+            }
+        }
+
+        if(autopilot_stop_flag){
+            DisengageAutoPilot();
+            currentControlType = ControlType.Manual;
+            autopilot_stop_flag = false;
+        }
+
     }
 
     void PredictFutureTrajectory(){
@@ -134,4 +176,21 @@ public class DroneManager : MonoBehaviour
         }
         controlVisUpdater.predictedPoints = trajectory.ToArray();
     }
+
+    bool InContingencyBuffer(){
+        Vector3 localDronePos = contingencyBuffer.InverseTransformPoint(vc.transform.position);
+        return localDronePos.x < contingencyBuffer.localScale.x/2f && localDronePos.x > -contingencyBuffer.transform.localScale.x/2f &&
+        localDronePos.y < contingencyBuffer.transform.localScale.y/2f && localDronePos.y > -contingencyBuffer.transform.localScale.y/2f &&
+        localDronePos.z < contingencyBuffer.transform.localScale.z/2f && localDronePos.z > -contingencyBuffer.transform.localScale.z/2f;
+    }
+
+    void EngageAutoPilot(){
+        AutopilotManager.EnableAutopilot(true);
+    }
+
+    void DisengageAutoPilot(){
+        AutopilotManager.EnableAutopilot(false);
+    }
+
+    
 }

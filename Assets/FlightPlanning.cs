@@ -18,9 +18,13 @@ public class FlightPlanning : MonoBehaviour
     private XRRayInteractor currentRayInteractor;
     private bool selectingSurface = false;
     private bool enablePlanning = true;
+
+    private bool pathPlanned = false;
     private float verticalStep = 2.5f;
     private float distToSurface = 2.5f;
     private float waypointMaxDist = 10f;
+
+    private float groundOffset = 15f;
     
 
     // Start is called before the first frame update
@@ -42,6 +46,12 @@ public class FlightPlanning : MonoBehaviour
         } else
         {
             StopHighlightingSurface();
+        }
+
+        //for debugging
+        if(Input.GetKeyDown(KeyCode.P)){
+            currentSelectedSurfaceIndex = 0;
+            GenerateFlightTrajectory();
         }
     }
 
@@ -153,7 +163,7 @@ public class FlightPlanning : MonoBehaviour
         Vector3 surfaceNormal = (surfaceVerts[currentSelectedSurfaceIndex, 0] - surfaceVerts[(currentSelectedSurfaceIndex + 3) % 4, 0]).normalized;
         for (Vector3 v = currentSurfaceVertices[0]; v.y < currentSurfaceVertices[3].y; v += Vector3.up * verticalStep)
         {
-            if (v.y > 5f)
+            if (v.y > groundOffset)
             {
                 if (!flipped)
                 {
@@ -200,7 +210,7 @@ public class FlightPlanning : MonoBehaviour
                 while (Vector3.Distance(currentTrajectoryPoint, nextTrajectoryPoint) > waypointMaxDist)
                 {
                     currentTrajectoryPoint += nextTrajectoryPointDirection * waypointMaxDist;
-                    path.Insert(i + 1, currentTrajectoryPoint);
+                    path.Insert(++i, currentTrajectoryPoint);
                     wp = Instantiate(waypoint, pathVisualization.transform) as GameObject;
                     wp.transform.position = currentTrajectoryPoint;
                 }
@@ -215,6 +225,7 @@ public class FlightPlanning : MonoBehaviour
             surfaceSelected[t].SetActive(false);
             currentSelectedSurfaceIndex = -1;
         }
+        pathPlanned = true;
     }
 
     private void UpdateBoundsGeometry()
@@ -246,5 +257,20 @@ public class FlightPlanning : MonoBehaviour
         surfaceVerts[3,1] = boundCenter + (Vector3)(m * new Vector3(-boundExtends.x, -boundExtends.y, boundExtends.z));
         surfaceVerts[3,2] = boundCenter + (Vector3)(m * new Vector3(-boundExtends.x, boundExtends.y, boundExtends.z));
         surfaceVerts[3,3] = boundCenter + (Vector3)(m * new Vector3(boundExtends.x, boundExtends.y, boundExtends.z));
+    }
+
+    public bool isPathPlanned () {
+        return pathPlanned;
+    }
+
+    public Vector3 GetCurrentWaypoint(int index, out bool out_of_bound){
+        if(index >= flightTrajectory.Length)
+        {
+            out_of_bound = true;
+            return Vector3.zero;
+        } else {
+            out_of_bound = false;
+            return flightTrajectory[index];
+        }
     }
 }

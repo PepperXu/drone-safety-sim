@@ -35,7 +35,7 @@ public class InputControl : MonoBehaviour {
 
 			if (vx > 0.01f || vy > 0.01f || yaw > 0.01f || height_diff > 0.01f)
             {
-				DroneManager.autopilot_flag = false;
+				DroneManager.autopilot_stop_flag = true;
             }
 
 			vc.desired_vx = vx;
