@@ -41,8 +41,7 @@ public class InputControl : MonoBehaviour {
 			vc.desired_vx = vx;
 			vc.desired_vy = vy;
 			vc.desired_yaw = yaw;
-			abs_height += height_diff;
-			vc.desired_height = abs_height;
+			vc.desired_height += height_diff;
 
             if (Input.GetButtonDown("AutoPilot"))
             {

@@ -29,7 +29,7 @@ public class VelocityControl : MonoBehaviour {
     //must set this
     public float take_off_height = 4.0f;
 
-    public float groundOffset = 0.211f;
+    public float groundOffset = 0.06f;
 
     private float previous_desired_height;
     [HideInInspector]
@@ -91,14 +91,16 @@ public class VelocityControl : MonoBehaviour {
                     if (dis2ground < 1f)
                     {
                         DroneManager.currentFlightState = DroneManager.FlightState.Landing;
-                        desired_height = transform.position.y - dis2ground + groundOffset;
+
+                        desired_height = transform.position.y - dis2ground;
                         desired_vx = 0f;
                         desired_vy = 0f;
                         desired_yaw = 0f;
                     }
                 } else
-                {
-                    if(dis2ground <= groundOffset + 0.005f)
+                {   
+                    Debug.Log("Landing");
+                    if(dis2ground <= groundOffset)
                     {
                         landedHeight = transform.position.y;
                         desired_height = landedHeight;
@@ -123,7 +125,8 @@ public class VelocityControl : MonoBehaviour {
 
         height_diff = desired_height - previous_desired_height;
 
-        float heightError = state.Altitude - desired_height;
+        float heightError = state.Altitude - desired_height + 3.27f;
+        //Debug.Log(heightError);
 
         Vector3 desiredVelocity = new Vector3 (desired_vy, -1.0f * heightError / time_constant_z_velocity, desired_vx);
         Vector3 velocityError = state.VelocityVector - desiredVelocity;
