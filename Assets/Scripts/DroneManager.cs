@@ -64,6 +64,7 @@ public class DroneManager : MonoBehaviour
 
     [SerializeField] Transform contingencyBuffer;
 
+    [SerializeField] LayerMask realObstacleLayerMask;
 
 
     // Start is called before the first frame update
@@ -91,7 +92,35 @@ public class DroneManager : MonoBehaviour
         if(currentFlightState == FlightState.Navigating || currentFlightState == FlightState.Hovering){
             controlVisUpdater.SetControlVisActive(true);
 
-            if(currentFlightState == FlightState.Navigating){
+            bool inBuffer = false;
+            controlVisUpdater.vectorToNearestBufferBound = CheckPositionInContingencyBuffer(out inBuffer);
+
+            if (currentMissionState == MissionState.MovingToFlightZone)
+            {
+                if (inBuffer)
+                {
+                    currentMissionState = MissionState.Inspecting;
+                }
+            }
+            else if (currentMissionState == MissionState.Inspecting)
+            {
+                if (autopilot_flag)
+                {
+                    if (flightPlanning.isPathPlanned())
+                    {
+                        EngageAutoPilot();
+                        currentControlType = ControlType.Autonomous;
+                    }
+                    autopilot_flag = false;
+                }
+                if (!inBuffer)
+                {
+                    currentSystemState = SystemState.Warning;
+                    autopilot_stop_flag = true;
+                }
+            }
+
+            if (currentFlightState == FlightState.Navigating){
                 if(Vector3.Magnitude(state.pose.WorldAcceleration) < 0.1f && Vector3.Magnitude(state.pose.WorldVelocity) < 0.1f){
                     currentFlightState = FlightState.Hovering;
                 } else {
@@ -119,22 +148,11 @@ public class DroneManager : MonoBehaviour
                 controlVisUpdater.SetControlVisActive(false);
         }
 
-        if(currentMissionState == MissionState.MovingToFlightZone){
-            if(InContingencyBuffer()){
-                currentMissionState = MissionState.Inspecting;
-            }
-        } else if (currentMissionState == MissionState.Inspecting){
-            if(autopilot_flag){
-                if(flightPlanning.isPathPlanned()){
-                    EngageAutoPilot();
-                    currentControlType = ControlType.Autonomous;
-                }
-                autopilot_flag = false;
-            }
-            if(!InContingencyBuffer()){
-                currentSystemState = SystemState.Warning;
-                autopilot_stop_flag = true;
-            }
+        if (currentFlightState != FlightState.Landed)
+        {
+            bool hitGround = false;
+            Vector3 vectorToGround = CheckDistToGround(out hitGround);
+
         }
 
         if(autopilot_stop_flag){
@@ -174,11 +192,31 @@ public class DroneManager : MonoBehaviour
         controlVisUpdater.predictedPoints = trajectory.ToArray();
     }
 
-    bool InContingencyBuffer(){
+    Vector3 CheckPositionInContingencyBuffer(out bool inBuffer){
         Vector3 localDronePos = contingencyBuffer.InverseTransformPoint(vc.transform.position);
-        return Mathf.Abs(localDronePos.x) < 0.5f && 
-        Mathf.Abs(localDronePos.y) < 0.5f &&
-        Mathf.Abs(localDronePos.z) < 0.5f;
+        inBuffer = Mathf.Abs(localDronePos.x) < 0.5f && Mathf.Abs(localDronePos.y) < 0.5f && Mathf.Abs(localDronePos.z) < 0.5f;
+        if(Mathf.Abs(Mathf.Abs(localDronePos.x) - 0.5f) > Mathf.Abs(Mathf.Abs(localDronePos.y) - 0.5f))
+        {
+            return contingencyBuffer.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * contingencyBuffer.localScale.x;
+        } else
+        {
+            return contingencyBuffer.forward * (Mathf.Abs(localDronePos.z) - 0.5f) * Mathf.Sign(localDronePos.z) * contingencyBuffer.localScale.z;
+        }
+    }
+
+    Vector3 CheckDistToGround(out bool hitGround)
+    {
+        Ray rayDown = new Ray(vc.transform.position, Vector3.down);
+        RaycastHit hit;
+        if (Physics.Raycast(rayDown, out hit, float.MaxValue, realObstacleLayerMask))
+        {
+            hitGround = true;
+            return (hit.point - vc.transform.position);
+        } else
+        {
+            hitGround = false;
+            return Vector3.down * float.PositiveInfinity;
+        }
     }
 
     void EngageAutoPilot(){

@@ -48,6 +48,8 @@ public class VelocityControl : MonoBehaviour {
     private Rigidbody rb;
     [SerializeField] LayerMask realObstacleLayerMask;
 
+    public Vector3 vectorToGround;
+
     [SerializeField] AudioClip take_off, flying, landing;
     AudioSource audioSource;
 
