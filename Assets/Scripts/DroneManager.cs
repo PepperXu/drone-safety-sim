@@ -195,12 +195,19 @@ public class DroneManager : MonoBehaviour
     Vector3 CheckPositionInContingencyBuffer(out bool inBuffer){
         Vector3 localDronePos = contingencyBuffer.InverseTransformPoint(vc.transform.position);
         inBuffer = Mathf.Abs(localDronePos.x) < 0.5f && Mathf.Abs(localDronePos.y) < 0.5f && Mathf.Abs(localDronePos.z) < 0.5f;
-        if(Mathf.Abs(Mathf.Abs(localDronePos.x) - 0.5f) > Mathf.Abs(Mathf.Abs(localDronePos.y) - 0.5f))
+        if (Mathf.Abs(localDronePos.y) < 0.5f && (Mathf.Abs(localDronePos.x) < 0.5f || Mathf.Abs(localDronePos.z) < 0.5f))
         {
-            return contingencyBuffer.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * contingencyBuffer.localScale.x;
+            if (Mathf.Abs(Mathf.Abs(localDronePos.x) - 0.5f) < Mathf.Abs(Mathf.Abs(localDronePos.z) - 0.5f))
+            {
+                return -contingencyBuffer.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * contingencyBuffer.localScale.x;
+            }
+            else
+            {
+                return -contingencyBuffer.forward * (Mathf.Abs(localDronePos.z) - 0.5f) * Mathf.Sign(localDronePos.z) * contingencyBuffer.localScale.z;
+            }
         } else
         {
-            return contingencyBuffer.forward * (Mathf.Abs(localDronePos.z) - 0.5f) * Mathf.Sign(localDronePos.z) * contingencyBuffer.localScale.z;
+            return Vector3.positiveInfinity;
         }
     }
 
