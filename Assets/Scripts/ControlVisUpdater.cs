@@ -55,6 +55,7 @@ public class ControlVisUpdater : MonoBehaviour
             {
                 lr.SetPosition(1, transform.InverseTransformPoint(hit.point));
                 lr.transform.GetChild(0).position = hit.point + (transform.position - hit.point).normalized * 0.01f;
+                lr.transform.GetChild(1).position = transform.InverseTransformPoint(hit.point) / 2f;
                 lr.transform.GetChild(1).GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2ground * 10f) / 10f + " m";
             }
         }
@@ -75,6 +76,7 @@ public class ControlVisUpdater : MonoBehaviour
             Vector3 hitPoint = transform.position + vectorToNearestBufferBound;
             lr.SetPosition(1, transform.InverseTransformPoint(hitPoint));
             lr.transform.GetChild(0).position = hitPoint - vectorToNearestBufferBound.normalized * 0.01f;
+            lr.transform.GetChild(1).position = transform.InverseTransformPoint(hitPoint) / 2f;
             lr.transform.GetChild(1).GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2bound * 10f) / 10f + " m";
         }
     }
