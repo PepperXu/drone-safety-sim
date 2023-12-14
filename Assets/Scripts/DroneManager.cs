@@ -91,8 +91,6 @@ public class DroneManager : MonoBehaviour
         if(currentFlightState == FlightState.Navigating || currentFlightState == FlightState.Hovering){
             controlVisUpdater.SetControlVisActive(true);
 
-            currentControlType = autopilot_flag ? ControlType.Autonomous : ControlType.Manual;
-
             if(currentFlightState == FlightState.Navigating){
                 if(Vector3.Magnitude(state.pose.WorldAcceleration) < 0.1f && Vector3.Magnitude(state.pose.WorldVelocity) < 0.1f){
                     currentFlightState = FlightState.Hovering;
@@ -178,9 +176,9 @@ public class DroneManager : MonoBehaviour
 
     bool InContingencyBuffer(){
         Vector3 localDronePos = contingencyBuffer.InverseTransformPoint(vc.transform.position);
-        return localDronePos.x < contingencyBuffer.localScale.x/2f && localDronePos.x > -contingencyBuffer.transform.localScale.x/2f &&
-        localDronePos.y < contingencyBuffer.transform.localScale.y/2f && localDronePos.y > -contingencyBuffer.transform.localScale.y/2f &&
-        localDronePos.z < contingencyBuffer.transform.localScale.z/2f && localDronePos.z > -contingencyBuffer.transform.localScale.z/2f;
+        return Mathf.Abs(localDronePos.x) < 0.5f && 
+        Mathf.Abs(localDronePos.y) < 0.5f &&
+        Mathf.Abs(localDronePos.z) < 0.5f;
     }
 
     void EngageAutoPilot(){

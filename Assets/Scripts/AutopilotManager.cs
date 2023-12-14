@@ -11,7 +11,7 @@ public class AutopilotManager : MonoBehaviour
     [SerializeField] FlightPlanning flightPlanning;
     [SerializeField] VelocityControl vc;
 
-    const float waitTime = 0.5f;
+    const float waitTime = 0.15f;
     float waitTimer = 0f;
 
     float autopilot_speed = 4f;
@@ -24,10 +24,12 @@ public class AutopilotManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        Debug.LogWarning("AUTOPILOT: " + isAutopiloting);
         if(isAutopiloting){
             bool out_of_bound;
             Vector3 target = flightPlanning.GetCurrentWaypoint(currentWaypointIndex, out out_of_bound);
             if(!out_of_bound){
+                Debug.LogWarning("Moving to waypoint " + currentWaypointIndex);
                 Vector3 offset = target - vc.transform.position;
                 if(offset.magnitude < 0.01f){
                     waitTimer += Time.deltaTime;

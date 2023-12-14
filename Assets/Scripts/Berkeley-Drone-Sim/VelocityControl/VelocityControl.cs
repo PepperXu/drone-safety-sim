@@ -43,14 +43,19 @@ public class VelocityControl : MonoBehaviour {
 
     private float landedHeight = 0f;
 
+    private float landingHeightThreshold = 1f;
+
     private Rigidbody rb;
     [SerializeField] LayerMask realObstacleLayerMask;
 
+    [SerializeField] AudioClip take_off, flying, landing;
+    AudioSource audioSource;
 
     // Use this for initialization
     void Start () {
         state.GetState();
         rb = GetComponent<Rigidbody>();
+        audioSource = GetComponent<AudioSource>();
         rb.isKinematic = true;
         rb.useGravity = false;
         landedHeight = transform.position.y;
@@ -68,8 +73,35 @@ public class VelocityControl : MonoBehaviour {
         Vector3 desiredForce = new Vector3(0.0f, gravity * state.Mass, 0.0f);
         rb.AddForce(desiredForce, ForceMode.Acceleration);
         DroneManager.currentFlightState = DroneManager.FlightState.TakingOff;
+        StartCoroutine(PlayTakeOffAudio());
     }
 
+    IEnumerator PlayTakeOffAudio()
+    {
+        audioSource.Stop();
+        audioSource.clip = take_off;
+        audioSource.loop = false;
+        audioSource.Play();
+        float clipLength = take_off.length;
+        float timer = 0f;
+        while (timer < clipLength)
+        {
+            timer += Time.deltaTime;
+            yield return new WaitForEndOfFrame();
+        }
+        audioSource.Stop();
+        audioSource.clip = flying;
+        audioSource.loop = true;
+        audioSource.Play();
+    }
+
+    void PlayLandingAudio()
+    {
+        audioSource.Stop();
+        audioSource.clip = landing;
+        audioSource.loop = false;
+        audioSource.Play();
+    }
     // Update is called once per frame
     private void Update()
     {
@@ -88,10 +120,10 @@ public class VelocityControl : MonoBehaviour {
                 float dis2ground = hit.distance;
                 if (DroneManager.currentFlightState != DroneManager.FlightState.Landing)
                 {
-                    if (dis2ground < 1f)
+                    if (dis2ground < landingHeightThreshold)
                     {
                         DroneManager.currentFlightState = DroneManager.FlightState.Landing;
-
+                        PlayLandingAudio();
                         desired_height = transform.position.y - dis2ground;
                         desired_vx = 0f;
                         desired_vy = 0f;

@@ -38,10 +38,13 @@ public class InputControl : MonoBehaviour {
 				DroneManager.autopilot_stop_flag = true;
             }
 
-			vc.desired_vx = vx;
-			vc.desired_vy = vy;
-			vc.desired_yaw = yaw;
-			vc.desired_height += height_diff;
+			if (DroneManager.currentControlType == DroneManager.ControlType.Manual)
+			{
+				vc.desired_vx = vx;
+				vc.desired_vy = vy;
+				vc.desired_yaw = yaw;
+				vc.desired_height += height_diff;
+			}
 
             if (Input.GetButtonDown("AutoPilot"))
             {
