@@ -167,10 +167,14 @@ public class VelocityControl : MonoBehaviour {
         rb.AddRelativeForce (desiredForce , ForceMode.Acceleration);
 
         //prop transforms
-        propFL.transform.Rotate(Vector3.forward * Time.deltaTime * desiredThrust * speedScale);
-        propFR.transform.Rotate(Vector3.forward * Time.deltaTime * desiredThrust * speedScale);
-        propRR.transform.Rotate(Vector3.forward * Time.deltaTime * desiredThrust * speedScale);
-        propRL.transform.Rotate(Vector3.forward * Time.deltaTime * desiredThrust * speedScale);
+
+        if (DroneManager.currentFlightState != DroneManager.FlightState.Landed)
+        {
+            propFL.transform.Rotate(Vector3.forward * Time.deltaTime * desiredThrust * speedScale);
+            propFR.transform.Rotate(Vector3.forward * Time.deltaTime * desiredThrust * speedScale);
+            propRR.transform.Rotate(Vector3.forward * Time.deltaTime * desiredThrust * speedScale);
+            propRL.transform.Rotate(Vector3.forward * Time.deltaTime * desiredThrust * speedScale);
+        }
 
         //Debug.Log ("Velocity" + state.VelocityVector);
         //Debug.Log ("Desired Velocity" + desiredVelocity);

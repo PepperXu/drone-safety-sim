@@ -15,7 +15,7 @@ public class InputControl : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void FixedUpdate () {
+	void Update () {
 		if (Input.GetButtonDown("TakeOff"))
 		{
 			vc.take_off_flag = true;

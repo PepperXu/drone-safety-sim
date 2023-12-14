@@ -135,8 +135,7 @@ public class DroneManager : MonoBehaviour
             }
             if(!InContingencyBuffer()){
                 currentSystemState = SystemState.Warning;
-                DisengageAutoPilot();
-                currentControlType = ControlType.Manual;
+                autopilot_stop_flag = true;
             }
         }
 
