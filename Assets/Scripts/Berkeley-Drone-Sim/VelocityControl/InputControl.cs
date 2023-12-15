@@ -53,7 +53,7 @@ public class InputControl : MonoBehaviour {
 
             if (Input.GetButtonDown("RTH"))
             {
-				
+				DroneManager.rth_flag = true;
             }
 		}
 	}

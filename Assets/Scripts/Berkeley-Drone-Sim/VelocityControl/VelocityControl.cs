@@ -46,7 +46,6 @@ public class VelocityControl : MonoBehaviour {
     private float landingHeightThreshold = 1f;
 
     private Rigidbody rb;
-    [SerializeField] LayerMask realObstacleLayerMask;
 
     public Vector3 vectorToGround;
 
@@ -115,33 +114,28 @@ public class VelocityControl : MonoBehaviour {
 
         if (DroneManager.currentFlightState == DroneManager.FlightState.Navigating || DroneManager.currentFlightState == DroneManager.FlightState.Hovering || DroneManager.currentFlightState == DroneManager.FlightState.Landing)
         {
-            Ray rayDown = new Ray(transform.position, Vector3.down);
-            RaycastHit hit;
-            if (Physics.Raycast(rayDown, out hit, float.MaxValue, realObstacleLayerMask))
+            float dis2ground = vectorToGround.magnitude;
+            if (DroneManager.currentFlightState != DroneManager.FlightState.Landing)
             {
-                float dis2ground = hit.distance;
-                if (DroneManager.currentFlightState != DroneManager.FlightState.Landing)
+                if (dis2ground < landingHeightThreshold)
                 {
-                    if (dis2ground < landingHeightThreshold)
-                    {
-                        DroneManager.currentFlightState = DroneManager.FlightState.Landing;
-                        PlayLandingAudio();
-                        desired_height = transform.position.y - dis2ground;
-                        desired_vx = 0f;
-                        desired_vy = 0f;
-                        desired_yaw = 0f;
-                    }
-                } else
-                {   
-                    Debug.Log("Landing");
-                    if(dis2ground <= groundOffset)
-                    {
-                        landedHeight = transform.position.y;
-                        desired_height = landedHeight;
-                        DroneManager.currentFlightState = DroneManager.FlightState.Landed;
-                        rb.isKinematic = true;
-                        rb.useGravity = false;
-                    }
+                    DroneManager.currentFlightState = DroneManager.FlightState.Landing;
+                    PlayLandingAudio();
+                    desired_height = transform.position.y - dis2ground;
+                    desired_vx = 0f;
+                    desired_vy = 0f;
+                    desired_yaw = 0f;
+                }
+            } else
+            {   
+                Debug.Log("Landing");
+                if(dis2ground <= groundOffset)
+                {
+                    landedHeight = transform.position.y;
+                    desired_height = landedHeight;
+                    DroneManager.currentFlightState = DroneManager.FlightState.Landed;
+                    rb.isKinematic = true;
+                    rb.useGravity = false;
                 }
             }
         }
@@ -242,5 +236,13 @@ public class VelocityControl : MonoBehaviour {
         wait = true;
         yield return new WaitForSeconds(time);
         wait = false;
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(DroneManager.currentFlightState != DroneManager.FlightState.Landed)
+        {
+            DroneManager.currentSystemState = DroneManager.SystemState.Emergency;
+        }
     }
 }

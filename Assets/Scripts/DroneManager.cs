@@ -66,6 +66,8 @@ public class DroneManager : MonoBehaviour
 
     [SerializeField] LayerMask realObstacleLayerMask;
 
+    [SerializeField] AutopilotManager autopilotManager;
+
 
     // Start is called before the first frame update
     void Start()
@@ -89,11 +91,19 @@ public class DroneManager : MonoBehaviour
             }
         }
 
-        if(currentFlightState == FlightState.Navigating || currentFlightState == FlightState.Hovering){
+        if (currentFlightState == FlightState.Navigating || currentFlightState == FlightState.Hovering) {
             controlVisUpdater.SetControlVisActive(true);
 
             bool inBuffer = false;
             controlVisUpdater.vectorToNearestBufferBound = CheckPositionInContingencyBuffer(out inBuffer);
+
+            if (rth_flag)
+            {
+                EngageAutoPilot(true);
+                currentControlType = ControlType.Autonomous;
+                currentMissionState = MissionState.Returning;
+                rth_flag = false;
+            }
 
             if (currentMissionState == MissionState.MovingToFlightZone)
             {
@@ -108,7 +118,7 @@ public class DroneManager : MonoBehaviour
                 {
                     if (flightPlanning.isPathPlanned())
                     {
-                        EngageAutoPilot();
+                        EngageAutoPilot(false);
                         currentControlType = ControlType.Autonomous;
                     }
                     autopilot_flag = false;
@@ -117,6 +127,9 @@ public class DroneManager : MonoBehaviour
                 {
                     currentSystemState = SystemState.Warning;
                     autopilot_stop_flag = true;
+                } else
+                {
+                    currentSystemState = SystemState.Healthy;
                 }
             }
 
@@ -152,7 +165,8 @@ public class DroneManager : MonoBehaviour
         {
             bool hitGround = false;
             Vector3 vectorToGround = CheckDistToGround(out hitGround);
-
+            vc.vectorToGround = vectorToGround;
+            controlVisUpdater.vectorToGround = vectorToGround;
         }
 
         if(autopilot_stop_flag){
@@ -160,6 +174,7 @@ public class DroneManager : MonoBehaviour
             currentControlType = ControlType.Manual;
             autopilot_stop_flag = false;
         }
+
 
     }
 
@@ -209,7 +224,7 @@ public class DroneManager : MonoBehaviour
                 }
             } else
             {
-                if(Mathf.Abs(localDronePos.x) < 0.5f)
+                if(Mathf.Abs(localDronePos.z) < 0.5f)
                 {
                     return -contingencyBuffer.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * contingencyBuffer.localScale.x;
                 } else
@@ -238,12 +253,12 @@ public class DroneManager : MonoBehaviour
         }
     }
 
-    void EngageAutoPilot(){
-        AutopilotManager.EnableAutopilot(true);
+    void EngageAutoPilot(bool rth){
+        autopilotManager.EnableAutopilot(true, rth);
     }
 
     void DisengageAutoPilot(){
-        AutopilotManager.EnableAutopilot(false);
+        autopilotManager.EnableAutopilot(false);
     }
 
     
