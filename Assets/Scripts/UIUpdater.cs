@@ -15,6 +15,8 @@ public class UIUpdater : MonoBehaviour
     bool continuous = true;
     float currentMonitoringInterval = 1.2f;
     float monitoringTimer = 0f;
+
+    
     // Start is called before the first frame update
     void Start()
     {
@@ -35,6 +37,8 @@ public class UIUpdater : MonoBehaviour
             if (continuous)
             {
                 audioSource.loop = true;
+                if(!audioSource.isPlaying)
+                    audioSource.Play();
             } else
             {
                 audioSource.loop = false;

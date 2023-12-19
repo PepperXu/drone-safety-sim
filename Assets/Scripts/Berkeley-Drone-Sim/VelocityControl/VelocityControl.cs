@@ -240,9 +240,10 @@ public class VelocityControl : MonoBehaviour {
 
     private void OnCollisionEnter(Collision collision)
     {
-        if(DroneManager.currentFlightState != DroneManager.FlightState.Landed)
+        if(DroneManager.currentFlightState == DroneManager.FlightState.Navigating || DroneManager.currentFlightState == DroneManager.FlightState.Hovering)
         {
             DroneManager.currentSystemState = DroneManager.SystemState.Emergency;
+            DroneManager.autopilot_stop_flag = true;
         }
     }
 }

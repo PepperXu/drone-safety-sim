@@ -16,15 +16,20 @@ public class InputControl : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+		
+		if (Input.GetButtonDown("Switch"))
+		{
+			VisType.SwitchVisType();
+		}
+
+		if(DroneManager.currentMissionState == DroneManager.MissionState.Planning)
+			return;
+
 		if (Input.GetButtonDown("TakeOff"))
 		{
 			vc.take_off_flag = true;
 		}
 
-		if (Input.GetButtonDown("Switch"))
-		{
-			VisType.SwitchVisType();
-		}
 
 		if (inputEnabled){
 			

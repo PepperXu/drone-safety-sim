@@ -39,7 +39,7 @@ public class AutopilotManager : MonoBehaviour
                     Vector3 offset = currentHomepoint.position - vc.transform.position;
                     Vector3 offsetXZ = new Vector3(offset.x, 0f, offset.z);
 
-                    if(offsetXZ.magnitude > 0.01f)
+                    if(offsetXZ.magnitude > 0.2f)
                     {
                         Vector3 localDir = vc.transform.InverseTransformDirection(offsetXZ);
                         if (localDir.magnitude > autopilot_speed)
@@ -50,9 +50,13 @@ public class AutopilotManager : MonoBehaviour
                         vc.desired_vy = localDir.x;
                     } else
                     {
-                        if(offset.y > 0.5f)
+                        if(Mathf.Abs(offset.y) > 0.5f)
                         {
-                            vc.desired_height = currentHomepoint.position.y;
+                            if(Mathf.Abs(offset.y) > autopilot_speed){
+                                vc.desired_height = vc.transform.position.y + Mathf.Sign(offset.y) * autopilot_speed;
+                            } else {
+                                vc.desired_height = currentHomepoint.position.y;
+                            }
                         }
                     }
                 }
@@ -77,12 +81,16 @@ public class AutopilotManager : MonoBehaviour
                     else
                     {
                         Vector3 localDir = vc.transform.InverseTransformDirection(offset);
+                        float heightTarget = target.y;
+                        if(Mathf.Abs(offset.y) > autopilot_speed){
+                            heightTarget = autopilot_speed * Mathf.Sign(offset.y) + vc.transform.position.y;
+                        }
                         Vector2 localDirXY = new Vector2(localDir.x, localDir.z);
                         if (localDirXY.magnitude > autopilot_speed)
                         {
                             localDirXY = localDirXY.normalized * autopilot_speed;
                         }
-                        vc.desired_height = target.y;
+                        vc.desired_height = heightTarget;
                         vc.desired_vx = localDirXY.y;
                         vc.desired_vy = localDirXY.x;
                     }

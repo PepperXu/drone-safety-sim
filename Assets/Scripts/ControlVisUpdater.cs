@@ -71,8 +71,12 @@ public class ControlVisUpdater : MonoBehaviour
         if (lr)
         {
             Vector3 hitPoint = transform.position + vectorToNearestBufferBound;
-            lr.SetPosition(1, transform.InverseTransformPoint(hitPoint));
+            Vector3 localHitPos = transform.InverseTransformPoint(hitPoint);
+            localHitPos = new Vector3(localHitPos.x, 0f, localHitPos.z);
+            lr.SetPosition(1, localHitPos);
+            
             lr.transform.GetChild(0).position = hitPoint - vectorToNearestBufferBound.normalized * 0.01f;
+            lr.transform.GetChild(0).localRotation =  Quaternion.LookRotation(localHitPos, Vector3.up);
             lr.transform.GetChild(1).localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
             lr.transform.GetChild(1).GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2bound * 10f) / 10f + " m";
         }

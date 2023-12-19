@@ -15,6 +15,7 @@ public class DroneManager : MonoBehaviour
     }
 
     public enum MissionState{
+        Planning,
         MovingToFlightZone, //When landed, or just take off
         Inspecting, //When in flight zone
         //Transiting,
@@ -54,6 +55,7 @@ public class DroneManager : MonoBehaviour
     private StateFinder.Pose originalPose;
 
     private bool controlActive = false;
+    private bool preInBuffer = false;
 
     public static bool autopilot_flag = false, autopilot_stop_flag = false, rth_flag = false;
 
@@ -75,7 +77,7 @@ public class DroneManager : MonoBehaviour
         state.GetState();
         originalPose = state.pose;
         currentFlightState = FlightState.Landed;
-        currentMissionState = MissionState.MovingToFlightZone;
+        currentMissionState = MissionState.Planning;
         currentControlType = ControlType.Manual;
         VisType.globalVisType = VisType.VisualizationType.MissionOnly;
         controlVisUpdater.SetControlVisActive(false);
@@ -93,6 +95,7 @@ public class DroneManager : MonoBehaviour
 
         if (currentFlightState == FlightState.Navigating || currentFlightState == FlightState.Hovering) {
             controlVisUpdater.SetControlVisActive(true);
+            uiUpdater.enableSound = true;
 
             bool inBuffer = false;
             controlVisUpdater.vectorToNearestBufferBound = CheckPositionInContingencyBuffer(out inBuffer);
@@ -105,14 +108,16 @@ public class DroneManager : MonoBehaviour
                 rth_flag = false;
             }
 
-            if (currentMissionState == MissionState.MovingToFlightZone)
-            {
-                if (inBuffer)
-                {
-                    currentMissionState = MissionState.Inspecting;
-                }
+            if(inBuffer != preInBuffer){
+                if(inBuffer)
+                    OnEnterBuffer();
+                else
+                    OnExitBuffer();
             }
-            else if (currentMissionState == MissionState.Inspecting)
+
+            preInBuffer = inBuffer;
+
+            if (currentMissionState == MissionState.Inspecting)
             {
                 if (autopilot_flag)
                 {
@@ -122,14 +127,6 @@ public class DroneManager : MonoBehaviour
                         currentControlType = ControlType.Autonomous;
                     }
                     autopilot_flag = false;
-                }
-                if (!inBuffer)
-                {
-                    currentSystemState = SystemState.Warning;
-                    autopilot_stop_flag = true;
-                } else
-                {
-                    currentSystemState = SystemState.Healthy;
                 }
             }
 
@@ -156,6 +153,7 @@ public class DroneManager : MonoBehaviour
             }
         } else
         {
+            uiUpdater.enableSound = false;
             ic.EnableControl(false);
             if(currentFlightState == FlightState.Landing)
                 controlVisUpdater.SetControlVisActive(false);
@@ -167,6 +165,10 @@ public class DroneManager : MonoBehaviour
             Vector3 vectorToGround = CheckDistToGround(out hitGround);
             vc.vectorToGround = vectorToGround;
             controlVisUpdater.vectorToGround = vectorToGround;
+        } else {
+            if(currentMissionState == MissionState.Returning){
+                currentMissionState = MissionState.MovingToFlightZone;
+            }
         }
 
         if(autopilot_stop_flag){
@@ -177,6 +179,7 @@ public class DroneManager : MonoBehaviour
 
 
     }
+
 
     void PredictFutureTrajectory(){
         List<Vector3> trajectory = new List<Vector3>();
@@ -235,6 +238,23 @@ public class DroneManager : MonoBehaviour
         } else
         {
             return Vector3.positiveInfinity;
+        }
+    }
+
+    void OnEnterBuffer(){
+        if (currentMissionState == MissionState.MovingToFlightZone){
+            currentMissionState = MissionState.Inspecting;
+            if(currentSystemState != SystemState.Emergency)
+                currentSystemState = SystemState.Healthy;
+        }
+    }
+
+    void OnExitBuffer(){
+        if (currentMissionState == MissionState.Inspecting){
+            if(currentSystemState != SystemState.Emergency)
+                currentSystemState = SystemState.Warning;
+            currentMissionState = MissionState.MovingToFlightZone;
+            autopilot_stop_flag = true;
         }
     }
 

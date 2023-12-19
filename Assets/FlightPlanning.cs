@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit;
 
 [RequireComponent(typeof(BoxCollider))]
@@ -17,7 +18,7 @@ public class FlightPlanning : MonoBehaviour
     [SerializeField] GameObject[] surfaceSelected;
     private XRRayInteractor currentRayInteractor;
     private bool selectingSurface = false;
-    private bool enablePlanning = true;
+    //private bool enablePlanning = true;
 
     private bool pathPlanned = false;
     private float verticalStep = 2.5f;
@@ -25,8 +26,12 @@ public class FlightPlanning : MonoBehaviour
     private float waypointMaxDist = 10f;
 
     private float groundOffset = 15f;
-    
 
+    private bool isFromTop = false;
+    
+    [SerializeField] GameObject planningUI, monitoringUI;
+    [SerializeField] private Transform[] startingPoints;
+    [SerializeField] private Transform camRig, droneRig;
     // Start is called before the first frame update
     void Start()
     {
@@ -37,7 +42,7 @@ public class FlightPlanning : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!enablePlanning)
+        if (DroneManager.currentMissionState != DroneManager.MissionState.Planning)
             return;
 
         if (selectingSurface)
@@ -57,7 +62,7 @@ public class FlightPlanning : MonoBehaviour
 
     public void StartSelectingSurface(HoverEnterEventArgs args)
     {
-        if (!enablePlanning)
+        if (DroneManager.currentMissionState != DroneManager.MissionState.Planning || pathPlanned)
             return;
         selectingSurface = true;
         currentRayInteractor = (XRRayInteractor)args.interactorObject;
@@ -65,7 +70,7 @@ public class FlightPlanning : MonoBehaviour
 
     public void EndSelectingSurface(HoverExitEventArgs args)
     {
-        if (!enablePlanning)
+        if (DroneManager.currentMissionState != DroneManager.MissionState.Planning || pathPlanned)
             return;
         if ((XRRayInteractor)args.interactorObject == currentRayInteractor)
         {
@@ -77,7 +82,7 @@ public class FlightPlanning : MonoBehaviour
 
     public void SelectSurface(ActivateEventArgs args)
     {
-        if (!enablePlanning)
+        if (DroneManager.currentMissionState != DroneManager.MissionState.Planning || pathPlanned)
             return;
         if ((XRRayInteractor)args.interactorObject == currentRayInteractor)
         {
@@ -88,6 +93,8 @@ public class FlightPlanning : MonoBehaviour
                     if (currentHoveringSurfaceIndex != currentSelectedSurfaceIndex)
                     {
                         surfaceSelected[i].SetActive(true);
+                        if(!planningUI.activeInHierarchy)
+                            planningUI.SetActive(true);
                         currentSelectedSurfaceIndex = currentHoveringSurfaceIndex;
                     }else
                     {
@@ -153,7 +160,7 @@ public class FlightPlanning : MonoBehaviour
         if (currentSelectedSurfaceIndex < 0)
             return;
 
-        enablePlanning = false;
+        //DroneManager.currentMissionState = DroneManager.MissionState.MovingToFlightZone;
         Vector3[] currentSurfaceVertices = new Vector3[4];
         for (int t = 0; t < 4; t++)
             currentSurfaceVertices[t] = surfaceVerts[currentSelectedSurfaceIndex, t];
@@ -161,10 +168,10 @@ public class FlightPlanning : MonoBehaviour
         List<Vector3> path = new List<Vector3>();
         bool flipped = false;
         Vector3 surfaceNormal = (surfaceVerts[currentSelectedSurfaceIndex, 0] - surfaceVerts[(currentSelectedSurfaceIndex + 3) % 4, 0]).normalized;
-        for (Vector3 v = currentSurfaceVertices[0]; v.y < currentSurfaceVertices[3].y; v += Vector3.up * verticalStep)
-        {
-            if (v.y > groundOffset)
+        if(isFromTop){
+            for (Vector3 v = currentSurfaceVertices[3]; v.y > groundOffset; v -= Vector3.up * verticalStep)
             {
+
                 if (!flipped)
                 {
                     path.Add(v + surfaceNormal * distToSurface);
@@ -177,20 +184,41 @@ public class FlightPlanning : MonoBehaviour
                 }
                 flipped = !flipped;
             }
+        } else{
+            for (Vector3 v = currentSurfaceVertices[0]; v.y < currentSurfaceVertices[3].y; v += Vector3.up * verticalStep)
+            {
+                if (v.y > groundOffset)
+                {
+                    if (!flipped)
+                    {
+                        path.Add(v + surfaceNormal * distToSurface);
+                        path.Add(v + surfaceNormal * distToSurface + horizontalOffset);
+                    }
+                    else
+                    {
+                        path.Add(v + surfaceNormal * distToSurface + horizontalOffset);
+                        path.Add(v + surfaceNormal * distToSurface);
+                    }
+                    flipped = !flipped;
+                }
+            }
+            if (flipped)
+            {
+                path.Add(currentSurfaceVertices[2] + surfaceNormal * distToSurface);
+                path.Add(currentSurfaceVertices[3] + surfaceNormal * distToSurface);
+            }
+            else
+            {
+                path.Add(currentSurfaceVertices[3] + surfaceNormal * distToSurface);
+                path.Add(currentSurfaceVertices[2] + surfaceNormal * distToSurface);
+            }
         }
-        if (flipped)
-        {
-            path.Add(currentSurfaceVertices[2] + surfaceNormal * distToSurface);
-            path.Add(currentSurfaceVertices[3] + surfaceNormal * distToSurface);
-        }
-        else
-        {
-            path.Add(currentSurfaceVertices[3] + surfaceNormal * distToSurface);
-            path.Add(currentSurfaceVertices[2] + surfaceNormal * distToSurface);
-        }
-
 
         int i = 0;
+
+        foreach(Transform waypoint in pathVisualization.transform){
+            Destroy(waypoint.gameObject);
+        }
 
         while (i < path.Count)
         {
@@ -217,15 +245,25 @@ public class FlightPlanning : MonoBehaviour
             }
             i++;
         }
+
+        flightTrajectory = new Vector3[path.Count];
         flightTrajectory = path.ToArray();
         pathVisualization.positionCount = flightTrajectory.Length;
         pathVisualization.SetPositions(flightTrajectory);
         for (int t = 0; t < surfaceSelected.Length; t++)
         {
             surfaceSelected[t].SetActive(false);
-            currentSelectedSurfaceIndex = -1;
         }
         pathPlanned = true;
+    }
+
+    public void FinishPlanning(){
+        if(pathPlanned){
+            DroneManager.currentMissionState = DroneManager.MissionState.MovingToFlightZone;
+            planningUI.SetActive(false);
+            currentSelectedSurfaceIndex = -1;
+            monitoringUI.SetActive(true);
+        }
     }
 
     private void UpdateBoundsGeometry()
@@ -271,6 +309,100 @@ public class FlightPlanning : MonoBehaviour
         } else {
             out_of_bound = false;
             return flightTrajectory[index];
+        }
+    }
+
+    public void SetVerticalGap(Slider slider){
+        verticalStep = slider.value;
+    }
+
+    public void SetHorizontalGap(Slider slider){
+        waypointMaxDist = slider.value;
+    }
+
+    public void SetDist2Surf(Slider slider){
+        distToSurface = slider.value;
+    }
+
+    public void SetGroundOffset(Slider slider){
+        groundOffset = slider.value;
+    }
+
+    public void SetIsFromTop(Toggle toggle){
+        isFromTop = toggle.isOn; 
+    }
+
+    public void SetStartingPoint(Dropdown dropdown){
+        switch(dropdown.value){
+            case 0:
+                camRig.position = startingPoints[0].position;
+                camRig.rotation = startingPoints[0].rotation;
+                droneRig.position = startingPoints[0].GetChild(0).position;
+                droneRig.rotation = startingPoints[0].GetChild(0).rotation;
+                break;
+            case 1:
+                camRig.position = startingPoints[1].position;
+                camRig.rotation = startingPoints[1].rotation;
+                droneRig.position = startingPoints[1].GetChild(0).position;
+                droneRig.rotation = startingPoints[1].GetChild(0).rotation;
+                break;
+            case 2:
+                camRig.position = startingPoints[2].position;
+                camRig.rotation = startingPoints[2].rotation;
+                droneRig.position = startingPoints[2].GetChild(0).position;
+                droneRig.rotation = startingPoints[2].GetChild(0).rotation;
+                break;
+            case 3:
+                camRig.position = startingPoints[3].position;
+                camRig.rotation = startingPoints[3].rotation;
+                droneRig.position = startingPoints[3].GetChild(0).position;
+                droneRig.rotation = startingPoints[3].GetChild(0).rotation;
+                break;
+            case 4:
+                camRig.position = startingPoints[4].position;
+                camRig.rotation = startingPoints[4].rotation;
+                droneRig.position = startingPoints[4].GetChild(0).position;
+                droneRig.rotation = startingPoints[4].GetChild(0).rotation;
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void SetStartingPoint(int index){
+        switch(index){
+            case 0:
+                camRig.position = startingPoints[0].position;
+                camRig.rotation = startingPoints[0].rotation;
+                droneRig.position = startingPoints[0].GetChild(0).position;
+                droneRig.rotation = startingPoints[0].GetChild(0).rotation;
+                break;
+            case 1:
+                camRig.position = startingPoints[1].position;
+                camRig.rotation = startingPoints[1].rotation;
+                droneRig.position = startingPoints[1].GetChild(0).position;
+                droneRig.rotation = startingPoints[1].GetChild(0).rotation;
+                break;
+            case 2:
+                camRig.position = startingPoints[2].position;
+                camRig.rotation = startingPoints[2].rotation;
+                droneRig.position = startingPoints[2].GetChild(0).position;
+                droneRig.rotation = startingPoints[2].GetChild(0).rotation;
+                break;
+            case 3:
+                camRig.position = startingPoints[3].position;
+                camRig.rotation = startingPoints[3].rotation;
+                droneRig.position = startingPoints[3].GetChild(0).position;
+                droneRig.rotation = startingPoints[3].GetChild(0).rotation;
+                break;
+            case 4:
+                camRig.position = startingPoints[4].position;
+                camRig.rotation = startingPoints[4].rotation;
+                droneRig.position = startingPoints[4].GetChild(0).position;
+                droneRig.rotation = startingPoints[4].GetChild(0).rotation;
+                break;
+            default:
+                break;
         }
     }
 }
