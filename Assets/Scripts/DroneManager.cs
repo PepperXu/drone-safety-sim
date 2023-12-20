@@ -165,6 +165,7 @@ public class DroneManager : MonoBehaviour
             Vector3 vectorToGround = CheckDistToGround(out hitGround);
             vc.vectorToGround = vectorToGround;
             controlVisUpdater.vectorToGround = vectorToGround;
+            uiUpdater.vpsHeight = vectorToGround.magnitude;
         } else {
             if(currentMissionState == MissionState.Returning){
                 currentMissionState = MissionState.MovingToFlightZone;
