@@ -9,27 +9,45 @@ using UnityEngine.XR.Interaction.Toolkit;
 
 public class UIUpdater : MonoBehaviour
 {
-    [SerializeField] TextMeshProUGUI flightState, missionState, controlState;
-    [SerializeField] TextMeshProUGUI distToHome, altitude, horiSpeed, vertSpeed, vps;
-    [SerializeField] TextMeshProUGUI defectCount, progressPercentage;
+    [Header("System and States")]
+    [SerializeField] TextMeshProUGUI flightState, controlState;
     [SerializeField] Image systemState;
+    [SerializeField] Image batteryIcon;
+    [SerializeField] Sprite[] batterySprites;
+    [SerializeField] TextMeshProUGUI batteryPercentage;
+    [SerializeField] TextMeshProUGUI batteryVoltage;
+
+    [Header("Flight Telemetry")]
+    [SerializeField] TextMeshProUGUI distToHome, altitude, horiSpeed, vertSpeed, vps;
+    [SerializeField] Transform northIcon, headingIcon, attitudeIconAnchor;
+
+
+    [Header("Mission States")]
+    [SerializeField] TextMeshProUGUI missionState, defectCount, progressPercentage;
+
+    [Header("Audio")]
     [SerializeField] AudioSource audioSource;
     [SerializeField] AudioClip beep, monitoring_ok, monitoring_warn, monitoring_alert;
     
+    [Header("External Anchors")]
     [SerializeField] StateFinder droneState;
-    
+    [SerializeField] Transform headAnchor, bodyAnchor;
+
+    [Header("General References")]
     [SerializeField] GameObject monitoringUI;
-    [SerializeField] Transform monitoringUIAnchor, originalAnchor;
     [SerializeField] Image movement_enabled, movement_locked;
+    
     private bool attachedToHead = false;
     private bool uiSelected = false;
     private XRRayInteractor currentRayInteractor = null;
+
+    [Header("Public Parameters")]
     public float healthyInterval = 1.2f, warningInterval = 0.8f, emergencyInterval = 0.4f;
     public bool enableSound = false;
-
     public float vpsHeight = 0f;
     public int defectsMarking = 0;
     public float progress = 0f;
+    
     bool continuous = true;
     float currentMonitoringInterval = 1.2f;
     float monitoringTimer = 0f;
@@ -81,6 +99,8 @@ public class UIUpdater : MonoBehaviour
         }
 
         CheckingSystemState();
+
+        UpdateCompassUI();
 
         //if(uiSelected){
         //    XRControllerState state = currentRayInteractor.transform.parent.GetComponent<ActionBasedController>().currentControllerState;
@@ -174,9 +194,9 @@ public class UIUpdater : MonoBehaviour
             uiSelected = false;
             currentRayInteractor = null;
             if(attachedToHead){
-                monitoringUI.transform.parent = monitoringUIAnchor;
+                monitoringUI.transform.parent = headAnchor;
             } else {
-                monitoringUI.transform.parent = originalAnchor;
+                monitoringUI.transform.parent = bodyAnchor;
             }
         }
     }
@@ -196,5 +216,51 @@ public class UIUpdater : MonoBehaviour
         }
     }
 
+    void UpdateCompassUI()
+    {
+        float northAngle = -headAnchor.transform.eulerAngles.y;
+        northAngle = NormalizeAngle(northAngle);
+        northIcon.localEulerAngles = new Vector3(0f, 0f, -northAngle);
+       
+        float relativeHeading = droneState.transform.eulerAngles.y - headAnchor.transform.eulerAngles.y;
+        relativeHeading = NormalizeAngle(relativeHeading);
+        headingIcon.localEulerAngles = new Vector3(0f, 0f, -relativeHeading);
+        Vector3 relativeOffsetLocal = headAnchor.InverseTransformPoint(droneState.transform.position);
+        Vector2 relativeOffset2D = new Vector2(relativeOffsetLocal.x, relativeOffsetLocal.z);
+        if (relativeOffset2D.magnitude <= 35f)
+        {
+            headingIcon.localPosition = relativeOffset2D;
+        }
+        else
+        {
+            float offsetAngle = Mathf.Atan2(relativeOffset2D.x, relativeOffset2D.y);
+            headingIcon.localPosition = new Vector3(35f * Mathf.Sin(offsetAngle), 35f * Mathf.Cos(offsetAngle), 0f);
+        }
+        float pitch = NormalizeAngle(droneState.transform.localEulerAngles.x);
+        float roll = NormalizeAngle(droneState.transform.localEulerAngles.z);
+        if (Mathf.Abs(relativeHeading) < 90f)
+        {
+            attitudeIconAnchor.localPosition = new Vector3(0f, pitch, 0f);
+            attitudeIconAnchor.localEulerAngles = new Vector3(0f, 0f, roll);
+        } else
+        {
+            attitudeIconAnchor.localPosition = new Vector3(0f, -pitch, 0f);
+            attitudeIconAnchor.localEulerAngles = new Vector3(0f, 0f, -roll);
+        }
+    }
+
+    float NormalizeAngle(float originalAngularValue)
+    {
+        float normalizedAngularValue = originalAngularValue;
+        while (normalizedAngularValue >= 180f)
+        {
+            normalizedAngularValue -= 360f;
+        }
+        while (normalizedAngularValue < -180f)
+        {
+            normalizedAngularValue += 360f;
+        }
+        return normalizedAngularValue;
+    }
 
 }

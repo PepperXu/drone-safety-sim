@@ -9,6 +9,10 @@ public class InputControl : MonoBehaviour {
 
 	private float abs_height = 1;
 
+	public float horizontal_sensitivity = 7f;
+	public float vertical_sensitivity = 0.4f;
+	public float turning_sensitivity = 4f;
+
 	// Use this for initialization
 	void Start () {
 		
@@ -32,11 +36,11 @@ public class InputControl : MonoBehaviour {
 
 
 		if (inputEnabled){
-			
-			float vx = Input.GetAxisRaw ("Pitch")*4.0f;
-			float vy = Input.GetAxisRaw ("Roll")*4.0f;
-			float yaw = Input.GetAxisRaw ("Yaw")*2f;
-			float height_diff = Input.GetAxisRaw("Throttle") * 0.1f;
+
+			float vx = Input.GetAxisRaw("Pitch") * horizontal_sensitivity;
+			float vy = Input.GetAxisRaw ("Roll")* horizontal_sensitivity;
+			float yaw = Input.GetAxisRaw ("Yaw")* turning_sensitivity;
+			float height_diff = Input.GetAxisRaw("Throttle") * vertical_sensitivity;
 
 			if (vx > 0.01f || vy > 0.01f || yaw > 0.01f || height_diff > 0.01f)
             {

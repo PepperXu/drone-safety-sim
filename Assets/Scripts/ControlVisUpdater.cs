@@ -108,7 +108,7 @@ public class ControlVisUpdater : MonoBehaviour
 
     void UpdateAttitudeVis()
     {
-        float pitch = droneParent.eulerAngles.x;
+        float pitch = droneParent.localEulerAngles.x;
         while (pitch >= 180f)
         {
             pitch -= 360f;
@@ -117,7 +117,7 @@ public class ControlVisUpdater : MonoBehaviour
         {
             pitch += 360f;
         }
-        float roll = droneParent.eulerAngles.z;
+        float roll = droneParent.localEulerAngles.z;
         while (roll >= 180f)
         {
             roll -= 360f;

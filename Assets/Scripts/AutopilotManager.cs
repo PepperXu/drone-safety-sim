@@ -20,7 +20,7 @@ public class AutopilotManager : MonoBehaviour
     const float waitTime = 0.15f;
     float waitTimer = 0f;
 
-    float autopilot_speed = 4f;
+    float autopilot_max_speed = 6f;
     // Start is called before the first frame update
     void Start()
     {
@@ -42,9 +42,9 @@ public class AutopilotManager : MonoBehaviour
                     if(offsetXZ.magnitude > 0.2f)
                     {
                         Vector3 localDir = vc.transform.InverseTransformDirection(offsetXZ);
-                        if (localDir.magnitude > autopilot_speed)
+                        if (localDir.magnitude > autopilot_max_speed)
                         {
-                            localDir = localDir.normalized * autopilot_speed;
+                            localDir = localDir.normalized * autopilot_max_speed;
                         }
                         vc.desired_vx = localDir.z;
                         vc.desired_vy = localDir.x;
@@ -52,8 +52,9 @@ public class AutopilotManager : MonoBehaviour
                     {
                         if(Mathf.Abs(offset.y) > 0.5f)
                         {
-                            if(Mathf.Abs(offset.y) > autopilot_speed){
-                                vc.desired_height = vc.transform.position.y + Mathf.Sign(offset.y) * autopilot_speed;
+                            if(Mathf.Abs(offset.y) > autopilot_max_speed)
+                            {
+                                vc.desired_height = vc.transform.position.y + Mathf.Sign(offset.y) * autopilot_max_speed;
                             } else {
                                 vc.desired_height = currentHomepoint.position.y;
                             }
@@ -82,13 +83,14 @@ public class AutopilotManager : MonoBehaviour
                     {
                         Vector3 localDir = vc.transform.InverseTransformDirection(offset);
                         float heightTarget = target.y;
-                        if(Mathf.Abs(offset.y) > autopilot_speed){
-                            heightTarget = autopilot_speed * Mathf.Sign(offset.y) + vc.transform.position.y;
+                        if(Mathf.Abs(offset.y) > autopilot_max_speed)
+                        {
+                            heightTarget = autopilot_max_speed * Mathf.Sign(offset.y) + vc.transform.position.y;
                         }
                         Vector2 localDirXY = new Vector2(localDir.x, localDir.z);
-                        if (localDirXY.magnitude > autopilot_speed)
+                        if (localDirXY.magnitude > autopilot_max_speed)
                         {
-                            localDirXY = localDirXY.normalized * autopilot_speed;
+                            localDirXY = localDirXY.normalized * autopilot_max_speed;
                         }
                         vc.desired_height = heightTarget;
                         vc.desired_vx = localDirXY.y;
