@@ -11,16 +11,17 @@ public class AutopilotManager : MonoBehaviour
 
     [SerializeField] FlightPlanning flightPlanning;
     [SerializeField] VelocityControl vc;
+    [SerializeField] UIUpdater uiUpdater;
 
     [SerializeField] Transform[] homePoints;
 
     Transform currentHomepoint;
 
 
-    const float waitTime = 0.15f;
+    const float waitTime = 0.2f;
     float waitTimer = 0f;
 
-    float autopilot_max_speed = 6f;
+    float autopilot_max_speed = 4.0f;
     // Start is called before the first frame update
     void Start()
     {
@@ -68,14 +69,15 @@ public class AutopilotManager : MonoBehaviour
                 Vector3 target = flightPlanning.GetCurrentWaypoint(currentWaypointIndex, out out_of_bound);
                 if (!out_of_bound)
                 {
-                    Debug.LogWarning("Moving to waypoint " + currentWaypointIndex);
+                    //Debug.LogWarning("Moving to waypoint " + currentWaypointIndex);
                     Vector3 offset = target - vc.transform.position;
-                    if (offset.magnitude < 0.01f)
+                    if (offset.magnitude < 0.2f)
                     {
                         waitTimer += Time.deltaTime;
                         if (waitTimer >= waitTime)
                         {
                             currentWaypointIndex++;
+                            uiUpdater.missionProgress = GetMissionProgress();
                             waitTimer = 0f;
                         }
                     }
@@ -128,5 +130,10 @@ public class AutopilotManager : MonoBehaviour
                 currentHomepoint = homepoint;
             }
         }
+    }
+
+    float GetMissionProgress()
+    {
+        return (currentWaypointIndex + 1f) / flightPlanning.GetTotalWaypointCount();
     }
 }

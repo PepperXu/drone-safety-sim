@@ -23,7 +23,8 @@ public class UIUpdater : MonoBehaviour
 
 
     [Header("Mission States")]
-    [SerializeField] TextMeshProUGUI missionState, defectCount, progressPercentage;
+    [SerializeField] TextMeshProUGUI missionState, defectCountUI, progressPercentageUI;
+    [SerializeField] Image cameraBorderUI;
 
     [Header("Audio")]
     [SerializeField] AudioSource audioSource;
@@ -45,12 +46,13 @@ public class UIUpdater : MonoBehaviour
     public float healthyInterval = 1.2f, warningInterval = 0.8f, emergencyInterval = 0.4f;
     public bool enableSound = false;
     public float vpsHeight = 0f;
-    public int defectsMarking = 0;
-    public float progress = 0f;
-    
+    public float missionProgress = 0f;
+
     bool continuous = true;
     float currentMonitoringInterval = 1.2f;
     float monitoringTimer = 0f;
+    int defectCount = 0;
+    //float progressPercentage = 0f;
     string[] flightStateString = {"Landed", "Taking Off", "Hovering", "Navigating", "Landing"};
     string[] missionStateString = {"Planning", "Moving to Flight Zone", "Inspecting", "Returning"};
     string[] systemStateString = {"Healthy", "Warning", "Emergency"};
@@ -76,8 +78,8 @@ public class UIUpdater : MonoBehaviour
         horiSpeed.text = ((int)new Vector3(droneState.pose.WorldVelocity.x, 0f, droneState.pose.WorldVelocity.z).magnitude).ToString();
         vertSpeed.text = ((int)Mathf.Abs(droneState.pose.WorldVelocity.y)).ToString();
         vps.text = ((int)vpsHeight).ToString();
-        defectCount.text = defectsMarking.ToString();
-        progressPercentage.text = (int)(progress*100f) + "%";
+        defectCountUI.text = defectCount.ToString();
+        progressPercentageUI.text = (int)(missionProgress*100f) + "%";
 
         if (enableSound)
         {
@@ -89,8 +91,11 @@ public class UIUpdater : MonoBehaviour
             } else
             {
                 audioSource.loop = false;
-                if(audioSource.clip != beep)
+                if (audioSource.clip != beep)
+                {
                     audioSource.clip = beep;
+                    StartCoroutine(PlayMonitoringSound());
+                }
             }
         } else
         {
@@ -214,6 +219,16 @@ public class UIUpdater : MonoBehaviour
                 movement_locked.gameObject.SetActive(false);
             }
         }
+    }
+
+    public void MarkDefect(ActivateEventArgs args)
+    {
+        if (uiSelected || DroneManager.currentMissionState != DroneManager.MissionState.Inspecting)
+            return;
+
+        defectCount++;
+        Color c = cameraBorderUI.color;
+        cameraBorderUI.color = new Color(c.r, c.g, c.b, 1f);
     }
 
     void UpdateCompassUI()

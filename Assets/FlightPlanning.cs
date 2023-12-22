@@ -312,6 +312,11 @@ public class FlightPlanning : MonoBehaviour
         }
     }
 
+    public int GetTotalWaypointCount()
+    {
+        return flightTrajectory.Length;
+    }
+
     public void SetVerticalGap(Slider slider){
         verticalStep = slider.value;
     }
