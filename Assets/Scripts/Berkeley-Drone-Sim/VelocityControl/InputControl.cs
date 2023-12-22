@@ -9,9 +9,9 @@ public class InputControl : MonoBehaviour {
 
 	private float abs_height = 1;
 
-	public float horizontal_sensitivity = 7f;
-	public float vertical_sensitivity = 0.4f;
-	public float turning_sensitivity = 4f;
+	private float horizontal_sensitivity = 7f;
+	private float vertical_sensitivity = 0.2f;
+	private float turning_sensitivity = 4f;
 
 	// Use this for initialization
 	void Start () {
