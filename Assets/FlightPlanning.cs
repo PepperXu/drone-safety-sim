@@ -4,38 +4,43 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit;
 
-[RequireComponent(typeof(BoxCollider))]
+//[RequireComponent(typeof(BoxCollider))]
 public class FlightPlanning : MonoBehaviour
 {
-    private BoxCollider boxCollider;
+    //private BoxCollider boxCollider;
     private Vector3[] flightTrajectory;
     [SerializeField] LineRenderer pathVisualization;
     [SerializeField] GameObject waypoint;
     private Vector3 boundCenter, boundExtends;
-    private int currentHoveringSurfaceIndex = -1, currentSelectedSurfaceIndex = -1;
+    //private int currentHoveringSurfaceIndex = -1, currentSelectedSurfaceIndex = -1;
     private Vector3[,] surfaceVerts = new Vector3[4,4];
-    [SerializeField] GameObject[] surfaceHighlights;
-    [SerializeField] GameObject[] surfaceSelected;
-    private XRRayInteractor currentRayInteractor;
-    private bool selectingSurface = false;
+    //[SerializeField] GameObject[] surfaceHighlights;
+    //[SerializeField] GameObject[] surfaceSelected;
+    //private XRRayInteractor currentRayInteractor;
+    //private bool selectingSurface = false;
     //private bool enablePlanning = true;
 
     private bool pathPlanned = false;
-    private float verticalStep = 2.5f;
+    private int verticalSteps = 18;
     private float distToSurface = 2.5f;
-    private float waypointMaxDist = 10f;
+    private int horizontalSteps = 7;
 
     private float groundOffset = 15f;
+    private float lrmargin = 1f;
 
     private bool isFromTop = false;
     
     [SerializeField] GameObject planningUI, monitoringUI;
     [SerializeField] private Transform[] startingPoints;
     [SerializeField] private Transform camRig, droneRig;
+
+    private int currentIndex = -1;
+
+    [SerializeField] WorldVisUpdater worldVis;
     // Start is called before the first frame update
     void Start()
     {
-        boxCollider = GetComponent<BoxCollider>();
+        //boxCollider = GetComponent<BoxCollider>();
         UpdateBoundsGeometry();
     }
 
@@ -45,122 +50,123 @@ public class FlightPlanning : MonoBehaviour
         if (DroneManager.currentMissionState != DroneManager.MissionState.Planning)
             return;
 
-        if (selectingSurface)
-        {
-            HighlightSurface();
-        } else
-        {
-            StopHighlightingSurface();
-        }
+        //if (selectingSurface)
+        //{
+        //    HighlightSurface();
+        //} else
+        //{
+        //    StopHighlightingSurface();
+        //}
 
         //for debugging
-        if(Input.GetKeyDown(KeyCode.P)){
-            currentSelectedSurfaceIndex = 0;
-            GenerateFlightTrajectory();
-        }
+        //if(Input.GetKeyDown(KeyCode.P)){
+        //    currentSelectedSurfaceIndex = 0;
+        //    GenerateFlightTrajectory();
+        //}
     }
 
-    public void StartSelectingSurface(HoverEnterEventArgs args)
+    //public void StartSelectingSurface(HoverEnterEventArgs args)
+    //{
+    //    if (DroneManager.currentMissionState != DroneManager.MissionState.Planning || pathPlanned)
+    //        return;
+    //    selectingSurface = true;
+    //    currentRayInteractor = (XRRayInteractor)args.interactorObject;
+    //}
+//
+    //public void EndSelectingSurface(HoverExitEventArgs args)
+    //{
+    //    if (DroneManager.currentMissionState != DroneManager.MissionState.Planning || pathPlanned)
+    //        return;
+    //    if ((XRRayInteractor)args.interactorObject == currentRayInteractor)
+    //    {
+    //        selectingSurface = false;
+    //        currentRayInteractor = null;
+//
+    //    }
+    //}
+
+    //public void SelectSurface()
+    //{
+    //    if (DroneManager.currentMissionState != DroneManager.MissionState.Planning || pathPlanned)
+    //        return;
+    //    if ((XRRayInteractor)args.interactorObject == currentRayInteractor)
+    //    {
+    //        for (int i = 0; i < surfaceSelected.Length; i++)
+    //        {
+    //            if (i == currentHoveringSurfaceIndex)
+    //            {
+    //                if (currentHoveringSurfaceIndex != currentSelectedSurfaceIndex)
+    //                {
+    //                    surfaceSelected[i].SetActive(true);
+    //                    if(!planningUI.activeInHierarchy)
+    //                        planningUI.SetActive(true);
+    //                    currentSelectedSurfaceIndex = currentHoveringSurfaceIndex;
+    //                }else
+    //                {
+    //                    surfaceSelected[i].SetActive(false);
+    //                    currentSelectedSurfaceIndex = -1;
+    //                }
+//
+    //            }
+    //            else
+    //            {
+    //                surfaceSelected[i].SetActive(false);
+    //            }
+    //        }
+    //    }
+    //}
+//
+    //void HighlightSurface()
+    //{
+    //    Vector3 hitPosition, hitNormal;
+    //    currentRayInteractor.TryGetHitInfo(out hitPosition, out hitNormal, out _, out _);
+    //    Vector3 localNormal = transform.InverseTransformDirection(hitNormal).normalized;
+    //    if ((localNormal + Vector3.right).magnitude < 0.02f)
+    //    {
+    //        currentHoveringSurfaceIndex = 0;
+    //    }
+    //    else if ((localNormal + Vector3.forward).magnitude < 0.02f)
+    //    {
+    //        currentHoveringSurfaceIndex = 1;
+    //    }
+    //    else if ((localNormal - Vector3.right).magnitude < 0.02f)
+    //    {
+    //        currentHoveringSurfaceIndex = 2;
+    //    }
+    //    else if ((localNormal - Vector3.forward).magnitude < 0.02f)
+    //    {
+    //        currentHoveringSurfaceIndex = 3;
+    //    } else
+    //    {
+    //        currentHoveringSurfaceIndex = -1;
+    //    }
+    //    for(int i = 0; i < surfaceHighlights.Length; i++)
+    //    {
+    //        if(i == currentHoveringSurfaceIndex)
+    //        {
+    //            surfaceHighlights[i].SetActive(true);
+    //        } else
+    //        {
+    //            surfaceHighlights[i].SetActive(false);
+    //        }
+    //    }
+    //}
+//
+    //public void StopHighlightingSurface()
+    //{
+    //    for (int i = 0; i < surfaceHighlights.Length; i++)
+    //    {
+    //        surfaceHighlights[i].SetActive(false);
+    //    }
+    //}
+//
+    public void GenerateFlightTrajectory(int currentSelectedSurfaceIndex)
     {
-        if (DroneManager.currentMissionState != DroneManager.MissionState.Planning || pathPlanned)
-            return;
-        selectingSurface = true;
-        currentRayInteractor = (XRRayInteractor)args.interactorObject;
-    }
-
-    public void EndSelectingSurface(HoverExitEventArgs args)
-    {
-        if (DroneManager.currentMissionState != DroneManager.MissionState.Planning || pathPlanned)
-            return;
-        if ((XRRayInteractor)args.interactorObject == currentRayInteractor)
-        {
-            selectingSurface = false;
-            currentRayInteractor = null;
-
-        }
-    }
-
-    public void SelectSurface(ActivateEventArgs args)
-    {
-        if (DroneManager.currentMissionState != DroneManager.MissionState.Planning || pathPlanned)
-            return;
-        if ((XRRayInteractor)args.interactorObject == currentRayInteractor)
-        {
-            for (int i = 0; i < surfaceSelected.Length; i++)
-            {
-                if (i == currentHoveringSurfaceIndex)
-                {
-                    if (currentHoveringSurfaceIndex != currentSelectedSurfaceIndex)
-                    {
-                        surfaceSelected[i].SetActive(true);
-                        if(!planningUI.activeInHierarchy)
-                            planningUI.SetActive(true);
-                        currentSelectedSurfaceIndex = currentHoveringSurfaceIndex;
-                    }else
-                    {
-                        surfaceSelected[i].SetActive(false);
-                        currentSelectedSurfaceIndex = -1;
-                    }
-
-                }
-                else
-                {
-                    surfaceSelected[i].SetActive(false);
-                }
-            }
-        }
-    }
-
-    void HighlightSurface()
-    {
-        Vector3 hitPosition, hitNormal;
-        currentRayInteractor.TryGetHitInfo(out hitPosition, out hitNormal, out _, out _);
-        Vector3 localNormal = transform.InverseTransformDirection(hitNormal).normalized;
-        if ((localNormal + Vector3.right).magnitude < 0.02f)
-        {
-            currentHoveringSurfaceIndex = 0;
-        }
-        else if ((localNormal + Vector3.forward).magnitude < 0.02f)
-        {
-            currentHoveringSurfaceIndex = 1;
-        }
-        else if ((localNormal - Vector3.right).magnitude < 0.02f)
-        {
-            currentHoveringSurfaceIndex = 2;
-        }
-        else if ((localNormal - Vector3.forward).magnitude < 0.02f)
-        {
-            currentHoveringSurfaceIndex = 3;
-        } else
-        {
-            currentHoveringSurfaceIndex = -1;
-        }
-        for(int i = 0; i < surfaceHighlights.Length; i++)
-        {
-            if(i == currentHoveringSurfaceIndex)
-            {
-                surfaceHighlights[i].SetActive(true);
-            } else
-            {
-                surfaceHighlights[i].SetActive(false);
-            }
-        }
-    }
-
-    public void StopHighlightingSurface()
-    {
-        for (int i = 0; i < surfaceHighlights.Length; i++)
-        {
-            surfaceHighlights[i].SetActive(false);
-        }
-    }
-
-    public void GenerateFlightTrajectory()
-    {
-        if (currentSelectedSurfaceIndex < 0)
-            return;
+        //if (currentSelectedSurfaceIndex < 0)
+        //    return;
 
         //DroneManager.currentMissionState = DroneManager.MissionState.MovingToFlightZone;
+        currentIndex = currentSelectedSurfaceIndex;
         Vector3[] currentSurfaceVertices = new Vector3[4];
         for (int t = 0; t < 4; t++)
             currentSurfaceVertices[t] = surfaceVerts[currentSelectedSurfaceIndex, t];
@@ -168,81 +174,75 @@ public class FlightPlanning : MonoBehaviour
         List<Vector3> path = new List<Vector3>();
         bool flipped = false;
         Vector3 surfaceNormal = (surfaceVerts[currentSelectedSurfaceIndex, 0] - surfaceVerts[(currentSelectedSurfaceIndex + 3) % 4, 0]).normalized;
+        float vertStepLength = (currentSurfaceVertices[3].y - currentSurfaceVertices[0].y - groundOffset)/verticalSteps;
+        
         if(isFromTop){
-            for (Vector3 v = currentSurfaceVertices[3]; v.y > groundOffset; v -= Vector3.up * verticalStep)
+            Vector3 v = currentSurfaceVertices[3];
+            for (int j = 0; j < verticalSteps + 1; j++)
             {
-
                 if (!flipped)
                 {
-                    path.Add(v + surfaceNormal * distToSurface);
-                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset);
+                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset.normalized * lrmargin);
+                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset - horizontalOffset.normalized * lrmargin);
                 }
                 else
                 {
-                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset);
-                    path.Add(v + surfaceNormal * distToSurface);
+                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset - horizontalOffset.normalized * lrmargin);
+                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset.normalized * lrmargin);
                 }
+                v -= Vector3.up * vertStepLength;
                 flipped = !flipped;
             }
         } else{
-            for (Vector3 v = currentSurfaceVertices[0]; v.y < currentSurfaceVertices[3].y; v += Vector3.up * verticalStep)
+            Vector3 v = currentSurfaceVertices[0] + Vector3.up * groundOffset;
+            for (int j = 0; j < verticalSteps + 1; j++)
             {
-                if (v.y > groundOffset)
+                if (!flipped)
                 {
-                    if (!flipped)
-                    {
-                        path.Add(v + surfaceNormal * distToSurface);
-                        path.Add(v + surfaceNormal * distToSurface + horizontalOffset);
-                    }
-                    else
-                    {
-                        path.Add(v + surfaceNormal * distToSurface + horizontalOffset);
-                        path.Add(v + surfaceNormal * distToSurface);
-                    }
-                    flipped = !flipped;
+                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset.normalized * lrmargin);
+                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset - horizontalOffset.normalized * lrmargin);
                 }
+                else
+                {
+                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset - horizontalOffset.normalized * lrmargin);
+                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset.normalized * lrmargin);
+                }
+                v += Vector3.up * vertStepLength;
+                flipped = !flipped;
             }
-            if (flipped)
-            {
-                path.Add(currentSurfaceVertices[2] + surfaceNormal * distToSurface);
-                path.Add(currentSurfaceVertices[3] + surfaceNormal * distToSurface);
-            }
-            else
-            {
-                path.Add(currentSurfaceVertices[3] + surfaceNormal * distToSurface);
-                path.Add(currentSurfaceVertices[2] + surfaceNormal * distToSurface);
-            }
+            //if (flipped)
+            //{
+            //    path.Add(currentSurfaceVertices[2] + surfaceNormal * distToSurface);
+            //    path.Add(currentSurfaceVertices[3] + surfaceNormal * distToSurface);
+            //}
+            //else
+            //{
+            //    path.Add(currentSurfaceVertices[3] + surfaceNormal * distToSurface);
+            //    path.Add(currentSurfaceVertices[2] + surfaceNormal * distToSurface);
+            //}
         }
 
         int i = 0;
 
-        foreach(Transform waypoint in pathVisualization.transform){
+        Transform wpParent = pathVisualization.transform.GetChild(0);
+
+        foreach(Transform waypoint in wpParent){
             Destroy(waypoint.gameObject);
         }
-
+        float horizontalStepLength = (path[0] - path[1]).magnitude/horizontalSteps;
         while (i < path.Count)
         {
-            GameObject wp = Instantiate(waypoint, pathVisualization.transform) as GameObject;
-            wp.transform.position = path[i];
-
-
-            if (i == path.Count - 1)
-            {
-                break;
+            SpawnWaypoint(path[i], wpParent);
+            Vector3 currentTrajectoryPoint = path[i];
+            Vector3 nextTrajectoryPoint = path[i + 1];
+            Vector3 nextTrajectoryPointDirection = (nextTrajectoryPoint - currentTrajectoryPoint).normalized;
+            for(int j = 0; j < horizontalSteps - 1; j++){
+                currentTrajectoryPoint += nextTrajectoryPointDirection * horizontalStepLength;
+                path.Insert(++i, currentTrajectoryPoint);
+                SpawnWaypoint(currentTrajectoryPoint, wpParent);
             }
-            else
-            {
-                Vector3 currentTrajectoryPoint = path[i];
-                Vector3 nextTrajectoryPoint = path[i + 1];
-                Vector3 nextTrajectoryPointDirection = (nextTrajectoryPoint - currentTrajectoryPoint).normalized;
-                while (Vector3.Distance(currentTrajectoryPoint, nextTrajectoryPoint) > waypointMaxDist)
-                {
-                    currentTrajectoryPoint += nextTrajectoryPointDirection * waypointMaxDist;
-                    path.Insert(++i, currentTrajectoryPoint);
-                    wp = Instantiate(waypoint, pathVisualization.transform) as GameObject;
-                    wp.transform.position = currentTrajectoryPoint;
-                }
-            }
+            i++;
+            SpawnWaypoint(path[i], wpParent);
             i++;
         }
 
@@ -250,19 +250,32 @@ public class FlightPlanning : MonoBehaviour
         flightTrajectory = path.ToArray();
         pathVisualization.positionCount = flightTrajectory.Length;
         pathVisualization.SetPositions(flightTrajectory);
-        for (int t = 0; t < surfaceSelected.Length; t++)
-        {
-            surfaceSelected[t].SetActive(false);
-        }
+        //for (int t = 0; t < surfaceSelected.Length; t++)
+        //{
+        //    surfaceSelected[t].SetActive(false);
+        //}
         pathPlanned = true;
+    }
+
+    public void GenerateFlightTrajectory(){
+        if(currentIndex == -1)
+            return;
+        GenerateFlightTrajectory(currentIndex);
+    }
+
+    private void SpawnWaypoint(Vector3 position, Transform parent){
+        GameObject wp = Instantiate(waypoint, parent);
+        wp.transform.position = position;
+        wp.transform.rotation = currentIndex == 0? transform.rotation*Quaternion.FromToRotation(Vector3.forward, Vector3.right):transform.rotation;
     }
 
     public void FinishPlanning(){
         if(pathPlanned){
             DroneManager.currentMissionState = DroneManager.MissionState.MovingToFlightZone;
             planningUI.SetActive(false);
-            currentSelectedSurfaceIndex = -1;
+            //currentSelectedSurfaceIndex = -1;
             monitoringUI.SetActive(true);
+            worldVis.UpdateWaypontList();
         }
     }
 
@@ -318,11 +331,11 @@ public class FlightPlanning : MonoBehaviour
     }
 
     public void SetVerticalGap(Slider slider){
-        verticalStep = slider.value;
+        verticalSteps = (int)slider.value;
     }
 
     public void SetHorizontalGap(Slider slider){
-        waypointMaxDist = slider.value;
+        horizontalSteps = (int)slider.value;
     }
 
     public void SetDist2Surf(Slider slider){
@@ -337,42 +350,42 @@ public class FlightPlanning : MonoBehaviour
         isFromTop = toggle.isOn; 
     }
 
-    public void SetStartingPoint(Dropdown dropdown){
-        switch(dropdown.value){
-            case 0:
-                camRig.position = startingPoints[0].position;
-                camRig.rotation = startingPoints[0].rotation;
-                droneRig.position = startingPoints[0].GetChild(0).position;
-                droneRig.rotation = startingPoints[0].GetChild(0).rotation;
-                break;
-            case 1:
-                camRig.position = startingPoints[1].position;
-                camRig.rotation = startingPoints[1].rotation;
-                droneRig.position = startingPoints[1].GetChild(0).position;
-                droneRig.rotation = startingPoints[1].GetChild(0).rotation;
-                break;
-            case 2:
-                camRig.position = startingPoints[2].position;
-                camRig.rotation = startingPoints[2].rotation;
-                droneRig.position = startingPoints[2].GetChild(0).position;
-                droneRig.rotation = startingPoints[2].GetChild(0).rotation;
-                break;
-            case 3:
-                camRig.position = startingPoints[3].position;
-                camRig.rotation = startingPoints[3].rotation;
-                droneRig.position = startingPoints[3].GetChild(0).position;
-                droneRig.rotation = startingPoints[3].GetChild(0).rotation;
-                break;
-            case 4:
-                camRig.position = startingPoints[4].position;
-                camRig.rotation = startingPoints[4].rotation;
-                droneRig.position = startingPoints[4].GetChild(0).position;
-                droneRig.rotation = startingPoints[4].GetChild(0).rotation;
-                break;
-            default:
-                break;
-        }
-    }
+    //public void SetStartingPoint(Dropdown dropdown){
+    //    switch(dropdown.value){
+    //        case 0:
+    //            camRig.position = startingPoints[0].position;
+    //            camRig.rotation = startingPoints[0].rotation;
+    //            droneRig.position = startingPoints[0].GetChild(0).position;
+    //            droneRig.rotation = startingPoints[0].GetChild(0).rotation;
+    //            break;
+    //        case 1:
+    //            camRig.position = startingPoints[1].position;
+    //            camRig.rotation = startingPoints[1].rotation;
+    //            droneRig.position = startingPoints[1].GetChild(0).position;
+    //            droneRig.rotation = startingPoints[1].GetChild(0).rotation;
+    //            break;
+    //        case 2:
+    //            camRig.position = startingPoints[2].position;
+    //            camRig.rotation = startingPoints[2].rotation;
+    //            droneRig.position = startingPoints[2].GetChild(0).position;
+    //            droneRig.rotation = startingPoints[2].GetChild(0).rotation;
+    //            break;
+    //        case 3:
+    //            camRig.position = startingPoints[3].position;
+    //            camRig.rotation = startingPoints[3].rotation;
+    //            droneRig.position = startingPoints[3].GetChild(0).position;
+    //            droneRig.rotation = startingPoints[3].GetChild(0).rotation;
+    //            break;
+    //        case 4:
+    //            camRig.position = startingPoints[4].position;
+    //            camRig.rotation = startingPoints[4].rotation;
+    //            droneRig.position = startingPoints[4].GetChild(0).position;
+    //            droneRig.rotation = startingPoints[4].GetChild(0).rotation;
+    //            break;
+    //        default:
+    //            break;
+    //    }
+    //}
 
     public void SetStartingPoint(int index){
         switch(index){
@@ -381,30 +394,35 @@ public class FlightPlanning : MonoBehaviour
                 camRig.rotation = startingPoints[0].rotation;
                 droneRig.position = startingPoints[0].GetChild(0).position;
                 droneRig.rotation = startingPoints[0].GetChild(0).rotation;
+                GenerateFlightTrajectory(0);
                 break;
             case 1:
                 camRig.position = startingPoints[1].position;
                 camRig.rotation = startingPoints[1].rotation;
                 droneRig.position = startingPoints[1].GetChild(0).position;
                 droneRig.rotation = startingPoints[1].GetChild(0).rotation;
+                GenerateFlightTrajectory(0);
                 break;
             case 2:
                 camRig.position = startingPoints[2].position;
                 camRig.rotation = startingPoints[2].rotation;
                 droneRig.position = startingPoints[2].GetChild(0).position;
                 droneRig.rotation = startingPoints[2].GetChild(0).rotation;
+                GenerateFlightTrajectory(0);
                 break;
             case 3:
                 camRig.position = startingPoints[3].position;
                 camRig.rotation = startingPoints[3].rotation;
                 droneRig.position = startingPoints[3].GetChild(0).position;
                 droneRig.rotation = startingPoints[3].GetChild(0).rotation;
+                GenerateFlightTrajectory(1);
                 break;
             case 4:
                 camRig.position = startingPoints[4].position;
                 camRig.rotation = startingPoints[4].rotation;
                 droneRig.position = startingPoints[4].GetChild(0).position;
                 droneRig.rotation = startingPoints[4].GetChild(0).rotation;
+                GenerateFlightTrajectory(1);
                 break;
             default:
                 break;

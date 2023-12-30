@@ -17,8 +17,9 @@ public class DroneManager : MonoBehaviour
     public enum MissionState{
         Planning,
         MovingToFlightZone, //When landed, or just take off
-        Inspecting, //When in flight zone
-        //Transiting,
+        InFlightZone, //When in flight zone
+        Inspecting, //When autopiloting
+        AutopilotInterupted,
         Returning //When path completed or RTH is triggered.
 
     }
@@ -57,7 +58,7 @@ public class DroneManager : MonoBehaviour
     private bool controlActive = false;
     private bool preInBuffer = false;
 
-    public static bool autopilot_flag = false, autopilot_stop_flag = false, rth_flag = false;
+    public static bool autopilot_flag = false, autopilot_stop_flag = false, rth_flag = false, take_photo_flag = false;
 
     [SerializeField] float predictStepLength = 1f;
     [SerializeField] int predictSteps = 3;
@@ -69,6 +70,9 @@ public class DroneManager : MonoBehaviour
     [SerializeField] LayerMask realObstacleLayerMask;
 
     [SerializeField] AutopilotManager autopilotManager;
+    [SerializeField] CameraController camController;
+
+    [SerializeField] Transform buildingCollision;
 
 
     // Start is called before the first frame update
@@ -99,6 +103,12 @@ public class DroneManager : MonoBehaviour
 
             bool inBuffer = false;
             controlVisUpdater.vectorToNearestBufferBound = CheckPositionInContingencyBuffer(out inBuffer);
+            Vector3 v2surf = CheckDistanceToBuildingSurface();
+            controlVisUpdater.vectorToNearestSurface = v2surf;
+            autopilotManager.vectorToBuildingSurface = v2surf;
+            worldVisUpdater.vectorToSurface = v2surf;
+            if(currentMissionState != MissionState.Inspecting && currentMissionState != MissionState.Returning)
+                currentMissionState = inBuffer?MissionState.InFlightZone:MissionState.MovingToFlightZone;
 
             if (rth_flag)
             {
@@ -117,7 +127,7 @@ public class DroneManager : MonoBehaviour
 
             preInBuffer = inBuffer;
 
-            if (currentMissionState == MissionState.Inspecting)
+            if (currentMissionState == MissionState.InFlightZone)
             {
                 if (autopilot_flag)
                 {
@@ -125,8 +135,16 @@ public class DroneManager : MonoBehaviour
                     {
                         EngageAutoPilot(false);
                         currentControlType = ControlType.Autonomous;
+                        currentMissionState = MissionState.Inspecting;
                     }
                     autopilot_flag = false;
+                }
+            } else if(currentMissionState == MissionState.Inspecting){
+                if(take_photo_flag)
+                {
+                    take_photo_flag = false;
+                    camController.TakePhoto();
+                    worldVisUpdater.SpawnCoverageObject();
                 }
             }
 
@@ -242,21 +260,32 @@ public class DroneManager : MonoBehaviour
         }
     }
 
+    Vector3 CheckDistanceToBuildingSurface(){
+        Vector3 localDronePos = buildingCollision.InverseTransformPoint(vc.transform.position);
+        if(Mathf.Abs(localDronePos.y) >= 0.5f)
+            return Vector3.positiveInfinity;
+        
+        if(Mathf.Abs(localDronePos.x) < 0.5f && Mathf.Abs(localDronePos.z) < 0.5f)
+            return Vector3.positiveInfinity;
+
+        if(Mathf.Abs(localDronePos.x) >= 0.5f && Mathf.Abs(localDronePos.z) >= 0.5f)
+            return Vector3.positiveInfinity;
+
+        if(Mathf.Abs(localDronePos.x) < 0.5f)
+            return -buildingCollision.forward * (Mathf.Abs(localDronePos.z) - 0.5f) * Mathf.Sign(localDronePos.z) * buildingCollision.localScale.z;
+        
+        return -buildingCollision.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * buildingCollision.localScale.x; 
+    }
+
     void OnEnterBuffer(){
-        if (currentMissionState == MissionState.MovingToFlightZone){
-            currentMissionState = MissionState.Inspecting;
-            if(currentSystemState != SystemState.Emergency)
-                currentSystemState = SystemState.Healthy;
-        }
+        if(currentSystemState != SystemState.Emergency)
+            currentSystemState = SystemState.Healthy;
     }
 
     void OnExitBuffer(){
-        if (currentMissionState == MissionState.Inspecting){
-            if(currentSystemState != SystemState.Emergency)
-                currentSystemState = SystemState.Warning;
-            currentMissionState = MissionState.MovingToFlightZone;
-            autopilot_stop_flag = true;
-        }
+        if(currentSystemState != SystemState.Emergency)
+            currentSystemState = SystemState.Warning;
+        autopilot_stop_flag = true;
     }
 
     Vector3 CheckDistToGround(out bool hitGround)

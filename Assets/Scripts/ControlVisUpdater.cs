@@ -9,9 +9,11 @@ public class ControlVisUpdater : MonoBehaviour
     private bool visActive = false;
     [SerializeField] private VisType dis2groundVis;
     [SerializeField] private VisType dis2boundVis;
+    [SerializeField] private VisType dis2SurfaceVis;
     [SerializeField] private VisType futureTrajectory;
     [SerializeField] private VisType attitude;
     [SerializeField] private Image cwise_Pitch_f, cwise_Pitch_b, acwise_Pitch_f, acwise_Pitch_b, cwise_Roll_l, cwise_Roll_r, acwise_Roll_l, acwise_Roll_r;
+    [SerializeField] private VisType camFrustum;
 
     [SerializeField] private LayerMask realObstacleLayerMask;
 
@@ -21,7 +23,7 @@ public class ControlVisUpdater : MonoBehaviour
 
     public Vector3[] predictedPoints;
 
-    public Vector3 vectorToNearestBufferBound, vectorToGround;
+    public Vector3 vectorToNearestBufferBound, vectorToGround, vectorToNearestSurface;
 
 
     void Update(){
@@ -34,14 +36,18 @@ public class ControlVisUpdater : MonoBehaviour
             attitude.showVisualization = true;
             UpdateDistance2Ground();
             UpdateDistance2Bound();
+            UpdateDistance2Surface();
             UpdateFutureTrajectory();
             UpdateAttitudeVis();
+            UpdateCameraFrustum();
         } else
         {
             dis2groundVis.showVisualization = false;
             futureTrajectory.showVisualization = false;
             attitude.showVisualization = false;
             dis2boundVis.showVisualization = false;
+            dis2SurfaceVis.showVisualization = false;
+            camFrustum.showVisualization = false;
         }
     }
 
@@ -81,6 +87,31 @@ public class ControlVisUpdater : MonoBehaviour
             lr.transform.GetChild(1).GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2bound * 10f) / 10f + " m";
         }
     }
+
+    void UpdateDistance2Surface()
+    {
+        float dis2surf = vectorToNearestSurface.magnitude;
+        if (dis2surf > 10f)
+        {
+            dis2SurfaceVis.showVisualization = false;
+            return;
+        }
+        dis2SurfaceVis.showVisualization = true;
+        LineRenderer lr = dis2SurfaceVis.transform.GetComponentInChildren<LineRenderer>();
+        if (lr)
+        {
+            Vector3 hitPoint = transform.position + vectorToNearestSurface;
+            Vector3 localHitPos = transform.InverseTransformPoint(hitPoint);
+            localHitPos = new Vector3(localHitPos.x, 0f, localHitPos.z);
+            lr.SetPosition(1, localHitPos);
+            
+            lr.transform.GetChild(0).position = hitPoint - vectorToNearestSurface.normalized * 0.01f;
+            lr.transform.GetChild(0).localRotation =  Quaternion.LookRotation(localHitPos, Vector3.up);
+            lr.transform.GetChild(1).localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
+            lr.transform.GetChild(1).GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2surf * 10f) / 10f + " m";
+        }
+    }
+
 
     public void SetControlVisActive(bool active)
     {
@@ -154,5 +185,20 @@ public class ControlVisUpdater : MonoBehaviour
             acwise_Roll_r.fillAmount = roll / 180f;
         }
 
+    }
+
+    void UpdateCameraFrustum(){
+        if(DroneManager.currentMissionState != DroneManager.MissionState.Inspecting){
+            camFrustum.showVisualization = false;
+            return;
+        } 
+        camFrustum.showVisualization = true;
+
+        float dis2surf = vectorToNearestSurface.magnitude;
+
+        if(dis2surf > 10f)
+        return;
+
+        camFrustum.transform.GetChild(0).GetChild(0).localScale = Vector3.one * dis2surf;
     }
 }

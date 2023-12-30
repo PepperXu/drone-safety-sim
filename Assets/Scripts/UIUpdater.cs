@@ -27,8 +27,8 @@ public class UIUpdater : MonoBehaviour
     [SerializeField] Image cameraBorderUI;
 
     [Header("Audio")]
-    [SerializeField] AudioSource audioSource;
-    [SerializeField] AudioClip beep, monitoring_ok, monitoring_warn, monitoring_alert;
+    [SerializeField] AudioSource audioSource, secondaryAudioSource;
+    [SerializeField] AudioClip beep, monitoring_ok, monitoring_warn, monitoring_alert, camCapture;
     
     [Header("External Anchors")]
     [SerializeField] StateFinder droneState;
@@ -54,7 +54,7 @@ public class UIUpdater : MonoBehaviour
     int defectCount = 0;
     //float progressPercentage = 0f;
     string[] flightStateString = {"Landed", "Taking Off", "Hovering", "Navigating", "Landing"};
-    string[] missionStateString = {"Planning", "Moving to Flight Zone", "Inspecting", "Returning"};
+    string[] missionStateString = {"Planning", "Moving to Flight Zone", "In Flight Zone", "Inspecting", "Interrupted", "Returning"};
     string[] systemStateString = {"Healthy", "Warning", "Emergency"};
     string[] controlStateString = {"Auto", "Manual"};
 
@@ -229,6 +229,8 @@ public class UIUpdater : MonoBehaviour
         defectCount++;
         Color c = cameraBorderUI.color;
         cameraBorderUI.color = new Color(c.r, c.g, c.b, 1f);
+        DroneManager.take_photo_flag = true;
+        secondaryAudioSource.PlayOneShot(camCapture);
     }
 
     void UpdateCompassUI()

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit.Utilities.Tweenables.Primitives;
 
 public class AutopilotManager : MonoBehaviour
 {
@@ -12,16 +13,22 @@ public class AutopilotManager : MonoBehaviour
     [SerializeField] FlightPlanning flightPlanning;
     [SerializeField] VelocityControl vc;
     [SerializeField] UIUpdater uiUpdater;
+    [SerializeField] WorldVisUpdater wordVis;
 
     [SerializeField] Transform[] homePoints;
 
     Transform currentHomepoint;
+    float ground_offset = 0.2f;
 
 
-    const float waitTime = 0.2f;
+    const float waitTime = 0.5f;
     float waitTimer = 0f;
 
-    float autopilot_max_speed = 4.0f;
+    float autopilot_max_speed = 3.0f;
+    float autopilot_slowing_start_dist = 5.0f;
+    public Vector3 vectorToBuildingSurface;
+
+    bool photoTaken = false;
     // Start is called before the first frame update
     void Start()
     {
@@ -37,15 +44,17 @@ public class AutopilotManager : MonoBehaviour
             {
                 if(DroneManager.currentFlightState == DroneManager.FlightState.Navigating || DroneManager.currentFlightState == DroneManager.FlightState.Hovering)
                 {
-                    Vector3 offset = currentHomepoint.position - vc.transform.position;
+                    Vector3 offset = currentHomepoint.position - vc.transform.position + Vector3.up * ground_offset;
                     Vector3 offsetXZ = new Vector3(offset.x, 0f, offset.z);
 
-                    if(offsetXZ.magnitude > 0.2f)
+                    if(offsetXZ.magnitude > 0.5f)
                     {
                         Vector3 localDir = vc.transform.InverseTransformDirection(offsetXZ);
-                        if (localDir.magnitude > autopilot_max_speed)
+                        if (localDir.magnitude > autopilot_slowing_start_dist)
                         {
                             localDir = localDir.normalized * autopilot_max_speed;
+                        } else {
+                            localDir = localDir.normalized * localDir.magnitude/autopilot_slowing_start_dist*autopilot_max_speed;
                         }
                         vc.desired_vx = localDir.z;
                         vc.desired_vy = localDir.x;
@@ -53,11 +62,11 @@ public class AutopilotManager : MonoBehaviour
                     {
                         if(Mathf.Abs(offset.y) > 0.5f)
                         {
-                            if(Mathf.Abs(offset.y) > autopilot_max_speed)
+                            if(Mathf.Abs(offset.y) > autopilot_slowing_start_dist)
                             {
                                 vc.desired_height = vc.transform.position.y + Mathf.Sign(offset.y) * autopilot_max_speed;
                             } else {
-                                vc.desired_height = currentHomepoint.position.y;
+                                vc.desired_height = vc.transform.position.y + Mathf.Sign(offset.y) * autopilot_max_speed * (Mathf.Abs(offset.y)/autopilot_slowing_start_dist) ;
                             }
                         }
                     }
@@ -71,32 +80,60 @@ public class AutopilotManager : MonoBehaviour
                 {
                     //Debug.LogWarning("Moving to waypoint " + currentWaypointIndex);
                     Vector3 offset = target - vc.transform.position;
-                    if (offset.magnitude < 0.2f)
+                    if (offset.magnitude < 0.5f)
                     {
                         waitTimer += Time.deltaTime;
+                        if(waitTimer >= waitTime/2f & !photoTaken){
+                            DroneManager.take_photo_flag = true;
+                            photoTaken = true;
+                        }
                         if (waitTimer >= waitTime)
                         {
                             currentWaypointIndex++;
                             uiUpdater.missionProgress = GetMissionProgress();
+                            wordVis.currentWaypointIndex = this.currentWaypointIndex;
                             waitTimer = 0f;
+                            photoTaken = false;
                         }
                     }
                     else
                     {
                         Vector3 localDir = vc.transform.InverseTransformDirection(offset);
                         float heightTarget = target.y;
-                        if(Mathf.Abs(offset.y) > autopilot_max_speed)
+                        if(Mathf.Abs(offset.y) > autopilot_slowing_start_dist)
                         {
                             heightTarget = autopilot_max_speed * Mathf.Sign(offset.y) + vc.transform.position.y;
+                        } else {
+                            heightTarget = autopilot_max_speed * (Mathf.Abs(offset.y)/autopilot_slowing_start_dist) * Mathf.Sign(offset.y) + vc.transform.position.y;
                         }
                         Vector2 localDirXY = new Vector2(localDir.x, localDir.z);
-                        if (localDirXY.magnitude > autopilot_max_speed)
+                        if (localDirXY.magnitude > autopilot_slowing_start_dist)
                         {
                             localDirXY = localDirXY.normalized * autopilot_max_speed;
+                        } else {
+                            localDirXY = localDirXY.normalized * localDirXY.magnitude/autopilot_slowing_start_dist*autopilot_max_speed;
                         }
                         vc.desired_height = heightTarget;
                         vc.desired_vx = localDirXY.y;
                         vc.desired_vy = localDirXY.x;
+                        if(vectorToBuildingSurface.magnitude < 10f){
+                            Vector3 localVector = vc.transform.InverseTransformDirection(vectorToBuildingSurface).normalized;
+                            Vector2 localVectorXY = new Vector2(localVector.x, localVector.z);
+                            float angleOffset = Vector2.SignedAngle(-Vector2.up, localVectorXY);
+                            while(angleOffset > 180f){
+                                angleOffset -= 360f;
+                            }
+                            while(angleOffset <= -180f){
+                                angleOffset += 360f;
+                            }
+                            if(angleOffset > 5f){
+                                angleOffset = 5f;
+                            }
+                            if(angleOffset < -5f){
+                                angleOffset = -5f;
+                            }
+                            vc.desired_yaw = angleOffset;
+                        }
                     }
                 }
             }
@@ -105,6 +142,7 @@ public class AutopilotManager : MonoBehaviour
 
     public void EnableAutopilot(bool enable){
         isAutopiloting = enable;
+        wordVis.currentWaypointIndex = this.currentWaypointIndex;
         isRTH = false;
     }
 
@@ -115,6 +153,8 @@ public class AutopilotManager : MonoBehaviour
         if (rth)
         {
             SetCurrentHomepoint();
+        } else {
+            wordVis.currentWaypointIndex = this.currentWaypointIndex;
         }
     }
 

@@ -42,9 +42,10 @@ public class InputControl : MonoBehaviour {
 			float yaw = Input.GetAxisRaw ("Yaw")* turning_sensitivity;
 			float height_diff = Input.GetAxisRaw("Throttle") * vertical_sensitivity;
 
-			if (vx > 0.01f || vy > 0.01f || yaw > 0.01f || height_diff > 0.01f)
+			if (Input.GetAxis("Pitch") > 0.1f || Input.GetAxis("Roll") > 0.1f || Input.GetAxis("Yaw") > 0.1f || Input.GetAxis("Throttle") > 0.1f)
             {
 				DroneManager.autopilot_stop_flag = true;
+				DroneManager.currentMissionState = DroneManager.MissionState.AutopilotInterupted;
             }
 
 			if (DroneManager.currentControlType == DroneManager.ControlType.Manual)
