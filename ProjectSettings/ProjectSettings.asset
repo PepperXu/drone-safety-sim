@@ -138,10 +138,8 @@ PlayerSettings:
   loadStoreDebugModeEnabled: 0
   bundleVersion: 1.0
   preloadedAssets:
-  - {fileID: 11400000, guid: 7e30092ae79961e4f83247431f31f28b, type: 2}
-  - {fileID: 11400000, guid: b8a1093d52464f34789d20ea28785043, type: 2}
-  - {fileID: -2485487239325910018, guid: 73f5509e344ca0f40b70e2dfee3a420f, type: 2}
-  - {fileID: 9019291694148519118, guid: 9f3dabd38f8a3894eb29f7e2062cae69, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -252,7 +250,7 @@ PlayerSettings:
   clonedFromGUID: 00000000000000000000000000000000
   templatePackageId: 
   templateDefaultScene: 
-  useCustomMainManifest: 0
+  useCustomMainManifest: 1
   useCustomLauncherManifest: 0
   useCustomMainGradleTemplate: 0
   useCustomLauncherGradleManifest: 0

@@ -1,0 +1,115 @@
+using System;
+using System.Collections; 
+using System.Collections.Generic; 
+using System.Net; 
+using System.Net.Sockets; 
+using System.Text; 
+using System.Threading; 
+using UnityEngine;  
+
+public class ExperimentServer : MonoBehaviour
+{
+	#region private members 	
+	/// <summary> 	
+	/// TCPListener to listen for incomming TCP connection 	
+	/// requests. 	
+	/// </summary> 	
+	private TcpListener tcpListener; 
+	/// <summary> 
+	/// Background thread for TcpServer workload. 	
+	/// </summary> 	
+	private Thread tcpListenerThread;  	
+	/// <summary> 	
+	/// Create handle to connected tcp client. 	
+	/// </summary> 	
+	private TcpClient connectedTcpClient; 	
+	#endregion 
+    [SerializeField] private FlightPlanning flightPlanning;
+    // Start is called before the first frame update
+    void Start()
+    {
+		tcpListenerThread = new Thread (new ThreadStart(ListenForIncommingRequests)); 		
+		tcpListenerThread.IsBackground = true; 		
+		tcpListenerThread.Start(); 	       
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if(DroneManager.currentMissionState != DroneManager.MissionState.Planning)
+            return;
+
+        if(!flightPlanning.isPathPlanned()){
+            flightPlanning.SetStartingPoint(4);
+        }
+
+        if(Input.GetKeyDown(KeyCode.Alpha1)){
+            flightPlanning.SetStartingPoint(1);
+        }
+        if(Input.GetKeyDown(KeyCode.Alpha2)){
+            flightPlanning.SetStartingPoint(2);
+        }
+        if(Input.GetKeyDown(KeyCode.Alpha3)){
+            flightPlanning.SetStartingPoint(3);
+        }
+        if(Input.GetKeyDown(KeyCode.Alpha4)){
+            flightPlanning.SetStartingPoint(4);
+        }
+        if(Input.GetKeyDown(KeyCode.Alpha0)){
+            flightPlanning.SetStartingPoint(0);
+        }
+    }
+
+    private void ListenForIncommingRequests () { 		
+		try { 			
+			// Create listener on localhost port 8052. 			
+			tcpListener = new TcpListener(IPAddress.Any, 8052);
+			tcpListener.Start();              
+			DebugText.Instance.SetText("Server is listening");              
+			Byte[] bytes = new Byte[1024];  			
+			while (true) { 				
+				using (connectedTcpClient = tcpListener.AcceptTcpClient()) { 					
+					// Get a stream object for reading 					
+					using (NetworkStream stream = connectedTcpClient.GetStream()) { 						
+						int length; 						
+						// Read incomming stream into byte arrary. 						
+						while ((length = stream.Read(bytes, 0, bytes.Length)) != 0) { 							
+							var incommingData = new byte[length]; 							
+							Array.Copy(bytes, 0, incommingData, 0, length);  							
+							// Convert byte array to string message. 							
+							string clientMessage = Encoding.ASCII.GetString(incommingData); 							
+							DebugText.Instance.SetText("client message received as: " + clientMessage); 						
+						} 					
+					} 				
+				} 			
+			} 		
+		} 		
+		catch (SocketException socketException) { 			
+			DebugText.Instance.SetText("SocketException " + socketException.ToString()); 		
+		}     
+	}  	
+	/// <summary> 	
+	/// Send message to client using socket connection. 	
+	/// </summary> 	
+	public new void SendMessage(string msg) { 		
+		if (connectedTcpClient == null) {             
+			return;         
+		}  		
+		
+		try { 			
+			// Get a stream object for writing. 			
+			NetworkStream stream = connectedTcpClient.GetStream(); 			
+			if (stream.CanWrite) {                 
+				//string serverMessage = "This is a message from your server."; 			
+				// Convert string message to byte array.                 
+				byte[] serverMessageAsByteArray = Encoding.ASCII.GetBytes(msg); 				
+				// Write byte array to socketConnection stream.               
+				stream.Write(serverMessageAsByteArray, 0, serverMessageAsByteArray.Length);               
+				DebugText.Instance.SetText("Server sent his message - should be received by client");           
+			}       
+		} 		
+		catch (SocketException socketException) {             
+			DebugText.Instance.SetText("Socket exception: " + socketException);         
+		} 	
+	}
+}

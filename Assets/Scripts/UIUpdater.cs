@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
-using UnityEditorInternal;
 using UnityEngine.XR.Interaction.Toolkit;
 
 public class UIUpdater : MonoBehaviour
