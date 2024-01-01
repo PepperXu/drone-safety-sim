@@ -67,7 +67,7 @@ public class ExperimentServer : MonoBehaviour
 			// Create listener on localhost port 8052. 			
 			tcpListener = new TcpListener(IPAddress.Any, 8052);
 			tcpListener.Start();              
-			DebugText.Instance.SetText("Server is listening");              
+			Debug.Log("Server is listening");              
 			Byte[] bytes = new Byte[1024];  			
 			while (true) { 				
 				using (connectedTcpClient = tcpListener.AcceptTcpClient()) { 					
@@ -81,14 +81,14 @@ public class ExperimentServer : MonoBehaviour
 							// Convert byte array to string message. 							
 							string clientMessage = Encoding.ASCII.GetString(incommingData);
 							ProcessClientMessage(clientMessage);
-							DebugText.Instance.SetText("client message received as: " + clientMessage); 						
+							Debug.Log("client message received as: " + clientMessage); 						
 						} 					
 					} 				
 				} 			
 			} 		
 		} 		
 		catch (SocketException socketException) { 			
-			DebugText.Instance.SetText("SocketException " + socketException.ToString()); 		
+			Debug.Log("SocketException " + socketException.ToString()); 		
 		}     
 	}
 
@@ -101,7 +101,7 @@ public class ExperimentServer : MonoBehaviour
 				flightPlanning.SetStartingPoint(int.Parse(splitMsg[1]));
 				break;
 			default:
-				DebugText.Instance.SetText("Undefined Command: " + msg);
+				Debug.Log("Undefined Command: " + msg);
 				break;
 		}
 	}
@@ -109,9 +109,6 @@ public class ExperimentServer : MonoBehaviour
 	/// Send message to client using socket connection. 	
 	/// </summary> 	
 	private new void SendMessage(string msg) { 		
-		if (connectedTcpClient == null) {             
-			return;         
-		}
 		try { 			
 			// Get a stream object for writing. 			
 			NetworkStream stream = connectedTcpClient.GetStream(); 			
@@ -121,11 +118,11 @@ public class ExperimentServer : MonoBehaviour
 				byte[] serverMessageAsByteArray = Encoding.ASCII.GetBytes(msg); 				
 				// Write byte array to socketConnection stream.               
 				stream.Write(serverMessageAsByteArray, 0, serverMessageAsByteArray.Length);               
-				DebugText.Instance.SetText("Server sent his message - should be received by client");           
+				Debug.Log("Server sent his message - should be received by client");           
 			}       
 		} 		
 		catch (SocketException socketException) {             
-			DebugText.Instance.SetText("Socket exception: " + socketException);         
+			Debug.Log("Socket exception: " + socketException);         
 		} 	
 	}
 

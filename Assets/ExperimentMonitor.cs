@@ -32,7 +32,10 @@ public class ExperimentMonitor : MonoBehaviour
 	/// <summary> 	
 	/// Setup socket connection. 	
 	/// </summary> 	
-	public void ConnectToTcpServer () { 		
+	public void ConnectToTcpServer () { 
+		if(clientReceiveThread != null){
+			clientReceiveThread.Abort();
+		}		
 		try {  			
 			clientReceiveThread = new Thread (new ThreadStart(ListenForData)); 			
 			clientReceiveThread.IsBackground = true; 			
