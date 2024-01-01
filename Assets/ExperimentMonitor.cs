@@ -17,7 +17,7 @@ public class ExperimentMonitor : MonoBehaviour
     string serverIp = "127.0.0.1";
 	[SerializeField] private TextMeshProUGUI flightStateText, missionStateText, controlTypeText, systemStateText;
 	[SerializeField] private TMP_InputField ipInputField;
-	string serverMessage;
+	string serverMessage = "";
 	// Use this for initialization 	
 	private void Awake() {
 		serverIp = PlayerPrefs.GetString("server-ip");

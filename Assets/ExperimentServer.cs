@@ -26,7 +26,7 @@ public class ExperimentServer : MonoBehaviour
 	#endregion 
     [SerializeField] private FlightPlanning flightPlanning;
 	[SerializeField] private UIUpdater uIUpdater;
-	private string clientMessage;
+	private string clientMessage = "";
     // Start is called before the first frame update
     void Start()
     {
