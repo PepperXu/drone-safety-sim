@@ -113,23 +113,27 @@ public class ExperimentServer : MonoBehaviour
 	/// Send message to client using socket connection. 	
 	/// </summary> 	
 	private new void SendMessage(string msg) { 		
-		if(connectedTcpClient == null)
-			return;
-		try { 			
+
+		try {
+			if(connectedTcpClient != null){
 			// Get a stream object for writing. 			
-			NetworkStream stream = connectedTcpClient.GetStream(); 			
-			if (stream.CanWrite) {                 
-				//string serverMessage = "This is a message from your server."; 			
-				// Convert string message to byte array.                 
-				byte[] serverMessageAsByteArray = Encoding.ASCII.GetBytes(msg); 				
-				// Write byte array to socketConnection stream.               
-				stream.Write(serverMessageAsByteArray, 0, serverMessageAsByteArray.Length);               
-				Debug.Log("Server sent his message - should be received by client");           
-			}       
+				NetworkStream stream = connectedTcpClient.GetStream(); 			
+				if (stream.CanWrite) {                 
+					//string serverMessage = "This is a message from your server."; 			
+					// Convert string message to byte array.                 
+					byte[] serverMessageAsByteArray = Encoding.ASCII.GetBytes(msg); 				
+					// Write byte array to socketConnection stream.               
+					stream.Write(serverMessageAsByteArray, 0, serverMessageAsByteArray.Length);               
+					Debug.Log("Server sent his message - should be received by client");           
+				}  
+			}     
 		} 		
 		catch (SocketException socketException) {             
 			Debug.Log("Socket exception: " + socketException);         
-		} 	
+		}
+		catch(ObjectDisposedException e){
+			Debug.Log("Object Disposed Exception: " + e);   
+		}
 	}
 
 	private void SendCurrentState(){
