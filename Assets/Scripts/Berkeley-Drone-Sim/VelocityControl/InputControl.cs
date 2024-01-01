@@ -20,10 +20,13 @@ public class InputControl : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		
-		if (Input.GetButtonDown("Switch"))
-		{
-			VisType.SwitchVisType();
+		if(ExperimentServer.currentVisCondition == ExperimentServer.VisualizationCondition.Manual){
+			if (Input.GetButtonDown("Switch"))
+			{
+				VisType.SwitchVisType();
+			}
+		} else if(ExperimentServer.currentVisCondition == ExperimentServer.VisualizationCondition.ManualProcedual){
+			
 		}
 
 		if(DroneManager.currentMissionState == DroneManager.MissionState.Planning)

@@ -6,6 +6,8 @@ public class WorldUIScaler : MonoBehaviour
 {
     [SerializeField] private float scaleDistRatio = 0.02f;
     [SerializeField] Transform mainCamera;
+    [SerializeField] bool Clamp;
+    [SerializeField] float baseScale = 1f;
     // Start is called before the first frame update
     void Start()
     {
@@ -17,6 +19,6 @@ public class WorldUIScaler : MonoBehaviour
     {
         float distance = (mainCamera.position - transform.position).magnitude;
         float currentScale = scaleDistRatio * distance;
-        transform.localScale = Vector3.one * currentScale;
+        transform.localScale = Vector3.one * (Clamp?Mathf.Max(baseScale, currentScale):currentScale);
     }
 }

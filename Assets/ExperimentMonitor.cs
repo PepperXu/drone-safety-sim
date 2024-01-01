@@ -15,8 +15,10 @@ public class ExperimentMonitor : MonoBehaviour
 	#endregion  	
 
     string serverIp = "127.0.0.1";
-	[SerializeField] private TextMeshProUGUI flightStateText, missionStateText, controlTypeText, systemStateText;
+	[SerializeField] private TextMeshProUGUI flightStateText, missionStateText, controlTypeText, systemStateText, visCondiText;
 	[SerializeField] private TMP_InputField ipInputField;
+	[SerializeField] private Transform wind;
+	private float defaultWindSpeed;
 	string serverMessage = "";
 	// Use this for initialization 	
 	private void Awake() {
@@ -86,6 +88,7 @@ public class ExperimentMonitor : MonoBehaviour
 				missionStateText.SetText(splitMsg[2]);
 				controlTypeText.SetText(splitMsg[3]);
 				systemStateText.SetText(splitMsg[4]);
+				visCondiText.SetText(splitMsg[5]);
 				break;
 			default:
 				Debug.Log("Undefined Header: " + serverMessage);
@@ -119,6 +122,10 @@ public class ExperimentMonitor : MonoBehaviour
 
 	public void SetStartingPoint(int i){
 		SendMessage("starting-point;" + i);
+	}
+
+	public void SetVisCondition(int i){
+		SendMessage("vis-condition;" + i);
 	}
 
 	public void SetServerIp(){

@@ -38,7 +38,7 @@ public class AutopilotManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Debug.LogWarning("AUTOPILOT: " + isAutopiloting);
+        //Debug.LogWarning("AUTOPILOT: " + isAutopiloting);
         if(isAutopiloting){
             if (isRTH)
             {

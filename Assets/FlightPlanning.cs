@@ -59,10 +59,11 @@ public class FlightPlanning : MonoBehaviour
         //}
 
         //for debugging
-        //if(Input.GetKeyDown(KeyCode.P)){
-        //    currentSelectedSurfaceIndex = 0;
-        //    GenerateFlightTrajectory();
-        //}
+        if(Input.GetKeyDown(KeyCode.P)){
+            //currentSelectedSurfaceIndex = 0;
+            GenerateFlightTrajectory();
+            FinishPlanning();
+        }
     }
 
     //public void StartSelectingSurface(HoverEnterEventArgs args)
@@ -257,6 +258,7 @@ public class FlightPlanning : MonoBehaviour
         pathPlanned = true;
     }
 
+    //For button interaction
     public void GenerateFlightTrajectory(){
         if(currentIndex == -1)
             return;
@@ -276,6 +278,7 @@ public class FlightPlanning : MonoBehaviour
             //currentSelectedSurfaceIndex = -1;
             monitoringUI.SetActive(true);
             worldVis.UpdateWaypontList();
+            VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
         }
     }
 

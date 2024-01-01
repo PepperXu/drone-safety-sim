@@ -18,8 +18,8 @@ public class RandomPulseNoise : MonoBehaviour {
     public float strength_hold_variance = 1000.0f;
 
     //mean/variance time between pulses
-    public float pulse_period_mean = 7; // seconds
-    public float pulse_period_variance = 5;
+    public float pulse_pause_mean = 7; // seconds
+    public float pulse_pause_variance = 5;
 
     //mean/variance duration of pulses
     public float pulse_duration_mean = 10; // seconds
@@ -44,6 +44,7 @@ public class RandomPulseNoise : MonoBehaviour {
     float pulse_period = 0.0f;
     float pulse_duration = 0.0f;
     float base_strength = 0.0f;
+    float target_strength = 0.0f;
     float strength = 0.0f;
 
     //0: decide pulse period
@@ -56,6 +57,11 @@ public class RandomPulseNoise : MonoBehaviour {
     float motion_period = 0.0f;
     float wind_change_speed = 0.0f;
     public Quaternion targetDirection; // wind noise direction
+
+    public bool fixedDirection;
+
+    public float yawCenter = 0f;
+    public float directionVariance = 100f;
 
     //0: decide target direction, speed of change, and motion period
     //1: slerp given the above
@@ -73,7 +79,7 @@ public class RandomPulseNoise : MonoBehaviour {
         if (pulse_mode == 0)
         {
             pulse_timer = 0.0f; //reset
-            pulse_period = SamplePositive(pulse_period_mean, pulse_period_variance);
+            pulse_period = SamplePositive(pulse_pause_mean, pulse_pause_variance);
             pulse_mode = 1;
         } 
         else if (pulse_mode == 1) 
@@ -81,7 +87,7 @@ public class RandomPulseNoise : MonoBehaviour {
             pulse_timer += Time.deltaTime;
 
             //slerp the wind speed back to 0
-            strength = strength - Time.deltaTime * strength_off_speed;
+            strength = strength - Mathf.Sign(strength) * Time.deltaTime * strength_off_speed;
             if (strength < 0.0f) {
                 strength = 0.0f;
             }
@@ -101,7 +107,7 @@ public class RandomPulseNoise : MonoBehaviour {
                 pulse_mode = 0;
             } else {
                 //apply force here
-                float target_strength = Sample(base_strength, strength_hold_variance);
+                target_strength = Sample(base_strength, strength_hold_variance);
 
                 //within 10%
                 if (Mathf.Abs(strength - target_strength) / (target_strength + 1e-8) < 0.4)
@@ -112,7 +118,7 @@ public class RandomPulseNoise : MonoBehaviour {
                 {
                     // slerp to ramp on and in between values
                     int dir = target_strength > strength ? 1 : -1;
-                    strength = strength + Time.deltaTime * strength_on_speed;
+                    strength = strength + dir * Time.deltaTime * strength_on_speed;
 
                     if (dir * strength > dir * target_strength)
                     {
@@ -125,24 +131,45 @@ public class RandomPulseNoise : MonoBehaviour {
         } 
 
 
-
-        if (motion_mode == 0) 
-        {
-            motion_timer = 0.0f;
-            motion_period = SamplePositive(motion_period_mean, motion_period_variance);
-            wind_change_speed = SamplePositive(wind_change_speed_mean, wind_change_speed_variance);
-            targetDirection = Quaternion.Euler(new Vector3(0.0f, Random.Range(-180.0f, 180.0f), 0.0f));
-            motion_mode = 1;
-        }
-        else if (motion_mode == 1)
-        {
-            motion_timer += Time.deltaTime;
-            //do the slerp here
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetDirection, Time.deltaTime * wind_change_speed);
-            if (motion_timer > motion_period) {
+        if(!fixedDirection){
+            if (motion_mode == 0) 
+            {
                 motion_timer = 0.0f;
-                motion_mode = 0; 
+                motion_period = SamplePositive(motion_period_mean, motion_period_variance);
+                wind_change_speed = SamplePositive(wind_change_speed_mean, wind_change_speed_variance);
+                targetDirection = Quaternion.Euler(new Vector3(0.0f, Random.Range(-180.0f, 180.0f), 0.0f));
+                motion_mode = 1;
+            }
+            else if (motion_mode == 1)
+            {
+                motion_timer += Time.deltaTime;
+                //do the slerp here
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetDirection, Time.deltaTime * wind_change_speed);
+                if (motion_timer > motion_period) {
+                    motion_timer = 0.0f;
+                    motion_mode = 0; 
 
+                }
+            }
+        } else {
+            if (motion_mode == 0) 
+            {
+                motion_timer = 0.0f;
+                motion_period = SamplePositive(motion_period_mean, motion_period_variance);
+                wind_change_speed = SamplePositive(wind_change_speed_mean, wind_change_speed_variance);
+                targetDirection = Quaternion.Euler(new Vector3(0.0f, Sample(yawCenter, directionVariance), 0.0f));
+                motion_mode = 1;
+            }
+            else if (motion_mode == 1)
+            {
+                motion_timer += Time.deltaTime;
+                //do the slerp here
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetDirection, Time.deltaTime * wind_change_speed);
+                if (motion_timer > motion_period) {
+                    motion_timer = 0.0f;
+                    motion_mode = 0; 
+
+                }
             }
         }
 
@@ -152,7 +179,7 @@ public class RandomPulseNoise : MonoBehaviour {
         {
             drone.AddForce(ray * strength_coef, ForceMode.Impulse);
         }
-        Debug.DrawRay(drone.position, ray, Color.green);
+        //Debug.DrawRay(drone.position, ray, Color.green);
 	}
 
     public float Sample(float mean, float var)

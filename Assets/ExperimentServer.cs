@@ -24,8 +24,22 @@ public class ExperimentServer : MonoBehaviour
 	/// </summary> 	
 	private TcpClient connectedTcpClient; 	
 	#endregion 
+
+	public enum VisualizationCondition
+    {
+        Manual,
+		ManualProcedual,
+        System,
+		SystemProcedual
+    }
+
+	public static VisualizationCondition currentVisCondition = VisualizationCondition.Manual;
+
+	string[] visConditionString = {"Manual", "Manual Procedual", "System", "System Procedual"};
+
     [SerializeField] private FlightPlanning flightPlanning;
 	[SerializeField] private UIUpdater uIUpdater;
+	[SerializeField] private RandomPulseNoise randomPulseNoise;
 	private string clientMessage = "";
     // Start is called before the first frame update
     void Start()
@@ -62,7 +76,16 @@ public class ExperimentServer : MonoBehaviour
             flightPlanning.SetStartingPoint(0);
         }
 
+		if(currentVisCondition == VisualizationCondition.System){
+			if((DroneManager.currentControlType == DroneManager.ControlType.Manual || DroneManager.currentSystemState != DroneManager.SystemState.Healthy) && VisType.globalVisType != VisType.VisualizationType.SafetyOnly){
+				VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
+			} else if(DroneManager.currentMissionState == DroneManager.MissionState.InFlightZone || DroneManager.currentMissionState == DroneManager.MissionState.Planning || DroneManager.currentMissionState == DroneManager.MissionState.Inspecting){
+				VisType.globalVisType = VisType.VisualizationType.MissionOnly;
+			}
+		}
+
 		ProcessClientMessage();
+
     }
 
     private void ListenForIncommingRequests () { 		
@@ -103,6 +126,9 @@ public class ExperimentServer : MonoBehaviour
 			case "starting-point":
 				flightPlanning.SetStartingPoint(int.Parse(splitMsg[1]));
 				break;
+			case "vis-condition":
+				currentVisCondition = (VisualizationCondition) int.Parse(splitMsg[1]);
+				break;
 			default:
 				Debug.Log("Undefined Command: " + clientMessage);
 				break;
@@ -140,7 +166,8 @@ public class ExperimentServer : MonoBehaviour
 		string currentState = "current-state;" + uIUpdater.flightStateString[(int)DroneManager.currentFlightState] + ";" +
 			uIUpdater.missionStateString[(int)DroneManager.currentMissionState] + ";" + 
 			uIUpdater.controlStateString[(int)DroneManager.currentControlType] + ";" + 
-			uIUpdater.systemStateString[(int)DroneManager.currentSystemState];
+			uIUpdater.systemStateString[(int)DroneManager.currentSystemState] + ";" + 
+			visConditionString[(int)currentVisCondition];
 		
 		SendMessage(currentState);
 
