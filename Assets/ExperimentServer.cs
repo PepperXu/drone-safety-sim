@@ -109,6 +109,8 @@ public class ExperimentServer : MonoBehaviour
 	/// Send message to client using socket connection. 	
 	/// </summary> 	
 	private new void SendMessage(string msg) { 		
+		if(connectedTcpClient == null)
+			return;
 		try { 			
 			// Get a stream object for writing. 			
 			NetworkStream stream = connectedTcpClient.GetStream(); 			
