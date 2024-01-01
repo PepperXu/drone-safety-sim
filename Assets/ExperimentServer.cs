@@ -26,6 +26,7 @@ public class ExperimentServer : MonoBehaviour
 	#endregion 
     [SerializeField] private FlightPlanning flightPlanning;
 	[SerializeField] private UIUpdater uIUpdater;
+	private string clientMessage;
     // Start is called before the first frame update
     void Start()
     {
@@ -60,6 +61,8 @@ public class ExperimentServer : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.Alpha0)){
             flightPlanning.SetStartingPoint(0);
         }
+
+		ProcessClientMessage();
     }
 
     private void ListenForIncommingRequests () { 		
@@ -79,8 +82,8 @@ public class ExperimentServer : MonoBehaviour
 							var incommingData = new byte[length]; 							
 							Array.Copy(bytes, 0, incommingData, 0, length);  							
 							// Convert byte array to string message. 							
-							string clientMessage = Encoding.ASCII.GetString(incommingData);
-							ProcessClientMessage(clientMessage);
+							clientMessage = Encoding.ASCII.GetString(incommingData);
+							
 							Debug.Log("client message received as: " + clientMessage); 						
 						} 					
 					} 				
@@ -92,18 +95,19 @@ public class ExperimentServer : MonoBehaviour
 		}     
 	}
 
-	private void ProcessClientMessage(string msg){
-		if(msg == "")
+	private void ProcessClientMessage(){
+		if(clientMessage == "")
 			return;
-		string[] splitMsg = msg.Split(';');
+		string[] splitMsg = clientMessage.Split(';');
 		switch(splitMsg[0]){
 			case "starting-point":
 				flightPlanning.SetStartingPoint(int.Parse(splitMsg[1]));
 				break;
 			default:
-				Debug.Log("Undefined Command: " + msg);
+				Debug.Log("Undefined Command: " + clientMessage);
 				break;
 		}
+		clientMessage = "";
 	}
 	/// <summary> 	
 	/// Send message to client using socket connection. 	

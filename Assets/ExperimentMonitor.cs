@@ -17,6 +17,7 @@ public class ExperimentMonitor : MonoBehaviour
     string serverIp = "127.0.0.1";
 	[SerializeField] private TextMeshProUGUI flightStateText, missionStateText, controlTypeText, systemStateText;
 	[SerializeField] private TMP_InputField ipInputField;
+	string serverMessage;
 	// Use this for initialization 	
 	private void Awake() {
 		serverIp = PlayerPrefs.GetString("server-ip");
@@ -27,7 +28,7 @@ public class ExperimentMonitor : MonoBehaviour
 	}  	
 	// Update is called once per frame
 	void Update () {         
-    
+		ProcessReceivedMessage();
 	}  	
 	/// <summary> 	
 	/// Setup socket connection. 	
@@ -62,8 +63,8 @@ public class ExperimentMonitor : MonoBehaviour
 						var incommingData = new byte[length]; 						
 						Array.Copy(bytes, 0, incommingData, 0, length); 						
 						// Convert byte array to string message. 						
-						string serverMessage = Encoding.ASCII.GetString(incommingData);	
-						ProcessReceivedMessage(serverMessage);			
+						serverMessage = Encoding.ASCII.GetString(incommingData);	
+						//ProcessReceivedMessage(serverMessage);			
 						Debug.Log("server message received as: " + serverMessage); 					
 					} 				
 				} 			
@@ -75,10 +76,10 @@ public class ExperimentMonitor : MonoBehaviour
 	}  	
 
 
-	private void ProcessReceivedMessage(string msg){
-		if(msg == "")
+	private void ProcessReceivedMessage(){
+		if(serverMessage == "")
 			return;
-		string[] splitMsg = msg.Split(';');
+		string[] splitMsg = serverMessage.Split(';');
 		switch(splitMsg[0]){
 			case "current-state":
 				flightStateText.SetText(splitMsg[1]);
@@ -87,9 +88,10 @@ public class ExperimentMonitor : MonoBehaviour
 				systemStateText.SetText(splitMsg[4]);
 				break;
 			default:
-				Debug.Log("Undefined Header: " + msg);
+				Debug.Log("Undefined Header: " + serverMessage);
 				break;
 		}
+		serverMessage = "";
 	}
 	/// <summary> 	
 	/// Send message to server using socket connection. 	
