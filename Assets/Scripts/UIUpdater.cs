@@ -52,10 +52,10 @@ public class UIUpdater : MonoBehaviour
     float monitoringTimer = 0f;
     int defectCount = 0;
     //float progressPercentage = 0f;
-    string[] flightStateString = {"Landed", "Taking Off", "Hovering", "Navigating", "Landing"};
-    string[] missionStateString = {"Planning", "Moving to Flight Zone", "In Flight Zone", "Inspecting", "Interrupted", "Returning"};
-    string[] systemStateString = {"Healthy", "Warning", "Emergency"};
-    string[] controlStateString = {"Auto", "Manual"};
+    public string[] flightStateString = {"Landed", "Taking Off", "Hovering", "Navigating", "Landing"};
+    public string[] missionStateString = {"Planning", "Moving to Flight Zone", "In Flight Zone", "Inspecting", "Interrupted", "Returning"};
+    public string[] systemStateString = {"Healthy", "Warning", "Emergency"};
+    public string[] controlStateString = {"Auto", "Manual"};
 
     
     // Start is called before the first frame update

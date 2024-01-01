@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Net; 
 using System.Net.Sockets; 
 using System.Text; 
-using System.Threading; 
+using System.Threading;
 using UnityEngine;  
 
 public class ExperimentServer : MonoBehaviour
@@ -25,12 +25,14 @@ public class ExperimentServer : MonoBehaviour
 	private TcpClient connectedTcpClient; 	
 	#endregion 
     [SerializeField] private FlightPlanning flightPlanning;
+	[SerializeField] private UIUpdater uIUpdater;
     // Start is called before the first frame update
     void Start()
     {
 		tcpListenerThread = new Thread (new ThreadStart(ListenForIncommingRequests)); 		
 		tcpListenerThread.IsBackground = true; 		
-		tcpListenerThread.Start(); 	       
+		tcpListenerThread.Start(); 
+		StartCoroutine(UpdateCurrentState());	       
     }
 
     // Update is called once per frame
@@ -77,7 +79,8 @@ public class ExperimentServer : MonoBehaviour
 							var incommingData = new byte[length]; 							
 							Array.Copy(bytes, 0, incommingData, 0, length);  							
 							// Convert byte array to string message. 							
-							string clientMessage = Encoding.ASCII.GetString(incommingData); 							
+							string clientMessage = Encoding.ASCII.GetString(incommingData);
+							ProcessClientMessage(clientMessage);
 							DebugText.Instance.SetText("client message received as: " + clientMessage); 						
 						} 					
 					} 				
@@ -87,15 +90,28 @@ public class ExperimentServer : MonoBehaviour
 		catch (SocketException socketException) { 			
 			DebugText.Instance.SetText("SocketException " + socketException.ToString()); 		
 		}     
-	}  	
+	}
+
+	private void ProcessClientMessage(string msg){
+		if(msg == "")
+			return;
+		string[] splitMsg = msg.Split(';');
+		switch(splitMsg[0]){
+			case "starting-point":
+				flightPlanning.SetStartingPoint(int.Parse(splitMsg[1]));
+				break;
+			default:
+				DebugText.Instance.SetText("Undefined Command: " + msg);
+				break;
+		}
+	}
 	/// <summary> 	
 	/// Send message to client using socket connection. 	
 	/// </summary> 	
-	public new void SendMessage(string msg) { 		
+	private new void SendMessage(string msg) { 		
 		if (connectedTcpClient == null) {             
 			return;         
-		}  		
-		
+		}
 		try { 			
 			// Get a stream object for writing. 			
 			NetworkStream stream = connectedTcpClient.GetStream(); 			
@@ -111,5 +127,22 @@ public class ExperimentServer : MonoBehaviour
 		catch (SocketException socketException) {             
 			DebugText.Instance.SetText("Socket exception: " + socketException);         
 		} 	
+	}
+
+	private void SendCurrentState(){
+		string currentState = "current-state;" + uIUpdater.flightStateString[(int)DroneManager.currentFlightState] + ";" +
+			uIUpdater.missionStateString[(int)DroneManager.currentMissionState] + ";" + 
+			uIUpdater.controlStateString[(int)DroneManager.currentControlType] + ";" + 
+			uIUpdater.systemStateString[(int)DroneManager.currentSystemState];
+		
+		SendMessage(currentState);
+
+	}
+
+	IEnumerator UpdateCurrentState(){
+		while(true){
+			SendCurrentState();
+			yield return new WaitForSeconds(0.5f);
+		}
 	}
 }

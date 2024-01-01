@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using TMPro;
 using UnityEngine;
 public class ExperimentMonitor : MonoBehaviour
 {
@@ -12,21 +14,25 @@ public class ExperimentMonitor : MonoBehaviour
 	private Thread clientReceiveThread; 	
 	#endregion  	
 
-    public string serverIp = "127.0.0.1";
+    string serverIp = "127.0.0.1";
+	[SerializeField] private TextMeshProUGUI flightStateText, missionStateText, controlTypeText, systemStateText;
+	[SerializeField] private TMP_InputField ipInputField;
 	// Use this for initialization 	
+	private void Awake() {
+		serverIp = PlayerPrefs.GetString("server-ip");
+		InitializeIpInputField();
+	}
 	void Start () {
 		ConnectToTcpServer();     
 	}  	
 	// Update is called once per frame
 	void Update () {         
-		if (Input.GetKeyDown(KeyCode.Space)) {             
-			SendMessage();         
-		}     
+    
 	}  	
 	/// <summary> 	
 	/// Setup socket connection. 	
 	/// </summary> 	
-	private void ConnectToTcpServer () { 		
+	public void ConnectToTcpServer () { 		
 		try {  			
 			clientReceiveThread = new Thread (new ThreadStart(ListenForData)); 			
 			clientReceiveThread.IsBackground = true; 			
@@ -41,8 +47,9 @@ public class ExperimentMonitor : MonoBehaviour
 	/// </summary>     
 	private void ListenForData() { 		
 		try { 			
-			socketConnection = new TcpClient(serverIp, 8052);  			
-			Byte[] bytes = new Byte[1024];             
+			socketConnection = new TcpClient(serverIp, 8052);
+			
+			Byte[] bytes = new Byte[1024];
 			while (true) { 				
 				// Get a stream object for reading 				
 				using (NetworkStream stream = socketConnection.GetStream()) { 					
@@ -52,7 +59,8 @@ public class ExperimentMonitor : MonoBehaviour
 						var incommingData = new byte[length]; 						
 						Array.Copy(bytes, 0, incommingData, 0, length); 						
 						// Convert byte array to string message. 						
-						string serverMessage = Encoding.ASCII.GetString(incommingData);				
+						string serverMessage = Encoding.ASCII.GetString(incommingData);	
+						ProcessReceivedMessage(serverMessage);			
 						Debug.Log("server message received as: " + serverMessage); 					
 					} 				
 				} 			
@@ -62,10 +70,28 @@ public class ExperimentMonitor : MonoBehaviour
 			Debug.Log("Socket exception: " + socketException);         
 		}     
 	}  	
+
+
+	private void ProcessReceivedMessage(string msg){
+		if(msg == "")
+			return;
+		string[] splitMsg = msg.Split(';');
+		switch(splitMsg[0]){
+			case "current-state":
+				flightStateText.SetText(splitMsg[1]);
+				missionStateText.SetText(splitMsg[2]);
+				controlTypeText.SetText(splitMsg[3]);
+				systemStateText.SetText(splitMsg[4]);
+				break;
+			default:
+				Debug.Log("Undefined Header: " + msg);
+				break;
+		}
+	}
 	/// <summary> 	
 	/// Send message to server using socket connection. 	
 	/// </summary> 	
-	private void SendMessage() {         
+	private new void SendMessage(string messageContent) {         
 		if (socketConnection == null) {             
 			return;         
 		}  		
@@ -73,7 +99,7 @@ public class ExperimentMonitor : MonoBehaviour
 			// Get a stream object for writing. 			
 			NetworkStream stream = socketConnection.GetStream(); 			
 			if (stream.CanWrite) {                 
-				string clientMessage = "This is a message from one of your clients."; 				
+				string clientMessage = messageContent; 				
 				// Convert string message to byte array.                 
 				byte[] clientMessageAsByteArray = Encoding.ASCII.GetBytes(clientMessage); 				
 				// Write byte array to socketConnection stream.                 
@@ -84,5 +110,18 @@ public class ExperimentMonitor : MonoBehaviour
 		catch (SocketException socketException) {             
 			Debug.Log("Socket exception: " + socketException);         
 		}     
-	} 
+	}
+
+	public void SetStartingPoint(int i){
+		SendMessage("starting-point;" + i);
+	}
+
+	public void SetServerIp(){
+		serverIp = ipInputField.text;
+		PlayerPrefs.SetString("server-ip", serverIp);
+	}
+
+	private void InitializeIpInputField(){
+		ipInputField.text = serverIp;
+	}
 }
