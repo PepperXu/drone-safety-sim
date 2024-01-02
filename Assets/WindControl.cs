@@ -82,7 +82,7 @@ public class WindControl : MonoBehaviour
         } else
         {
             if(dragging){
-                experimentMonitor.SendWindCondition(windCone.localEulerAngles.z - 20f + UICam.transform.eulerAngles.z, currentWindStrength);
+                experimentMonitor.SendWindCondition(windCone.localEulerAngles.z - 20f - UICam.transform.eulerAngles.z, currentWindStrength);
                 dragging = false;
             }
         }
