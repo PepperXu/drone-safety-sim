@@ -80,8 +80,10 @@ public class WindControl : MonoBehaviour
             windStrengthText.text = "" + (int)currentWindStrength;
         } else
         {
-            experimentMonitor.SendWindCondition(windCone.localEulerAngles.z - 20f, currentWindStrength);
-            dragging = false;
+            if(dragging){
+                experimentMonitor.SendWindCondition(windCone.localEulerAngles.z - 20f, currentWindStrength);
+                dragging = false;
+            }
         }
     }
 }
