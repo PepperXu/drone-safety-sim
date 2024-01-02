@@ -14,49 +14,59 @@ public class Battery : MonoBehaviour
     private float normalWindStrength = 20f;
     private float noWindDischargeRate = 7.66f;
     private float resistance = 1.488f;
-    private float randomNoise = 0f;
-
+    float abnormalDischargeRate = 0f;
+    float voltageDropDischargeRateCoeff = 1.5f;
+    float randomNoise = 0f;
     float currentBatteryPercentage = 100f;
     float currentBatteryCapacity = 3830f;
     float currentDischargeRate = 0f;
     float dischargeRateWindCoeff = 0f;
     float remainingTimeInSeconds;
+    float currentVoltage = 0f;
 
     [SerializeField] StateFinder droneState;
     [SerializeField] UIUpdater uiUpdater;
     [SerializeField] RandomPulseNoise randomPulseNoise;
 
+    System.Random r;
+
     // Start is called before the first frame update
     void Start()
     {
         dischargeRateWindCoeff = (normalDischargeRate - noWindDischargeRate) / normalWindStrength;
+        r = new System.Random();
     }
 
     // Update is called once per frame
     void Update()
     {
         if(DroneManager.currentFlightState != DroneManager.FlightState.Landed){
-            randomNoise = Sample(0f, 4f);
+            randomNoise = Sample(abnormalDischargeRate, 3f);
             currentDischargeRate = Mathf.Abs(randomPulseNoise.GetCurrentWindStrength()) * dischargeRateWindCoeff + noWindDischargeRate + randomNoise;
         } else {
             currentDischargeRate = 0f;
         }
         currentBatteryCapacity -= currentDischargeRate * Time.deltaTime / 3.6f;
-            remainingTimeInSeconds = currentBatteryCapacity / currentDischargeRate * 3.6f;
+        currentBatteryPercentage = currentBatteryCapacity/batteryCapacity;
+        remainingTimeInSeconds = currentBatteryCapacity / currentDischargeRate * 3.6f;
     }
 
-    public float Sample(float mean, float var)
+    public void SimulateVoltageDrop(int dropLevel){
+        abnormalDischargeRate = dropLevel * voltageDropDischargeRateCoeff;
+    }
+
+    float Sample(float mean, float var)
     {
         float n = NextGaussianDouble();
 
         return n * Mathf.Sqrt(var) + mean;
     }
 
-    public float SamplePositive(float mean, float var) {
+    float SamplePositive(float mean, float var) {
         return Mathf.Abs(Sample(mean, var));
     }
 
-    public float NextGaussianDouble()
+    float NextGaussianDouble()
     {
         float u, v, S;
 
