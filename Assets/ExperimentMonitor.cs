@@ -17,8 +17,7 @@ public class ExperimentMonitor : MonoBehaviour
     string serverIp = "127.0.0.1";
 	[SerializeField] private TextMeshProUGUI flightStateText, missionStateText, controlTypeText, systemStateText, visCondiText;
 	[SerializeField] private TMP_InputField ipInputField;
-	[SerializeField] private Transform wind;
-	private float defaultWindSpeed;
+	
 	string serverMessage = "";
 	// Use this for initialization 	
 	private void Awake() {
@@ -126,6 +125,10 @@ public class ExperimentMonitor : MonoBehaviour
 
 	public void SetVisCondition(int i){
 		SendMessage("vis-condition;" + i);
+	}
+
+	public void SendWindCondition(float direction, float strength){
+		SendMessage("wind-condition;" + direction + ";" + strength);
 	}
 
 	public void SetServerIp(){

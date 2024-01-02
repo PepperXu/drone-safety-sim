@@ -208,4 +208,8 @@ public class RandomPulseNoise : MonoBehaviour {
         float fac = Mathf.Sqrt(-2.0f * Mathf.Log(S) / S);
         return u * fac;
     }
+
+    public float GetCurrentWindStrength(){
+        return strength;
+    }
 }

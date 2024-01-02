@@ -129,6 +129,10 @@ public class ExperimentServer : MonoBehaviour
 			case "vis-condition":
 				currentVisCondition = (VisualizationCondition) int.Parse(splitMsg[1]);
 				break;
+			case "wind-condition":
+				randomPulseNoise.yawCenter = float.Parse(splitMsg[1]);
+				randomPulseNoise.strength_mean = float.Parse(splitMsg[2]);
+				break;
 			default:
 				Debug.Log("Undefined Command: " + clientMessage);
 				break;
