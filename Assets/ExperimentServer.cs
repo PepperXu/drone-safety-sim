@@ -40,6 +40,7 @@ public class ExperimentServer : MonoBehaviour
     [SerializeField] private FlightPlanning flightPlanning;
 	[SerializeField] private UIUpdater uIUpdater;
 	[SerializeField] private RandomPulseNoise randomPulseNoise;
+	[SerializeField] private Battery battery;
 	private string clientMessage = "";
     // Start is called before the first frame update
     void Start()
@@ -53,28 +54,14 @@ public class ExperimentServer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(DroneManager.currentMissionState != DroneManager.MissionState.Planning)
-            return;
-
-        if(!flightPlanning.isPathPlanned()){
-            flightPlanning.SetStartingPoint(4);
+		if(!flightPlanning.isPathPlanned()){
+        	flightPlanning.SetStartingPoint(4);
         }
 
-        if(Input.GetKeyDown(KeyCode.Alpha1)){
-            flightPlanning.SetStartingPoint(1);
-        }
-        if(Input.GetKeyDown(KeyCode.Alpha2)){
-            flightPlanning.SetStartingPoint(2);
-        }
-        if(Input.GetKeyDown(KeyCode.Alpha3)){
-            flightPlanning.SetStartingPoint(3);
-        }
-        if(Input.GetKeyDown(KeyCode.Alpha4)){
-            flightPlanning.SetStartingPoint(4);
-        }
-        if(Input.GetKeyDown(KeyCode.Alpha0)){
-            flightPlanning.SetStartingPoint(0);
-        }
+		ProcessClientMessage();
+        
+		//For Debugging
+		//ProcessKeyboardInput();
 
 		if(currentVisCondition == VisualizationCondition.System){
 			if((DroneManager.currentControlType == DroneManager.ControlType.Manual || DroneManager.currentSystemState != DroneManager.SystemState.Healthy) && VisType.globalVisType != VisType.VisualizationType.SafetyOnly){
@@ -84,9 +71,28 @@ public class ExperimentServer : MonoBehaviour
 			}
 		}
 
-		ProcessClientMessage();
-
     }
+
+	void ProcessKeyboardInput(){
+		if(DroneManager.currentMissionState == DroneManager.MissionState.Planning){
+        	
+        	if(Input.GetKeyDown(KeyCode.Alpha1)){
+        	    flightPlanning.SetStartingPoint(1);
+        	}
+        	if(Input.GetKeyDown(KeyCode.Alpha2)){
+        	    flightPlanning.SetStartingPoint(2);
+        	}
+        	if(Input.GetKeyDown(KeyCode.Alpha3)){
+        	    flightPlanning.SetStartingPoint(3);
+        	}
+        	if(Input.GetKeyDown(KeyCode.Alpha4)){
+        	    flightPlanning.SetStartingPoint(4);
+        	}
+        	if(Input.GetKeyDown(KeyCode.Alpha0)){
+        	    flightPlanning.SetStartingPoint(0);
+        	}
+		}
+	}
 
     private void ListenForIncommingRequests () { 		
 		try { 			
@@ -124,12 +130,15 @@ public class ExperimentServer : MonoBehaviour
 		string[] splitMsg = clientMessage.Split(';');
 		switch(splitMsg[0]){
 			case "starting-point":
-				flightPlanning.SetStartingPoint(int.Parse(splitMsg[1]));
+				if(DroneManager.currentMissionState == DroneManager.MissionState.Planning){
+					flightPlanning.SetStartingPoint(int.Parse(splitMsg[1]));
+				}
 				break;
 			case "vis-condition":
 				currentVisCondition = (VisualizationCondition) int.Parse(splitMsg[1]);
 				break;
 			case "wind-condition":
+				Debug.Log("Setting new wind condition");
 				randomPulseNoise.yawCenter = float.Parse(splitMsg[1]);
 				randomPulseNoise.strength_mean = float.Parse(splitMsg[2]);
 				break;

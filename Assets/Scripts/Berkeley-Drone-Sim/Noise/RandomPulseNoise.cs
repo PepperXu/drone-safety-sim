@@ -179,7 +179,7 @@ public class RandomPulseNoise : MonoBehaviour {
         {
             drone.AddForce(ray * strength_coef, ForceMode.Impulse);
         }
-        //Debug.DrawRay(drone.position, ray, Color.green);
+        Debug.DrawRay(drone.position, ray, Color.green);
 	}
 
     public float Sample(float mean, float var)
