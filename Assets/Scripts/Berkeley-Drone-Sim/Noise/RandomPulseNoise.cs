@@ -66,6 +66,7 @@ public class RandomPulseNoise : MonoBehaviour {
     //0: decide target direction, speed of change, and motion period
     //1: slerp given the above
     int motion_mode = 0;
+    public bool wind_change_flag = false;
 
 	// Use this for initialization
 	void Start () {
@@ -131,45 +132,25 @@ public class RandomPulseNoise : MonoBehaviour {
         } 
 
 
-        if(!fixedDirection){
-            if (motion_mode == 0) 
-            {
-                motion_timer = 0.0f;
-                motion_period = SamplePositive(motion_period_mean, motion_period_variance);
-                wind_change_speed = SamplePositive(wind_change_speed_mean, wind_change_speed_variance);
-                targetDirection = Quaternion.Euler(new Vector3(0.0f, Random.Range(-180.0f, 180.0f), 0.0f));
-                motion_mode = 1;
-            }
-            else if (motion_mode == 1)
-            {
-                motion_timer += Time.deltaTime;
-                //do the slerp here
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetDirection, Time.deltaTime * wind_change_speed);
-                if (motion_timer > motion_period) {
-                    motion_timer = 0.0f;
-                    motion_mode = 0; 
 
-                }
-            }
-        } else {
-            if (motion_mode == 0) 
-            {
+        if (motion_mode == 0) 
+        {
+            motion_timer = 0.0f;
+            motion_period = SamplePositive(motion_period_mean, motion_period_variance);
+            wind_change_speed = SamplePositive(wind_change_speed_mean, wind_change_speed_variance);
+            targetDirection = Quaternion.Euler(new Vector3(0.0f, fixedDirection?Sample(yawCenter, directionVariance):Random.Range(-180.0f, 180.0f), 0.0f));
+            motion_mode = 1;
+        }
+        else if (motion_mode == 1)
+        {
+            motion_timer += Time.deltaTime;
+            //do the slerp here
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetDirection, Time.deltaTime * wind_change_speed);
+            if (motion_timer > motion_period || wind_change_flag) {
+                wind_change_flag = false;
                 motion_timer = 0.0f;
-                motion_period = SamplePositive(motion_period_mean, motion_period_variance);
-                wind_change_speed = SamplePositive(wind_change_speed_mean, wind_change_speed_variance);
-                targetDirection = Quaternion.Euler(new Vector3(0.0f, Sample(yawCenter, directionVariance), 0.0f));
-                motion_mode = 1;
-            }
-            else if (motion_mode == 1)
-            {
-                motion_timer += Time.deltaTime;
-                //do the slerp here
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetDirection, Time.deltaTime * wind_change_speed);
-                if (motion_timer > motion_period) {
-                    motion_timer = 0.0f;
-                    motion_mode = 0; 
+                motion_mode = 0; 
 
-                }
             }
         }
 

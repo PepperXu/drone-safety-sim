@@ -141,6 +141,7 @@ public class ExperimentServer : MonoBehaviour
 				Debug.Log("Setting new wind condition");
 				randomPulseNoise.yawCenter = float.Parse(splitMsg[1]);
 				randomPulseNoise.strength_mean = float.Parse(splitMsg[2]);
+				randomPulseNoise.wind_change_flag = true;
 				break;
 			default:
 				Debug.Log("Undefined Command: " + clientMessage);
