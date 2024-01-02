@@ -16,6 +16,7 @@ public class WindControl : MonoBehaviour
     [SerializeField] Transform windControlTransform, windCone;
     [SerializeField] TextMeshProUGUI windStrengthText;
     [SerializeField] ExperimentMonitor experimentMonitor;
+    [SerializeField] Camera UICam;
     float currentWindStrength;
     public int minWindStrength = 20;
     public int maxWindStrength = 80;
@@ -81,7 +82,7 @@ public class WindControl : MonoBehaviour
         } else
         {
             if(dragging){
-                experimentMonitor.SendWindCondition(windCone.localEulerAngles.z - 20f, currentWindStrength);
+                experimentMonitor.SendWindCondition(windCone.localEulerAngles.z - 20f + UICam.transform.eulerAngles.z, currentWindStrength);
                 dragging = false;
             }
         }
