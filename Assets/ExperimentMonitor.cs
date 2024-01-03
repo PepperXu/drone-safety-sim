@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 public class ExperimentMonitor : MonoBehaviour
 {
     #region private members 	
@@ -15,7 +16,7 @@ public class ExperimentMonitor : MonoBehaviour
 	#endregion  	
 
     string serverIp = "127.0.0.1";
-	[SerializeField] private TextMeshProUGUI flightStateText, missionStateText, controlTypeText, systemStateText, visCondiText;
+	[SerializeField] private TextMeshProUGUI flightStateText, missionStateText, controlTypeText, systemStateText, visCondiText, batteryPercentageText, batteryVoltageText, positionalSignalStatusText;
 	[SerializeField] private TMP_InputField ipInputField;
 	
 	string serverMessage = "";
@@ -88,6 +89,9 @@ public class ExperimentMonitor : MonoBehaviour
 				controlTypeText.SetText(splitMsg[3]);
 				systemStateText.SetText(splitMsg[4]);
 				visCondiText.SetText(splitMsg[5]);
+				batteryPercentageText.SetText(splitMsg[6]);
+				batteryVoltageText.SetText(splitMsg[7]);
+				positionalSignalStatusText.SetText(splitMsg[8]);
 				break;
 			default:
 				Debug.Log("Undefined Header: " + serverMessage);
@@ -129,6 +133,14 @@ public class ExperimentMonitor : MonoBehaviour
 
 	public void SendWindCondition(float direction, float strength){
 		SendMessage("wind-condition;" + direction + ";" + strength);
+	}
+
+	public void SendPositoinalSignalLevel(int level){
+		SendMessage("positional-signal-level;" + level);
+	}
+
+	public void SendBatteryVoltageLevel(Slider slider){
+		SendMessage("battery-voltage-level;" + slider.value);
 	}
 
 	public void SetServerIp(){

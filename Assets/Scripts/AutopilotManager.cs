@@ -29,6 +29,7 @@ public class AutopilotManager : MonoBehaviour
     public Vector3 vectorToBuildingSurface;
 
     bool photoTaken = false;
+    public Vector3 positionOffset;
     // Start is called before the first frame update
     void Start()
     {
@@ -60,7 +61,7 @@ public class AutopilotManager : MonoBehaviour
                         vc.desired_vy = localDir.x;
                     } else
                     {
-                        if(Mathf.Abs(offset.y) > 0.5f)
+                        if(Mathf.Abs(offset.y) > 0.2f)
                         {
                             if(Mathf.Abs(offset.y) > autopilot_slowing_start_dist)
                             {
@@ -68,8 +69,11 @@ public class AutopilotManager : MonoBehaviour
                             } else {
                                 vc.desired_height = vc.transform.position.y + Mathf.Sign(offset.y) * autopilot_max_speed * (Mathf.Abs(offset.y)/autopilot_slowing_start_dist) ;
                             }
-                        }
+                        } 
                     }
+                } else {
+                    isAutopiloting = false;
+                    isRTH = false;
                 }
             }
             else
@@ -78,8 +82,9 @@ public class AutopilotManager : MonoBehaviour
                 Vector3 target = flightPlanning.GetCurrentWaypoint(currentWaypointIndex, out out_of_bound);
                 if (!out_of_bound)
                 {
+                    Vector3 sensedPosition = vc.transform.position + positionOffset;
                     //Debug.LogWarning("Moving to waypoint " + currentWaypointIndex);
-                    Vector3 offset = target - vc.transform.position;
+                    Vector3 offset = target - sensedPosition;
                     if (offset.magnitude < 0.5f)
                     {
                         waitTimer += Time.deltaTime;
@@ -102,9 +107,9 @@ public class AutopilotManager : MonoBehaviour
                         float heightTarget = target.y;
                         if(Mathf.Abs(offset.y) > autopilot_slowing_start_dist)
                         {
-                            heightTarget = autopilot_max_speed * Mathf.Sign(offset.y) + vc.transform.position.y;
+                            heightTarget = autopilot_max_speed * Mathf.Sign(offset.y) + sensedPosition.y;
                         } else {
-                            heightTarget = autopilot_max_speed * (Mathf.Abs(offset.y)/autopilot_slowing_start_dist) * Mathf.Sign(offset.y) + vc.transform.position.y;
+                            heightTarget = autopilot_max_speed * (Mathf.Abs(offset.y)/autopilot_slowing_start_dist) * Mathf.Sign(offset.y) + sensedPosition.y;
                         }
                         Vector2 localDirXY = new Vector2(localDir.x, localDir.z);
                         if (localDirXY.magnitude > autopilot_slowing_start_dist)

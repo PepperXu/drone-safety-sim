@@ -13,6 +13,11 @@ public class InputControl : MonoBehaviour {
 	private float vertical_sensitivity = 0.2f;
 	private float turning_sensitivity = 4f;
 
+	private bool switched = false;
+
+
+
+
 	// Use this for initialization
 	void Start () {
 		
@@ -26,7 +31,25 @@ public class InputControl : MonoBehaviour {
 				VisType.SwitchVisType();
 			}
 		} else if(ExperimentServer.currentVisCondition == ExperimentServer.VisualizationCondition.ManualProcedual){
-			
+			if(Input.GetButton("Switch")){
+				VisType.RevealHiddenVisType(true);
+				if(Input.GetAxisRaw("SwitchConfirm") > 0.5f){
+					if(!switched){
+						VisType.SwitchVisType();
+						switched = true;
+					}
+				} else {
+					switched = false;
+				}
+			} else {
+				VisType.RevealHiddenVisType(false);
+				switched = false;
+			}
+		} else if(ExperimentServer.currentVisCondition == ExperimentServer.VisualizationCondition.SystemProcedual){
+			if (Input.GetButtonDown("Switch"))
+			{
+				VisType.SwitchVisType();
+			}
 		}
 
 		if(DroneManager.currentMissionState == DroneManager.MissionState.Planning)

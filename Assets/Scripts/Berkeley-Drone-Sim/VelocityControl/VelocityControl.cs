@@ -49,6 +49,9 @@ public class VelocityControl : MonoBehaviour {
 
     public Vector3 vectorToGround;
 
+    public int collisionHitCount = 0;
+    public bool out_of_balance = false;
+
     [SerializeField] AudioClip take_off, flying, landing;
     AudioSource audioSource;
 
@@ -242,7 +245,10 @@ public class VelocityControl : MonoBehaviour {
     {
         if(DroneManager.currentFlightState == DroneManager.FlightState.Navigating || DroneManager.currentFlightState == DroneManager.FlightState.Hovering)
         {
-            DroneManager.currentSystemState = DroneManager.SystemState.Emergency;
+            //DroneManager.currentSystemState = DroneManager.SystemState.Emergency;
+            collisionHitCount++;
+            if(transform.up.y < 0.6f)
+                out_of_balance = true;
             DroneManager.autopilot_stop_flag = true;
         }
     }

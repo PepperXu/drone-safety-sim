@@ -11,7 +11,7 @@ public class VisType : MonoBehaviour
         Both
     }
 
-    public VisualizationType visType;
+    [SerializeField] private VisualizationType visType;
 
     public Transform visRoot;
 
@@ -19,16 +19,25 @@ public class VisType : MonoBehaviour
 
     public bool showVisualization = true;
 
+    private VisualizationType originalVisType, hiddenVisType;
+
+    private static bool isRevealing = false;
+
+    //[SerializeField] private bool allowSwitchToBoth = false;
+
     // Start is called before the first frame update
     void Start()
     {
         if (!visRoot)
             visRoot = transform.GetChild(0);
+        originalVisType = visType;
+        hiddenVisType = visType;
     }
 
     // Update is called once per frame
     void Update()
     {
+        if(isRevealing) visType = hiddenVisType; else visType = originalVisType;
         visRoot.gameObject.SetActive((globalVisType == visType || visType == VisualizationType.Both) && showVisualization);
     }
 
@@ -38,5 +47,13 @@ public class VisType : MonoBehaviour
             globalVisType = VisualizationType.SafetyOnly;
         else
             globalVisType = VisualizationType.MissionOnly;
+    }
+
+    public void SwitchHiddenVisTypeLocal(bool isBoth){
+        hiddenVisType = isBoth?VisualizationType.Both:VisualizationType.SafetyOnly;
+    }
+
+    public static void RevealHiddenVisType(bool reveal){
+        isRevealing = reveal;
     }
 }

@@ -13,6 +13,7 @@ public class ControlVisUpdater : MonoBehaviour
     [SerializeField] private VisType futureTrajectory;
     [SerializeField] private VisType attitude;
     [SerializeField] private Image cwise_Pitch_f, cwise_Pitch_b, acwise_Pitch_f, acwise_Pitch_b, cwise_Roll_l, cwise_Roll_r, acwise_Roll_l, acwise_Roll_r;
+    //[SerializeField] private VisType heading;
     [SerializeField] private VisType camFrustum;
 
     [SerializeField] private LayerMask realObstacleLayerMask;
@@ -25,29 +26,56 @@ public class ControlVisUpdater : MonoBehaviour
 
     public Vector3 vectorToNearestBufferBound, vectorToGround, vectorToNearestSurface;
 
+    public Vector3 positionOffset = Vector3.zero;
 
+    public float updateRate;
+    
+    public bool updating = true;
+
+    void Start(){
+        updateRate = Time.deltaTime;
+        updating = true;
+    }
     void Update(){
-        transform.position = droneParent.position;
-        transform.eulerAngles = new Vector3(0f, droneParent.eulerAngles.y, 0f);
-        if (visActive)
-        {
-            dis2groundVis.showVisualization = true;
-            futureTrajectory.showVisualization = true;
-            attitude.showVisualization = true;
-            UpdateDistance2Ground();
-            UpdateDistance2Bound();
-            UpdateDistance2Surface();
-            UpdateFutureTrajectory();
-            UpdateAttitudeVis();
-            UpdateCameraFrustum();
-        } else
-        {
-            dis2groundVis.showVisualization = false;
-            futureTrajectory.showVisualization = false;
-            attitude.showVisualization = false;
-            dis2boundVis.showVisualization = false;
-            dis2SurfaceVis.showVisualization = false;
-            camFrustum.showVisualization = false;
+        
+    }
+
+    public void SetControlVisActive(bool active)
+    {
+        if(active){
+            if(!visActive){
+                visActive = true;
+                dis2groundVis.showVisualization = true;
+                futureTrajectory.showVisualization = true;
+                attitude.showVisualization = true;
+                StartCoroutine(UpdateControlVis());
+            }
+        } else {
+            if(visActive){
+                visActive = false;
+                StopAllCoroutines();
+                dis2groundVis.showVisualization = false;
+                futureTrajectory.showVisualization = false;
+                attitude.showVisualization = false;
+                dis2boundVis.showVisualization = false;
+                dis2SurfaceVis.showVisualization = false;
+                camFrustum.showVisualization = false;
+            }
+        }
+    }
+    IEnumerator UpdateControlVis(){
+        while(true){
+            if(updating){
+                transform.position = droneParent.position + positionOffset;
+                transform.eulerAngles = new Vector3(0f, droneParent.eulerAngles.y, 0f);
+                UpdateDistance2Ground();
+                UpdateDistance2Bound();
+                UpdateDistance2Surface();
+                UpdateFutureTrajectory();
+                UpdateAttitudeVis();
+                UpdateCameraFrustum();
+            }
+            yield return new WaitForSeconds(updateRate);
         }
     }
 
@@ -62,6 +90,10 @@ public class ControlVisUpdater : MonoBehaviour
             lr.transform.GetChild(1).localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
             lr.transform.GetChild(1).GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2ground * 10f) / 10f + " m";
         }
+        if(DroneManager.currentMissionState == DroneManager.MissionState.Returning)
+            dis2groundVis.SwitchHiddenVisTypeLocal(true);
+        else
+            dis2groundVis.SwitchHiddenVisTypeLocal(false);
     }
 
     void UpdateDistance2Bound()
@@ -85,6 +117,11 @@ public class ControlVisUpdater : MonoBehaviour
             lr.transform.GetChild(0).localRotation =  Quaternion.LookRotation(localHitPos, Vector3.up);
             lr.transform.GetChild(1).localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
             lr.transform.GetChild(1).GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2bound * 10f) / 10f + " m";
+        }
+        if(dis2bound < DroneManager.bufferCautionThreahold){
+            dis2boundVis.SwitchHiddenVisTypeLocal(true);
+        } else {
+            dis2boundVis.SwitchHiddenVisTypeLocal(false);
         }
     }
 
@@ -110,13 +147,15 @@ public class ControlVisUpdater : MonoBehaviour
             lr.transform.GetChild(1).localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
             lr.transform.GetChild(1).GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2surf * 10f) / 10f + " m";
         }
+        if(dis2surf < DroneManager.surfaceCautionThreshold){
+            dis2SurfaceVis.SwitchHiddenVisTypeLocal(true);
+        } else {
+            dis2SurfaceVis.SwitchHiddenVisTypeLocal(false);
+        }
     }
 
 
-    public void SetControlVisActive(bool active)
-    {
-        visActive = active;
-    }
+
 
     void UpdateFutureTrajectory()
     {

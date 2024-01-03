@@ -14,7 +14,11 @@ public class UIUpdater : MonoBehaviour
     [SerializeField] Image batteryIcon;
     [SerializeField] Sprite[] batterySprites;
     [SerializeField] TextMeshProUGUI batteryPercentage;
-    [SerializeField] TextMeshProUGUI batteryVoltage;
+    [SerializeField] TextMeshProUGUI batteryRemainingTime, batteryVoltage;
+
+    [SerializeField] Image GNSSIcon;
+    [SerializeField] Sprite[] GNSSSprites;
+
 
     [Header("Flight Telemetry")]
     [SerializeField] TextMeshProUGUI distToHome, altitude, horiSpeed, vertSpeed, vps;
@@ -46,6 +50,12 @@ public class UIUpdater : MonoBehaviour
     public bool enableSound = false;
     public float vpsHeight = 0f;
     public float missionProgress = 0f;
+    public float currentBatteryPercentage = 1f;
+    public float remainingTime;
+    public float positional_signal_level;
+    //public int satelliteCount = 35;
+
+    public float voltage;
 
     bool continuous = true;
     float currentMonitoringInterval = 1.2f;
@@ -54,7 +64,7 @@ public class UIUpdater : MonoBehaviour
     //float progressPercentage = 0f;
     public string[] flightStateString = {"Landed", "Taking Off", "Hovering", "Navigating", "Landing"};
     public string[] missionStateString = {"Planning", "Moving to Flight Zone", "In Flight Zone", "Inspecting", "Interrupted", "Returning"};
-    public string[] systemStateString = {"Healthy", "Warning", "Emergency"};
+    public string[] systemStateString = {"Healthy", "Caution", "Warning", "Emergency"};
     public string[] controlStateString = {"Auto", "Manual"};
 
     
@@ -72,6 +82,73 @@ public class UIUpdater : MonoBehaviour
         missionState.text = missionStateString[(int)DroneManager.currentMissionState];
         //systemState.text = Enum.GetName(typeof(DroneManager.SystemState), DroneManager.currentSystemState);
         controlState.text = controlStateString[(int)DroneManager.currentControlType];
+
+        batteryPercentage.text = ((int) ((currentBatteryPercentage - 0.2f)/ 0.8f * 100f)) + "%";
+        batteryVoltage.text = ((int) (voltage * 10f)) / 10f + "V";
+        
+        int remainingTimeMinutes = Mathf.FloorToInt(remainingTime/60);
+        batteryRemainingTime.text = remainingTimeMinutes + ":" + Mathf.FloorToInt(remainingTime - remainingTimeMinutes * 60);
+
+        if(currentBatteryPercentage >= 1f){
+            batteryIcon.sprite = batterySprites[0];
+            batteryIcon.color = Color.green;
+            batteryPercentage.color = Color.white;
+            batteryRemainingTime.color = Color.white;
+        } else if (currentBatteryPercentage > 0.73333f){
+            batteryIcon.sprite = batterySprites[0];
+            batteryIcon.color = Color.white;
+            batteryPercentage.color = Color.white;
+            batteryRemainingTime.color = Color.green;
+        } else if(currentBatteryPercentage > 0.46667f) {
+            batteryIcon.sprite = batterySprites[1];
+            batteryIcon.color = Color.white;
+            batteryPercentage.color = Color.white;
+            batteryRemainingTime.color = Color.green;
+        } else if(currentBatteryPercentage > 0.3f){
+            batteryIcon.sprite = batterySprites[2];
+            batteryIcon.color = Color.yellow;
+            batteryPercentage.color = Color.yellow;
+            batteryRemainingTime.color = Color.yellow;
+        } else if(currentBatteryPercentage > 0.2f){
+            batteryIcon.sprite = batterySprites[3];
+            batteryIcon.color = Color.red;
+            batteryPercentage.color = Color.red;
+            batteryRemainingTime.color = Color.red;
+        } else {
+            batteryIcon.sprite = batterySprites[3];
+            batteryIcon.color = Color.red;
+            batteryPercentage.color = Color.red;
+            batteryRemainingTime.color = Color.red;
+        }
+
+        if(voltage > 10f){
+            batteryVoltage.color = Color.white;
+        } else if(voltage > 9f){
+            batteryVoltage.color = Color.yellow;
+        } else {
+            batteryVoltage.color = Color.red;
+        }
+
+        switch(positional_signal_level){
+            case 3:
+                GNSSIcon.sprite = GNSSSprites[0];
+                GNSSIcon.color = Color.white;
+                break;
+            case 2:
+                GNSSIcon.sprite = GNSSSprites[1];
+                GNSSIcon.color = Color.yellow;
+                break;
+            case 1:
+                GNSSIcon.sprite = GNSSSprites[2];
+                GNSSIcon.color = Color.yellow;
+                break;
+            case 0:
+                GNSSIcon.sprite = GNSSSprites[3];
+                GNSSIcon.color = Color.red;
+                break;
+        }
+
+
         distToHome.text = ((int)(transform.position-droneState.pose.WorldPosition).magnitude).ToString();
         altitude.text = ((int)droneState.Altitude).ToString();
         horiSpeed.text = ((int)new Vector3(droneState.pose.WorldVelocity.x, 0f, droneState.pose.WorldVelocity.z).magnitude).ToString();
@@ -149,8 +226,23 @@ public class UIUpdater : MonoBehaviour
                         currentMonitoringInterval = healthyInterval;
                 }
                 break;
-            case DroneManager.SystemState.Warning:
+            case DroneManager.SystemState.Caution:
                 systemState.color = Color.yellow;
+                if(enableSound){
+                    if (continuous)
+                    {
+                        if (audioSource.clip != monitoring_warn)
+                        {
+                            audioSource.clip = monitoring_warn;
+                            audioSource.Play();
+                        }
+                    }
+                    else
+                        currentMonitoringInterval = warningInterval;
+                }
+                break;
+            case DroneManager.SystemState.Warning:
+                systemState.color = new Color(1f, 0.5f, 0f);
                 if(enableSound){
                     if (continuous)
                     {

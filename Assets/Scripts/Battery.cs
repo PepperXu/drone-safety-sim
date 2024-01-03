@@ -13,20 +13,24 @@ public class Battery : MonoBehaviour
     private float normalDischargeRate = 8.754f;
     private float normalWindStrength = 20f;
     private float noWindDischargeRate = 7.66f;
+
+    private float normalBatteryVoltage = 11.4f;
     private float resistance = 1.488f;
     float abnormalDischargeRate = 0f;
     float voltageDropDischargeRateCoeff = 1.5f;
     float randomNoise = 0f;
-    float currentBatteryPercentage = 100f;
+    float currentBatteryPercentage = 1f;
     float currentBatteryCapacity = 3830f;
     float currentDischargeRate = 0f;
     float dischargeRateWindCoeff = 0f;
     float remainingTimeInSeconds;
     float currentVoltage = 0f;
+    float voltageDropPerLevel = 1f;
 
     [SerializeField] StateFinder droneState;
     [SerializeField] UIUpdater uiUpdater;
     [SerializeField] RandomPulseNoise randomPulseNoise;
+
 
     System.Random r;
 
@@ -35,24 +39,39 @@ public class Battery : MonoBehaviour
     {
         dischargeRateWindCoeff = (normalDischargeRate - noWindDischargeRate) / normalWindStrength;
         r = new System.Random();
+        currentVoltage = normalBatteryVoltage;
     }
 
     // Update is called once per frame
     void Update()
     {
         if(DroneManager.currentFlightState != DroneManager.FlightState.Landed){
-            randomNoise = Sample(abnormalDischargeRate, 3f);
+            randomNoise = Sample(abnormalDischargeRate, 0.01f);
             currentDischargeRate = Mathf.Abs(randomPulseNoise.GetCurrentWindStrength()) * dischargeRateWindCoeff + noWindDischargeRate + randomNoise;
         } else {
             currentDischargeRate = 0f;
         }
         currentBatteryCapacity -= currentDischargeRate * Time.deltaTime / 3.6f;
         currentBatteryPercentage = currentBatteryCapacity/batteryCapacity;
-        remainingTimeInSeconds = currentBatteryCapacity / currentDischargeRate * 3.6f;
+        float predictedDischargeRate = randomPulseNoise.strength_mean * dischargeRateWindCoeff + noWindDischargeRate + abnormalDischargeRate;
+        remainingTimeInSeconds = (currentBatteryCapacity - batteryCapacity * 0.2f) / predictedDischargeRate * 3.6f;
+        uiUpdater.currentBatteryPercentage = currentBatteryPercentage;
+        uiUpdater.remainingTime = remainingTimeInSeconds;
+        uiUpdater.voltage = currentVoltage;
+
     }
 
-    public void SimulateVoltageDrop(int dropLevel){
-        abnormalDischargeRate = dropLevel * voltageDropDischargeRateCoeff;
+    public void SetVoltageLevel(int level){
+        abnormalDischargeRate = (3 - level) * voltageDropDischargeRateCoeff;
+        currentVoltage = normalBatteryVoltage - (3 - level) * voltageDropPerLevel;
+    }
+
+    public float GetBatteryLevel(){
+        return currentBatteryPercentage;
+    }
+
+    public float GetBatteryVoltage(){
+        return currentVoltage;
     }
 
     float Sample(float mean, float var)

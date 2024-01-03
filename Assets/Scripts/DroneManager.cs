@@ -26,11 +26,10 @@ public class DroneManager : MonoBehaviour
 
     public enum SystemState{
         Healthy,
+        Caution,
         Warning,
         Emergency
     }
-
-
 
     public enum ControlType
     {
@@ -74,6 +73,11 @@ public class DroneManager : MonoBehaviour
 
     [SerializeField] Transform buildingCollision;
 
+    [SerializeField] Battery battery;
+    [SerializeField] PositionalSensorSimulator posSensor;
+
+    public static float bufferCautionThreahold = 2.5f, surfaceCautionThreshold = 2f, surfaceWarningThreshold = 1f;
+
 
     // Start is called before the first frame update
     void Start()
@@ -102,21 +106,15 @@ public class DroneManager : MonoBehaviour
             uiUpdater.enableSound = true;
 
             bool inBuffer = false;
-            controlVisUpdater.vectorToNearestBufferBound = CheckPositionInContingencyBuffer(out inBuffer);
+            Vector3 v2bound = CheckPositionInContingencyBuffer(out inBuffer);
+            controlVisUpdater.vectorToNearestBufferBound = v2bound;
             Vector3 v2surf = CheckDistanceToBuildingSurface();
             controlVisUpdater.vectorToNearestSurface = v2surf;
             autopilotManager.vectorToBuildingSurface = v2surf;
             worldVisUpdater.vectorToSurface = v2surf;
+            
             if(currentMissionState != MissionState.Inspecting && currentMissionState != MissionState.Returning)
                 currentMissionState = inBuffer?MissionState.InFlightZone:MissionState.MovingToFlightZone;
-
-            if (rth_flag)
-            {
-                EngageAutoPilot(true);
-                currentControlType = ControlType.Autonomous;
-                currentMissionState = MissionState.Returning;
-                rth_flag = false;
-            }
 
             if(inBuffer != preInBuffer){
                 if(inBuffer)
@@ -126,6 +124,15 @@ public class DroneManager : MonoBehaviour
             }
 
             preInBuffer = inBuffer;
+
+
+            if (rth_flag)
+            {
+                EngageAutoPilot(true);
+                currentControlType = ControlType.Autonomous;
+                currentMissionState = MissionState.Returning;
+                rth_flag = false;
+            }
 
             if (currentMissionState == MissionState.InFlightZone)
             {
@@ -169,6 +176,15 @@ public class DroneManager : MonoBehaviour
                     controlVisUpdater.predictedPoints = new Vector3[0];
                 }
             }
+
+            if(autopilot_stop_flag){
+                DisengageAutoPilot();
+                currentControlType = ControlType.Manual;
+                autopilot_stop_flag = false;
+            }
+
+            UpdateSystemState(inBuffer, v2bound.magnitude, v2surf.magnitude, battery.GetBatteryLevel(), battery.GetBatteryVoltage(), posSensor.GetSignalLevel());
+
         } else
         {
             uiUpdater.enableSound = false;
@@ -189,14 +205,6 @@ public class DroneManager : MonoBehaviour
                 currentMissionState = MissionState.MovingToFlightZone;
             }
         }
-
-        if(autopilot_stop_flag){
-            DisengageAutoPilot();
-            currentControlType = ControlType.Manual;
-            autopilot_stop_flag = false;
-        }
-
-
     }
 
 
@@ -236,14 +244,16 @@ public class DroneManager : MonoBehaviour
         {
             if (inBuffer)
             {
+                Vector3 vectorToBufferWall;
                 if (Mathf.Abs(Mathf.Abs(localDronePos.x) - 0.5f) < Mathf.Abs(Mathf.Abs(localDronePos.z) - 0.5f))
                 {
-                    return -contingencyBuffer.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * contingencyBuffer.localScale.x;
+                    vectorToBufferWall = -contingencyBuffer.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * contingencyBuffer.localScale.x;
                 }
                 else
                 {
-                    return -contingencyBuffer.forward * (Mathf.Abs(localDronePos.z) - 0.5f) * Mathf.Sign(localDronePos.z) * contingencyBuffer.localScale.z;
+                    vectorToBufferWall = -contingencyBuffer.forward * (Mathf.Abs(localDronePos.z) - 0.5f) * Mathf.Sign(localDronePos.z) * contingencyBuffer.localScale.z;
                 }
+                return vectorToBufferWall;
             } else
             {
                 if(Mathf.Abs(localDronePos.z) < 0.5f)
@@ -258,6 +268,64 @@ public class DroneManager : MonoBehaviour
         {
             return Vector3.positiveInfinity;
         }
+    }
+
+    void UpdateSystemState(bool inBuffer, float distToBuffer, float distToSurface, float batteryLevel, float voltage, int positional_signal_level){
+        if(currentSystemState == SystemState.Emergency)
+            return;
+        
+
+        SystemState tempState = SystemState.Healthy;
+
+        if(currentMissionState == MissionState.Inspecting && inBuffer){
+            if(distToBuffer < bufferCautionThreahold){
+                tempState = SystemState.Caution;
+            }
+        }
+        
+        if(distToSurface < surfaceCautionThreshold){
+            tempState = SystemState.Caution;
+        }
+        if(batteryLevel < 0.46667f){
+            tempState = SystemState.Caution;
+        }
+        if(voltage < 10f){
+            tempState = SystemState.Caution;
+        }
+        if(positional_signal_level == 2){
+            tempState = SystemState.Caution;
+        }
+
+        if(currentMissionState == MissionState.Inspecting && !inBuffer){
+            tempState = SystemState.Warning;
+        }
+        if(distToSurface < surfaceWarningThreshold){
+            tempState = SystemState.Warning;
+        }
+        if(batteryLevel < 0.2f){
+            tempState = SystemState.Caution;
+        }
+        if(voltage < 9f){
+            tempState = SystemState.Warning;
+        }
+        if(vc.collisionHitCount > 0){
+            tempState = SystemState.Warning;
+        }
+        if(positional_signal_level == 1){
+            tempState = SystemState.Warning;
+        }
+        if(positional_signal_level == 0){
+            tempState = SystemState.Warning;
+        }
+
+        if(batteryLevel <= 0f){
+            tempState = SystemState.Emergency;
+        } else if(vc.collisionHitCount > 10 || vc.out_of_balance){
+            tempState = SystemState.Emergency;
+        }
+
+        currentSystemState = tempState;
+
     }
 
     Vector3 CheckDistanceToBuildingSurface(){
@@ -278,13 +346,13 @@ public class DroneManager : MonoBehaviour
     }
 
     void OnEnterBuffer(){
-        if(currentSystemState != SystemState.Emergency)
-            currentSystemState = SystemState.Healthy;
+        //if(currentSystemState != SystemState.Emergency)
+        //    currentSystemState = SystemState.Healthy;
     }
 
     void OnExitBuffer(){
-        if(currentSystemState != SystemState.Emergency)
-            currentSystemState = SystemState.Warning;
+       //if(currentSystemState != SystemState.Emergency)
+       //    currentSystemState = SystemState.Warning;
         autopilot_stop_flag = true;
     }
 
@@ -295,7 +363,7 @@ public class DroneManager : MonoBehaviour
         if (Physics.Raycast(rayDown, out hit, float.MaxValue, realObstacleLayerMask))
         {
             hitGround = true;
-            return (hit.point - vc.transform.position);
+            return hit.point - vc.transform.position;
         } else
         {
             hitGround = false;

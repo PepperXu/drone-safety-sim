@@ -35,12 +35,15 @@ public class ExperimentServer : MonoBehaviour
 
 	public static VisualizationCondition currentVisCondition = VisualizationCondition.Manual;
 
+
 	string[] visConditionString = {"Manual", "Manual Procedual", "System", "System Procedual"};
+	string[] posStatusString = {"Signal Lost", "Unstable Connection", "Position Offset", "Normal"};
 
     [SerializeField] private FlightPlanning flightPlanning;
 	[SerializeField] private UIUpdater uIUpdater;
 	[SerializeField] private RandomPulseNoise randomPulseNoise;
 	[SerializeField] private Battery battery;
+	[SerializeField] private PositionalSensorSimulator positionalSensorSimulator;
 	private string clientMessage = "";
     // Start is called before the first frame update
     void Start()
@@ -48,7 +51,7 @@ public class ExperimentServer : MonoBehaviour
 		tcpListenerThread = new Thread (new ThreadStart(ListenForIncommingRequests)); 		
 		tcpListenerThread.IsBackground = true; 		
 		tcpListenerThread.Start(); 
-		StartCoroutine(UpdateCurrentState());	       
+		StartCoroutine(UpdateCurrentState());
     }
 
     // Update is called once per frame
@@ -61,19 +64,26 @@ public class ExperimentServer : MonoBehaviour
 		ProcessClientMessage();
         
 		//For Debugging
-		//ProcessKeyboardInput();
+		ProcessKeyboardInput();
 
 		if(currentVisCondition == VisualizationCondition.System){
-			if((DroneManager.currentControlType == DroneManager.ControlType.Manual || DroneManager.currentSystemState != DroneManager.SystemState.Healthy) && VisType.globalVisType != VisType.VisualizationType.SafetyOnly){
+			if(DroneManager.currentControlType == DroneManager.ControlType.Manual || DroneManager.currentSystemState != DroneManager.SystemState.Healthy){
 				VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
-			} else if(DroneManager.currentMissionState == DroneManager.MissionState.InFlightZone || DroneManager.currentMissionState == DroneManager.MissionState.Planning || DroneManager.currentMissionState == DroneManager.MissionState.Inspecting){
+			} else {
 				VisType.globalVisType = VisType.VisualizationType.MissionOnly;
+			}
+		} else {
+			if(currentVisCondition == VisualizationCondition.SystemProcedual){
+				VisType.RevealHiddenVisType(true);
+			}  else if (currentVisCondition == VisualizationCondition.Manual){
+				VisType.RevealHiddenVisType(false);
 			}
 		}
 
     }
 
 	void ProcessKeyboardInput(){
+
 		if(DroneManager.currentMissionState == DroneManager.MissionState.Planning){
         	
         	if(Input.GetKeyDown(KeyCode.Alpha1)){
@@ -91,8 +101,23 @@ public class ExperimentServer : MonoBehaviour
         	if(Input.GetKeyDown(KeyCode.Alpha0)){
         	    flightPlanning.SetStartingPoint(0);
         	}
+		} else {
+			if(Input.GetKeyDown(KeyCode.Alpha1)){
+        	    currentVisCondition = VisualizationCondition.Manual;
+        	}
+        	if(Input.GetKeyDown(KeyCode.Alpha2)){
+        	    currentVisCondition = VisualizationCondition.ManualProcedual;
+        	}
+        	if(Input.GetKeyDown(KeyCode.Alpha3)){
+        	    currentVisCondition = VisualizationCondition.System;
+        	}
+        	if(Input.GetKeyDown(KeyCode.Alpha4)){
+        	    currentVisCondition = VisualizationCondition.SystemProcedual;
+        	}
 		}
 	}
+
+
 
     private void ListenForIncommingRequests () { 		
 		try { 			
@@ -138,10 +163,15 @@ public class ExperimentServer : MonoBehaviour
 				currentVisCondition = (VisualizationCondition) int.Parse(splitMsg[1]);
 				break;
 			case "wind-condition":
-				Debug.Log("Setting new wind condition");
 				randomPulseNoise.yawCenter = float.Parse(splitMsg[1]);
 				randomPulseNoise.strength_mean = float.Parse(splitMsg[2]);
 				randomPulseNoise.wind_change_flag = true;
+				break;
+			case "battery-voltage-level":
+				battery.SetVoltageLevel(int.Parse(splitMsg[1]));
+				break;
+			case "positional-signal-level":
+				positionalSensorSimulator.SetSignalLevel(int.Parse(splitMsg[1]));
 				break;
 			default:
 				Debug.Log("Undefined Command: " + clientMessage);
@@ -181,7 +211,10 @@ public class ExperimentServer : MonoBehaviour
 			uIUpdater.missionStateString[(int)DroneManager.currentMissionState] + ";" + 
 			uIUpdater.controlStateString[(int)DroneManager.currentControlType] + ";" + 
 			uIUpdater.systemStateString[(int)DroneManager.currentSystemState] + ";" + 
-			visConditionString[(int)currentVisCondition];
+			visConditionString[(int)currentVisCondition] + ";" + 
+			((int) ((battery.GetBatteryLevel() - 0.2f)/ 0.8f * 100f)) + "%" + ";" + 
+			((int) (battery.GetBatteryVoltage() * 10f)) / 10f + "V" + ";" + 
+			posStatusString[positionalSensorSimulator.GetSignalLevel()];
 		
 		SendMessage(currentState);
 
