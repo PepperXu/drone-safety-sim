@@ -26,7 +26,7 @@ public class UIUpdater : MonoBehaviour
 
 
     [Header("Mission States")]
-    [SerializeField] TextMeshProUGUI missionState, defectCountUI, progressPercentageUI;
+    [SerializeField] TextMeshProUGUI missionState, cameraCountUI, defectCountUI, progressPercentageUI;
     [SerializeField] Image cameraBorderUI;
 
     [Header("Audio")]
@@ -154,6 +154,7 @@ public class UIUpdater : MonoBehaviour
         horiSpeed.text = ((int)new Vector3(droneState.pose.WorldVelocity.x, 0f, droneState.pose.WorldVelocity.z).magnitude).ToString();
         vertSpeed.text = ((int)Mathf.Abs(droneState.pose.WorldVelocity.y)).ToString();
         vps.text = ((int)vpsHeight).ToString();
+        cameraCountUI.text = CameraController.photoTaken.ToString();
         defectCountUI.text = defectCount.ToString();
         progressPercentageUI.text = (int)(missionProgress*100f) + "%";
 
