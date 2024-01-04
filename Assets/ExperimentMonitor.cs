@@ -79,7 +79,7 @@ public class ExperimentMonitor : MonoBehaviour
 	/// </summary>     
 	private void ListenForData() { 		
 		try { 			
-			socketConnection = new TcpClient(serverIp, 7777);
+			socketConnection = new TcpClient(serverIp, 8052);
 			
 			Byte[] bytes = new Byte[1024];
 			while (true) { 				

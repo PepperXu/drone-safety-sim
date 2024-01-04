@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+
 public class DroneManager : MonoBehaviour
 {
     public enum FlightState{
@@ -104,6 +105,7 @@ public class DroneManager : MonoBehaviour
         rth_flag = false; 
         take_photo_flag = false;
         mark_defect_flag = false;
+
     }
 
     // Update is called once per frame

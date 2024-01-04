@@ -48,16 +48,15 @@ public class ControlVisUpdater : MonoBehaviour
                 StartCoroutine(UpdateControlVis());
             }
         } else {
-            if(visActive){
-                visActive = false;
-                StopAllCoroutines();
-                dis2groundVis.showVisualization = false;
-                futureTrajectory.showVisualization = false;
-                attitude.showVisualization = false;
-                dis2boundVis.showVisualization = false;
-                dis2SurfaceVis.showVisualization = false;
-                camFrustum.showVisualization = false;
-            }
+            visActive = false;
+            StopAllCoroutines();
+            dis2groundVis.showVisualization = false;
+            futureTrajectory.showVisualization = false;
+            attitude.showVisualization = false;
+            dis2boundVis.showVisualization = false;
+            dis2SurfaceVis.showVisualization = false;
+            camFrustum.showVisualization = false;
+
         }
     }
     IEnumerator UpdateControlVis(){

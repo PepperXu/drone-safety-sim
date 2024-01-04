@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text; 
 using System.Threading;
 using UnityEngine;  
+using Unity.XR.CoreUtils;
 
 public class ExperimentServer : MonoBehaviour
 {
@@ -45,6 +46,8 @@ public class ExperimentServer : MonoBehaviour
 	[SerializeField] private PositionalSensorSimulator positionalSensorSimulator;
 	[SerializeField] private DroneManager droneManager;
 	[SerializeField] private Transform droneParent;
+	
+    [SerializeField] private XROrigin xrOrigin;
 	private string clientMessage = "";
     // Start is called before the first frame update
     void Start()
@@ -53,12 +56,18 @@ public class ExperimentServer : MonoBehaviour
 		tcpListenerThread.IsBackground = true; 		
 		tcpListenerThread.Start(); 
 		StartCoroutine(UpdateCurrentState());
+		StartCoroutine(DelayedInitializeTrackingOriginMode());
     }
+
+	IEnumerator DelayedInitializeTrackingOriginMode(){
+		yield return new WaitForSecondsRealtime(3f);
+		xrOrigin.RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Floor;
+	}
 
     // Update is called once per frame
     void Update()
     {
-
+		
 		ProcessClientMessage();
         
 		//For Debugging
@@ -120,7 +129,7 @@ public class ExperimentServer : MonoBehaviour
     private void ListenForIncommingRequests () { 		
 		try { 			
 			// Create listener on localhost port 8052. 			
-			tcpListener = new TcpListener(IPAddress.Any, 7777);
+			tcpListener = new TcpListener(IPAddress.Any, 8052);
 			tcpListener.Start();              
 			Debug.Log("Server is listening");              
 			Byte[] bytes = new Byte[1024];  			
