@@ -266,4 +266,13 @@ public class ExperimentMonitor : MonoBehaviour
 			
 		}
 	}
+
+	private void OnApplicationQuit() {
+		try{
+			socketConnection.Close();
+		}
+		catch(Exception e){
+			Debug.Log(e.Message);
+		}
+	}
 }

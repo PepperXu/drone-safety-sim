@@ -255,5 +255,14 @@ public class ExperimentServer : MonoBehaviour
 		}
 	}
 
+	private void OnApplicationQuit() {
+		try{
+			tcpListener.Stop();
+		}
+		catch(Exception e){
+			Debug.Log(e.Message);
+		}
+	}
+
 
 }
