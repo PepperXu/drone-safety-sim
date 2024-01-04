@@ -98,7 +98,7 @@ public class ExperimentMonitor : MonoBehaviour
 					StreamReader sr = new StreamReader(stream);
 					do{
 						incomingMsgQueue.Enqueue(sr.ReadLine());
-					} while(sr.ReadLine() != null);			
+					} while(sr.ReadLine() != null);	
 				} 			
 			}         
 		}         
@@ -216,23 +216,23 @@ public class ExperimentMonitor : MonoBehaviour
 
 
 	public void SetVisCondition(int i){
-		sendMsgQueue.Enqueue("vis-condition;" + i);
+		sendMsgQueue.Enqueue("vis-condition;" + i + "\n");
 	}
 
 	public void SendWindCondition(float direction, float strength){
-		sendMsgQueue.Enqueue("wind-condition;" + direction + ";" + strength);
+		sendMsgQueue.Enqueue("wind-condition;" + direction + ";" + strength + "\n");
 	}
 
 	public void SendPositoinalSignalLevel(int level){
-		sendMsgQueue.Enqueue("positional-signal-level;" + level);
+		sendMsgQueue.Enqueue("positional-signal-level;" + level + "\n");
 	}
 
 	public void SendBatteryVoltageLevel(Slider slider){
-		sendMsgQueue.Enqueue("battery-voltage-level;" + slider.value);
+		sendMsgQueue.Enqueue("battery-voltage-level;" + slider.value + "\n");
 	}
 
 	public void ResetAllStates(){
-		sendMsgQueue.Enqueue("reset-all-states");
+		sendMsgQueue.Enqueue("reset-all-states" + "\n");
 	}
 
 	public void SetServerIp(){

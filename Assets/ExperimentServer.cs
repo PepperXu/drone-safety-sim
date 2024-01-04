@@ -49,9 +49,9 @@ public class ExperimentServer : MonoBehaviour
 	[SerializeField] private Transform droneParent;
 	
     [SerializeField] private XROrigin xrOrigin;
-	private string clientMessage = "";
+	//private string clientMessage = "";
 	Queue<string> msgQueue = new Queue<string>();
-
+	Queue<string> incomingMsgQueue = new Queue<string>();
 	int msgSendCounter = 0;
     // Start is called before the first frame update
     void Start()
@@ -71,8 +71,8 @@ public class ExperimentServer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-		
-		ProcessClientMessage();
+		if(incomingMsgQueue.Count > 0)
+			ProcessClientMessage();
         
 		//For Debugging
 		ProcessKeyboardInput();
@@ -143,16 +143,10 @@ public class ExperimentServer : MonoBehaviour
 				using (connectedTcpClient = tcpListener.AcceptTcpClient()) { 					
 					// Get a stream object for reading 					
 					using (NetworkStream stream = connectedTcpClient.GetStream()) { 						
-						int length; 						
-						// Read incomming stream into byte arrary. 						
-						while ((length = stream.Read(bytes, 0, bytes.Length)) != 0) { 							
-							var incommingData = new byte[length]; 							
-							Array.Copy(bytes, 0, incommingData, 0, length);  							
-							// Convert byte array to string message. 							
-							clientMessage = Encoding.ASCII.GetString(incommingData);
-							
-							Debug.Log("client message received as: " + clientMessage); 						
-						} 					
+						StreamReader sr = new StreamReader(stream);
+						do{
+							incomingMsgQueue.Enqueue(sr.ReadLine());
+						} while(sr.ReadLine() != null);		
 					} 				
 				} 			
 			} 		
@@ -163,8 +157,7 @@ public class ExperimentServer : MonoBehaviour
 	}
 
 	private void ProcessClientMessage(){
-		if(clientMessage == "")
-			return;
+		string clientMessage = incomingMsgQueue.Dequeue();
 		string[] splitMsg = clientMessage.Split(';');
 		switch(splitMsg[0]){
 			case "starting-point":

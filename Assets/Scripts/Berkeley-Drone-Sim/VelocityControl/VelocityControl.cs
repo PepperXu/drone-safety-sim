@@ -71,6 +71,8 @@ public class VelocityControl : MonoBehaviour {
         rb.useGravity = false;
         landedHeight = transform.position.y;
         desired_height = landedHeight;
+        collisionHitCount = 0;
+        out_of_balance = false;
         state.GetState();
         audioSource.Stop();
     }
