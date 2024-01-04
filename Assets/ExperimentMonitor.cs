@@ -45,6 +45,8 @@ public class ExperimentMonitor : MonoBehaviour
 	private const float normalBatteryVoltage = 11.4f;
     private const float voltageDropPerLevel = 1f;
 
+	private float expTimer = 0f;
+
 	Queue<string> msgQueue = new Queue<string>();
 	// Use this for initialization 	
 	private void Awake() {
@@ -55,11 +57,13 @@ public class ExperimentMonitor : MonoBehaviour
 		ConnectToTcpServer();     
 	}  	
 	// Update is called once per frame
-	void Update () {         
+	void Update () {
 		ProcessReceivedMessage();
 		droneParent.position = currentDronePosition;
 		if(msgQueue.Count > 0)
 			SendMessageFromQueue();
+		if(isRecording)
+			expTimer += Time.deltaTime;
 	}  	
 	/// <summary> 	
 	/// Setup socket connection. 	
@@ -158,18 +162,18 @@ public class ExperimentMonitor : MonoBehaviour
 		controlTypeText.SetText(controlStateString[statusArray[1]]);
 		systemStateText.SetText(systemStateString[statusArray[2]]);
 		visCondiText.SetText(visConditionString[statusArray[3]]);
-		batteryVoltageText.SetText(((int) (normalBatteryVoltage - (3 - statusArray[4]) * voltageDropPerLevel * 10f)) / 10f + "V");
+		batteryVoltageText.SetText((int) (normalBatteryVoltage - (3 - statusArray[4]) * voltageDropPerLevel) * 10f / 10f + "V");
 		positionalSignalStatusText.SetText(posStatusString[statusArray[5]]);
 		defectCountText.SetText(statusArray[6] + "");
 		if(isRecording)
-			RecordData(missionStateString[statusArray[0]] + "," +
+			RecordData(expTimer + "," + missionStateString[statusArray[0]] + "," +
 			controlStateString[statusArray[1]]+ "," +
 			systemStateString[statusArray[2]] + "," +
 			visConditionString[statusArray[3]] + "," +
 			((int) (normalBatteryVoltage - (3 - statusArray[4]) * voltageDropPerLevel * 10f)) / 10f + "V" + "," +
 			posStatusString[statusArray[5]] + "," +
 			statusArray[6] + "," + 
-			currentDronePosition + "," + 
+			currentDronePosition.x + "," + currentDronePosition.y + "," + currentDronePosition.z + "," + 
 			currentBatteryPercentage
 			);
 	}
@@ -250,9 +254,10 @@ public class ExperimentMonitor : MonoBehaviour
 		string fileName = baseFileName + "_starting+point_" + currentStartingPointIndex + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
         filePath = Application.persistentDataPath + "/" + fileName + ".csv";
 		using (StreamWriter writer = new StreamWriter(filePath, true)) {
-			writer.WriteLine("Mission State, Control State, SystemState, Visualization Condition, Battery Voltage, "+
-			"Positional Signal State, Defect Count, Drone Position, Battery Percentage");
+			writer.WriteLine("Timestamp, Mission State, Control State, SystemState, Visualization Condition, Battery Voltage, "+
+			"Positional Signal State, Defect Count, Drone Position X, Drone Position Y, Drone Position Z, Battery Percentage");
 		};
+		expTimer = 0f;
         isRecording = true;
 	}
 
