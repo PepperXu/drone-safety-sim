@@ -93,12 +93,14 @@ public class DroneManager : MonoBehaviour
         currentSystemState = SystemState.Healthy;
         VisType.globalVisType = VisType.VisualizationType.MissionOnly;
         controlVisUpdater.SetControlVisActive(false);
+        autopilotManager.ResetAutopilot();
         flightPlanning.ResetPathPlanning();
+        vc.transform.localPosition = Vector3.zero;
+        vc.transform.localEulerAngles = Vector3.zero;
         vc.ResetVelocityControl();
         worldVisUpdater.ResetWorldVis();
         uiUpdater.ResetUI();
         camController.ResetCamera();
-        autopilotManager.ResetAutopilot();
         battery.ResetBattery();
         autopilot_flag = false;
         autopilot_stop_flag = false;  

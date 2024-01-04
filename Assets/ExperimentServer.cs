@@ -228,25 +228,25 @@ public class ExperimentServer : MonoBehaviour
 			(int)currentVisCondition + ";" + 
 			battery.GetBatteryVoltageLevel() + ";" + 
 			positionalSensorSimulator.GetSignalLevel() + ";" + 
-			uIUpdater.GetDefectCount();
+			uIUpdater.GetDefectCount() + "\n";
 		msgQueue.Enqueue(currentState);
 	}
 
 	private void SendFlightPlanningInfo(){
-		string currentPlan = "flight-planning;" + flightPlanning.GetCurrentStartingPointIndex();
+		string currentPlan = "flight-planning;" + flightPlanning.GetCurrentStartingPointIndex() + "\n";
 		msgQueue.Enqueue(currentPlan);
 	}
 	private void SendDroneFlightStatus(){
-		string currentFlightState = "drone-status;" + (int)DroneManager.currentFlightState;
+		string currentFlightState = "drone-status;" + (int)DroneManager.currentFlightState + "\n";
 		msgQueue.Enqueue(currentFlightState);
 	}
 	private void SendCurrentDronePose(){
-		string currentDronePose = "drone-position;" + droneParent.position.x + ";" + droneParent.position.y + ";" + droneParent.position.z;
+		string currentDronePose = "drone-position;" + droneParent.position.x + ";" + droneParent.position.y + ";" + droneParent.position.z + "\n";
 		msgQueue.Enqueue(currentDronePose);
 	}
 
 	private void SendBatteryPercentage(){
-		string currentBatPer = "battery-percentage;" + battery.GetBatteryLevel();
+		string currentBatPer = "battery-percentage;" + battery.GetBatteryLevel() + "\n";
 		msgQueue.Enqueue(currentBatPer);
 	}
 

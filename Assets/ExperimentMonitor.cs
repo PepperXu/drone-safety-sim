@@ -27,7 +27,7 @@ public class ExperimentMonitor : MonoBehaviour
 	private float currentBatteryPercentage;
 	private int currentDroneStatus;
 	[SerializeField] private Transform droneParent;
-	string serverMessage = "";
+	//string serverMessage = "";
 
 	string[] visConditionString = {"Manual", "Manual Procedual", "System", "System Procedual"};
 	string[] posStatusString = {"Signal Lost", "Unstable Connection", "Position Offset", "Normal"};
@@ -47,7 +47,9 @@ public class ExperimentMonitor : MonoBehaviour
 
 	private float expTimer = 0f;
 
-	Queue<string> msgQueue = new Queue<string>();
+	Queue<string> incomingMsgQueue = new Queue<string>();
+
+	Queue<string> sendMsgQueue = new Queue<string>();
 	// Use this for initialization 	
 	private void Awake() {
 		serverIp = PlayerPrefs.GetString("server-ip");
@@ -58,9 +60,10 @@ public class ExperimentMonitor : MonoBehaviour
 	}  	
 	// Update is called once per frame
 	void Update () {
-		ProcessReceivedMessage();
+		if(incomingMsgQueue.Count > 0)
+			ProcessReceivedMessage();
 		droneParent.position = currentDronePosition;
-		if(msgQueue.Count > 0)
+		if(sendMsgQueue.Count > 0)
 			SendMessageFromQueue();
 		if(isRecording)
 			expTimer += Time.deltaTime;
@@ -91,17 +94,11 @@ public class ExperimentMonitor : MonoBehaviour
 			Byte[] bytes = new Byte[1024];
 			while (true) { 				
 				// Get a stream object for reading 				
-				using (NetworkStream stream = socketConnection.GetStream()) { 					
-					int length; 					
-					// Read incomming stream into byte arrary. 					
-					while ((length = stream.Read(bytes, 0, bytes.Length)) != 0) { 						
-						var incommingData = new byte[length]; 						
-						Array.Copy(bytes, 0, incommingData, 0, length); 						
-						// Convert byte array to string message. 						
-						serverMessage = Encoding.ASCII.GetString(incommingData);	
-						//ProcessReceivedMessage(serverMessage);			
-						Debug.Log("server message received as: " + serverMessage); 					
-					} 				
+				using (NetworkStream stream = socketConnection.GetStream()) { 		
+					StreamReader sr = new StreamReader(stream);
+					do{
+						incomingMsgQueue.Enqueue(sr.ReadLine());
+					} while(sr.ReadLine() != null);			
 				} 			
 			}         
 		}         
@@ -112,8 +109,7 @@ public class ExperimentMonitor : MonoBehaviour
 
 
 	private void ProcessReceivedMessage(){
-		if(serverMessage == "")
-			return;
+		string serverMessage = incomingMsgQueue.Dequeue();
 		string[] splitMsg = serverMessage.Split(';');
 		switch(splitMsg[0]){
 			case "current-state":
@@ -188,7 +184,7 @@ public class ExperimentMonitor : MonoBehaviour
 			// Get a stream object for writing. 			
 			NetworkStream stream = socketConnection.GetStream(); 			
 			if (stream.CanWrite) {
-				string clientMessage = msgQueue.Dequeue();
+				string clientMessage = sendMsgQueue.Dequeue();
 				// Convert string message to byte array.                 
 				byte[] clientMessageAsByteArray = Encoding.ASCII.GetBytes(clientMessage); 				
 				// Write byte array to socketConnection stream.                 
@@ -202,7 +198,7 @@ public class ExperimentMonitor : MonoBehaviour
 	}
 
 	public void SetStartingPoint(int i){
-		msgQueue.Enqueue("starting-point;" + i);
+		sendMsgQueue.Enqueue("starting-point;" + i);
 		currentStartingPointIndex = i;
 		UpdateStartingPointsVisual();
 	}
@@ -220,23 +216,23 @@ public class ExperimentMonitor : MonoBehaviour
 
 
 	public void SetVisCondition(int i){
-		msgQueue.Enqueue("vis-condition;" + i);
+		sendMsgQueue.Enqueue("vis-condition;" + i);
 	}
 
 	public void SendWindCondition(float direction, float strength){
-		msgQueue.Enqueue("wind-condition;" + direction + ";" + strength);
+		sendMsgQueue.Enqueue("wind-condition;" + direction + ";" + strength);
 	}
 
 	public void SendPositoinalSignalLevel(int level){
-		msgQueue.Enqueue("positional-signal-level;" + level);
+		sendMsgQueue.Enqueue("positional-signal-level;" + level);
 	}
 
 	public void SendBatteryVoltageLevel(Slider slider){
-		msgQueue.Enqueue("battery-voltage-level;" + slider.value);
+		sendMsgQueue.Enqueue("battery-voltage-level;" + slider.value);
 	}
 
 	public void ResetAllStates(){
-		msgQueue.Enqueue("reset-all-states");
+		sendMsgQueue.Enqueue("reset-all-states");
 	}
 
 	public void SetServerIp(){
