@@ -217,7 +217,7 @@ public class ExperimentServer : MonoBehaviour
 	}
 
 	private void SendCurrentState(){
-		string currentState = "current-state;" + ";" +
+		string currentState = "current-state;" + 
 			(int)DroneManager.currentMissionState + ";" + 
 			(int)DroneManager.currentControlType + ";" + 
 			(int)DroneManager.currentSystemState + ";" + 
