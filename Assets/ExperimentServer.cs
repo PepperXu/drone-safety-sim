@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using UnityEngine;  
 using Unity.XR.CoreUtils;
+using System.IO;
 
 public class ExperimentServer : MonoBehaviour
 {
@@ -50,6 +51,8 @@ public class ExperimentServer : MonoBehaviour
     [SerializeField] private XROrigin xrOrigin;
 	private string clientMessage = "";
 	Queue<string> msgQueue = new Queue<string>();
+
+	int msgSendCounter = 0;
     // Start is called before the first frame update
     void Start()
     {
@@ -90,7 +93,6 @@ public class ExperimentServer : MonoBehaviour
 
 		if(msgQueue.Count > 0)
 			SendMessageFromQueue();
-
     }
 
 	void ProcessKeyboardInput(){
@@ -201,12 +203,12 @@ public class ExperimentServer : MonoBehaviour
 			if(connectedTcpClient != null){
 			// Get a stream object for writing. 			
 				NetworkStream stream = connectedTcpClient.GetStream();	
-				if (stream.CanWrite) {		
+				if (stream.CanWrite) {
 					// Convert string message to byte array.                 
 					byte[] serverMessageAsByteArray = Encoding.ASCII.GetBytes(msgQueue.Dequeue());			
 					// Write byte array to socketConnection stream.               
 					stream.Write(serverMessageAsByteArray, 0, serverMessageAsByteArray.Length);               
-					Debug.Log("Server sent his message - should be received by client");        
+					Debug.Log("Server sent his message - should be received by client");   
 				}  
 			}     
 		} 		
@@ -250,13 +252,31 @@ public class ExperimentServer : MonoBehaviour
 
 	IEnumerator UpdateCurrentState(){
 		while(true){
-			SendCurrentState();
-			SendFlightPlanningInfo();
-			SendDroneFlightStatus();
-			SendCurrentDronePose();
-			SendBatteryPercentage();
-
-			yield return new WaitForSeconds(0.5f);
+			switch (msgSendCounter)
+			{
+				case 0:
+					SendCurrentState();
+					break;
+				case 1:
+					SendFlightPlanningInfo();
+					break;
+				case 2:
+					SendDroneFlightStatus();
+					break;
+				case 3:
+					SendCurrentDronePose();
+					break;
+				case 4:
+					SendBatteryPercentage();
+					break;
+				default:
+					break;
+			}
+			msgSendCounter++;
+			if(msgSendCounter >= 5){
+				msgSendCounter = 0;
+			}
+			yield return new WaitForSeconds(0.1f);
 		}
 	}
 
