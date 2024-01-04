@@ -57,13 +57,22 @@ public class VelocityControl : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        state.GetState();
+          
+    }
+
+    public void ResetVelocityControl(){
+        state.Reset();
+        desired_vx = 0.0f;
+        desired_vy = 0.0f;
+        desired_yaw = 0.0f;
         rb = GetComponent<Rigidbody>();
         audioSource = GetComponent<AudioSource>();
         rb.isKinematic = true;
         rb.useGravity = false;
         landedHeight = transform.position.y;
-        desired_height = landedHeight;   
+        desired_height = landedHeight;
+        state.GetState();
+        audioSource.Stop();
     }
 
     void TakeOff()

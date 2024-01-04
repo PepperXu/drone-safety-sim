@@ -52,12 +52,12 @@ public class DroneManager : MonoBehaviour
     public static ControlType currentControlType = ControlType.Manual;
     public static MissionState currentMissionState = MissionState.MovingToFlightZone;
 
-    private StateFinder.Pose originalPose;
+    //private StateFinder.Pose originalPose;
 
     private bool controlActive = false;
     private bool preInBuffer = false;
 
-    public static bool autopilot_flag = false, autopilot_stop_flag = false, rth_flag = false, take_photo_flag = false;
+    public static bool autopilot_flag = false, autopilot_stop_flag = false, rth_flag = false, take_photo_flag = false, mark_defect_flag = false;
 
     [SerializeField] float predictStepLength = 1f;
     [SerializeField] int predictSteps = 3;
@@ -82,13 +82,28 @@ public class DroneManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        state.GetState();
-        originalPose = state.pose;
+        ResetAllStates();
+    }
+
+    public void ResetAllStates(){
         currentFlightState = FlightState.Landed;
         currentMissionState = MissionState.Planning;
         currentControlType = ControlType.Manual;
+        currentSystemState = SystemState.Healthy;
         VisType.globalVisType = VisType.VisualizationType.MissionOnly;
         controlVisUpdater.SetControlVisActive(false);
+        flightPlanning.ResetPathPlanning();
+        vc.ResetVelocityControl();
+        worldVisUpdater.ResetWorldVis();
+        uiUpdater.ResetUI();
+        camController.ResetCamera();
+        autopilotManager.ResetAutopilot();
+        battery.ResetBattery();
+        autopilot_flag = false;
+        autopilot_stop_flag = false;  
+        rth_flag = false; 
+        take_photo_flag = false;
+        mark_defect_flag = false;
     }
 
     // Update is called once per frame
@@ -112,6 +127,7 @@ public class DroneManager : MonoBehaviour
             controlVisUpdater.vectorToNearestSurface = v2surf;
             autopilotManager.vectorToBuildingSurface = v2surf;
             worldVisUpdater.vectorToSurface = v2surf;
+            uiUpdater.vector2surface = v2surf;
             
             if(currentMissionState != MissionState.Inspecting && currentMissionState != MissionState.Returning)
                 currentMissionState = inBuffer?MissionState.InFlightZone:MissionState.MovingToFlightZone;
@@ -134,6 +150,12 @@ public class DroneManager : MonoBehaviour
                 rth_flag = false;
             }
 
+            if(mark_defect_flag){
+                mark_defect_flag = false;
+                camController.TakePhoto();
+                worldVisUpdater.SpawnCoverageObject(true); 
+            }
+
             if (currentMissionState == MissionState.InFlightZone)
             {
                 if (autopilot_flag)
@@ -147,11 +169,12 @@ public class DroneManager : MonoBehaviour
                     autopilot_flag = false;
                 }
             } else if(currentMissionState == MissionState.Inspecting){
+                
                 if(take_photo_flag)
                 {
                     take_photo_flag = false;
                     camController.TakePhoto();
-                    worldVisUpdater.SpawnCoverageObject();
+                    worldVisUpdater.SpawnCoverageObject(false);
                 }
             }
 

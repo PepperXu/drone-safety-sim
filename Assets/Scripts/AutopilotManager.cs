@@ -36,6 +36,12 @@ public class AutopilotManager : MonoBehaviour
         
     }
 
+    public void ResetAutopilot(){
+        isAutopiloting = false;
+        isRTH = false;
+        currentWaypointIndex = 0;
+    }
+
     // Update is called once per frame
     void Update()
     {

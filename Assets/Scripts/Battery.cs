@@ -8,14 +8,14 @@ using UnityEngine.XR.Interaction.Toolkit.Utilities.Tweenables.SmartTweenableVari
 public class Battery : MonoBehaviour
 {
     //private float hoveringDischargeRate = 7.66f;
-    private float batteryCapacity = 3830f;
+    private const float batteryCapacity = 3830f;
     //private float optimalFlightSpeed = 6.94f;
-    private float normalDischargeRate = 8.754f;
-    private float normalWindStrength = 20f;
-    private float noWindDischargeRate = 7.66f;
+    private const float normalDischargeRate = 8.754f;
+    private const float normalWindStrength = 20f;
+    private const float noWindDischargeRate = 7.66f;
 
-    private float normalBatteryVoltage = 11.4f;
-    private float resistance = 1.488f;
+    private const float normalBatteryVoltage = 11.4f;
+    private const float voltageDropPerLevel = 1f;
     float abnormalDischargeRate = 0f;
     float voltageDropDischargeRateCoeff = 1.5f;
     float randomNoise = 0f;
@@ -25,7 +25,7 @@ public class Battery : MonoBehaviour
     float dischargeRateWindCoeff = 0f;
     float remainingTimeInSeconds;
     float currentVoltage = 0f;
-    float voltageDropPerLevel = 1f;
+
 
     [SerializeField] StateFinder droneState;
     [SerializeField] UIUpdater uiUpdater;
@@ -34,12 +34,11 @@ public class Battery : MonoBehaviour
 
     System.Random r;
 
-    // Start is called before the first frame update
-    void Start()
-    {
+    public void ResetBattery(){
         dischargeRateWindCoeff = (normalDischargeRate - noWindDischargeRate) / normalWindStrength;
         r = new System.Random();
         currentVoltage = normalBatteryVoltage;
+        currentBatteryCapacity = batteryCapacity;
     }
 
     // Update is called once per frame
@@ -51,7 +50,7 @@ public class Battery : MonoBehaviour
         } else {
             currentDischargeRate = 0f;
         }
-        currentBatteryCapacity -= currentDischargeRate * Time.deltaTime / 3.6f;
+        currentBatteryCapacity -= Mathf.Max(0f, currentDischargeRate * Time.deltaTime / 3.6f);
         currentBatteryPercentage = currentBatteryCapacity/batteryCapacity;
         float predictedDischargeRate = randomPulseNoise.strength_mean * dischargeRateWindCoeff + noWindDischargeRate + abnormalDischargeRate;
         remainingTimeInSeconds = (currentBatteryCapacity - batteryCapacity * 0.2f) / predictedDischargeRate * 3.6f;
@@ -68,6 +67,10 @@ public class Battery : MonoBehaviour
 
     public float GetBatteryLevel(){
         return currentBatteryPercentage;
+    }
+
+    public int GetBatteryVoltageLevel(){
+        return 3 - (int)((normalBatteryVoltage - currentVoltage)/voltageDropPerLevel);
     }
 
     public float GetBatteryVoltage(){

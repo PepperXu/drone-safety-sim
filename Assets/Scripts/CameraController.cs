@@ -8,15 +8,14 @@ public class CameraController : MonoBehaviour
     public static int photoTaken = 0;
     [SerializeField] RenderTexture camRT;
     // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 
+    public void ResetCamera(){
+        photoTaken = 0;
+    }
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     public void TakePhoto(){

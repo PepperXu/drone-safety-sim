@@ -8,6 +8,7 @@ using System.Threading;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using System.IO;
 public class ExperimentMonitor : MonoBehaviour
 {
     #region private members 	
@@ -16,10 +17,33 @@ public class ExperimentMonitor : MonoBehaviour
 	#endregion  	
 
     string serverIp = "127.0.0.1";
-	[SerializeField] private TextMeshProUGUI flightStateText, missionStateText, controlTypeText, systemStateText, visCondiText, batteryPercentageText, batteryVoltageText, positionalSignalStatusText;
+	[SerializeField] private TextMeshProUGUI flightStateText, missionStateText, controlTypeText, systemStateText, visCondiText, batteryPercentageText, batteryVoltageText, positionalSignalStatusText, defectCountText;
 	[SerializeField] private TMP_InputField ipInputField;
+
+	[SerializeField] private Button[] startingPoints;
 	
+	private int currentStartingPointIndex = 0;
+	private Vector3 currentDronePosition;
+	private float currentBatteryPercentage;
+	private int currentDroneStatus;
+	[SerializeField] private Transform droneParent;
 	string serverMessage = "";
+
+	string[] visConditionString = {"Manual", "Manual Procedual", "System", "System Procedual"};
+	string[] posStatusString = {"Signal Lost", "Unstable Connection", "Position Offset", "Normal"};
+
+	string[] flightStateString = {"Landed", "Taking Off", "Hovering", "Navigating", "Landing"};
+    string[] missionStateString = {"Planning", "Moving to Flight Zone", "In Flight Zone", "Inspecting", "Interrupted", "Returning"};
+    string[] systemStateString = {"Healthy", "Caution", "Warning", "Emergency"};
+    string[] controlStateString = {"Auto", "Manual"};
+
+	bool isRecording = false;
+	string baseFileName = "exp_recording";
+	string filePath;
+	int[] statusArray = new int[9];
+
+	private const float normalBatteryVoltage = 11.4f;
+    private const float voltageDropPerLevel = 1f;
 	// Use this for initialization 	
 	private void Awake() {
 		serverIp = PlayerPrefs.GetString("server-ip");
@@ -31,6 +55,8 @@ public class ExperimentMonitor : MonoBehaviour
 	// Update is called once per frame
 	void Update () {         
 		ProcessReceivedMessage();
+		droneParent.position = currentDronePosition;
+
 	}  	
 	/// <summary> 	
 	/// Setup socket connection. 	
@@ -84,20 +110,65 @@ public class ExperimentMonitor : MonoBehaviour
 		string[] splitMsg = serverMessage.Split(';');
 		switch(splitMsg[0]){
 			case "current-state":
-				flightStateText.SetText(splitMsg[1]);
-				missionStateText.SetText(splitMsg[2]);
-				controlTypeText.SetText(splitMsg[3]);
-				systemStateText.SetText(splitMsg[4]);
-				visCondiText.SetText(splitMsg[5]);
-				batteryPercentageText.SetText(splitMsg[6]);
-				batteryVoltageText.SetText(splitMsg[7]);
-				positionalSignalStatusText.SetText(splitMsg[8]);
+				int[] currentStatus = {int.Parse(splitMsg[1]), int.Parse(splitMsg[2]), int.Parse(splitMsg[3]), int.Parse(splitMsg[4]), 
+				int.Parse(splitMsg[5]), int.Parse(splitMsg[6]), int.Parse(splitMsg[7]), int.Parse(splitMsg[8]), int.Parse(splitMsg[9])};
+				UpdateStatusText(currentStatus);
+				break;
+			case "flight-planning":
+				int startingPoint = int.Parse(splitMsg[1]);
+				if(startingPoint != currentStartingPointIndex){
+					currentStartingPointIndex = startingPoint;
+					UpdateStartingPointsVisual();
+				}
+				break;
+			case "drone-status":
+				currentDroneStatus = int.Parse(splitMsg[1]);
+				flightStateText.SetText(flightStateString[currentDroneStatus]);
+				if(currentDroneStatus != 0 && !isRecording){
+					StartRecording();
+				} else if(currentDroneStatus == 0){
+					StopRecording();
+				}
+				break;
+			case "drone-position":
+				if(currentDroneStatus == 0)
+					currentDronePosition = Vector3.positiveInfinity;
+				else
+					currentDronePosition = new Vector3(float.Parse(splitMsg[1]), float.Parse(splitMsg[2]), float.Parse(splitMsg[3]));
+				break;
+			case "battery-percentage":
+				currentBatteryPercentage = float.Parse(splitMsg[1]);
+				batteryPercentageText.SetText(((int) ((currentBatteryPercentage- 0.2f)/ 0.8f * 100f)) + "%");
 				break;
 			default:
 				Debug.Log("Undefined Header: " + serverMessage);
 				break;
 		}
 		serverMessage = "";
+	}
+
+	private void UpdateStatusText(int[] currentStatus){
+		if(currentStatus == statusArray)
+			return;
+		statusArray = currentStatus;
+		missionStateText.SetText(missionStateString[statusArray[0]]);
+		controlTypeText.SetText(controlStateString[statusArray[1]]);
+		systemStateText.SetText(systemStateString[statusArray[2]]);
+		visCondiText.SetText(visConditionString[statusArray[3]]);
+		batteryVoltageText.SetText(((int) (normalBatteryVoltage - (3 - statusArray[4]) * voltageDropPerLevel * 10f)) / 10f + "V");
+		positionalSignalStatusText.SetText(posStatusString[statusArray[5]]);
+		defectCountText.SetText(statusArray[6] + "");
+		if(isRecording)
+			RecordData(missionStateString[statusArray[0]] + "," +
+			controlStateString[statusArray[1]]+ "," +
+			systemStateString[statusArray[2]] + "," +
+			visConditionString[statusArray[3]] + "," +
+			((int) (normalBatteryVoltage - (3 - statusArray[4]) * voltageDropPerLevel * 10f)) / 10f + "V" + "," +
+			posStatusString[statusArray[5]] + "," +
+			statusArray[6] + "," + 
+			currentDronePosition + "," + 
+			currentBatteryPercentage
+			);
 	}
 	/// <summary> 	
 	/// Send message to server using socket connection. 	
@@ -125,7 +196,21 @@ public class ExperimentMonitor : MonoBehaviour
 
 	public void SetStartingPoint(int i){
 		SendMessage("starting-point;" + i);
+		currentStartingPointIndex = i;
+		UpdateStartingPointsVisual();
 	}
+
+	void UpdateStartingPointsVisual(){
+		for(int t = 0; t < startingPoints.Length; t++){
+			if(t == currentStartingPointIndex){
+				startingPoints[t].transform.GetChild(1).gameObject.SetActive(true);
+			} else {
+				startingPoints[t].transform.GetChild(1).gameObject.SetActive(false);
+			}
+		}
+	}
+
+
 
 	public void SetVisCondition(int i){
 		SendMessage("vis-condition;" + i);
@@ -143,6 +228,10 @@ public class ExperimentMonitor : MonoBehaviour
 		SendMessage("battery-voltage-level;" + slider.value);
 	}
 
+	public void ResetAllStates(){
+		SendMessage("reset-all-states");
+	}
+
 	public void SetServerIp(){
 		serverIp = ipInputField.text;
 		PlayerPrefs.SetString("server-ip", serverIp);
@@ -150,5 +239,31 @@ public class ExperimentMonitor : MonoBehaviour
 
 	private void InitializeIpInputField(){
 		ipInputField.text = serverIp;
+	}
+
+
+	
+	void StartRecording(){
+		string fileName = baseFileName + "_starting+point_" + currentStartingPointIndex + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
+        filePath = Application.persistentDataPath + "/" + fileName + ".csv";
+		using (StreamWriter writer = new StreamWriter(filePath, true)) {
+			writer.WriteLine("Mission State, Control State, SystemState, Visualization Condition, Battery Voltage, "+
+			"Positional Signal State, Defect Count, Drone Position, Battery Percentage");
+		};
+        isRecording = true;
+	}
+
+	void StopRecording(){
+		isRecording = false;
+	}
+
+	void RecordData(string line){
+		if (isRecording)
+        {
+            using (StreamWriter writer = new StreamWriter(filePath, true)) {
+				 writer.WriteLine(line);
+			};
+			
+		}
 	}
 }

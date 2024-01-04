@@ -32,16 +32,21 @@ public class FlightPlanning : MonoBehaviour
     
     [SerializeField] GameObject planningUI, monitoringUI;
     [SerializeField] private Transform[] startingPoints;
+
+    private int currentStartingPoint = 0;
     [SerializeField] private Transform camRig, droneRig;
 
     private int currentIndex = -1;
 
     [SerializeField] WorldVisUpdater worldVis;
     // Start is called before the first frame update
-    void Start()
-    {
-        //boxCollider = GetComponent<BoxCollider>();
+
+    public void ResetPathPlanning(){
+        pathPlanned = false;
         UpdateBoundsGeometry();
+        SetStartingPoint(4);
+        planningUI.SetActive(true);
+        monitoringUI.SetActive(false);
     }
 
     // Update is called once per frame
@@ -328,6 +333,10 @@ public class FlightPlanning : MonoBehaviour
         }
     }
 
+    public int GetCurrentStartingPointIndex(){
+        return currentStartingPoint;
+    }
+
     public int GetTotalWaypointCount()
     {
         return flightTrajectory.Length;
@@ -430,5 +439,6 @@ public class FlightPlanning : MonoBehaviour
             default:
                 break;
         }
+        currentStartingPoint = index;
     }
 }

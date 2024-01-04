@@ -13,25 +13,28 @@ public class WorldVisUpdater : MonoBehaviour
     public int currentWaypointIndex = -1;
 
     [SerializeField] Transform droneParent;
-    [SerializeField] GameObject coverageObject;
+    [SerializeField] GameObject coverageObject, markedObject;
 
     Gradient defaultGradient = new Gradient();
     Color inspectionTrajColor = new Color(0f, 1f, 1f);
 
     public Vector3 vectorToSurface;
 
+    List<GameObject> spawnedCoverageObjects = new List<GameObject>();
+
     // Start is called before the first frame update
     void Start()
     {
-        defaultGradient.colorKeys = new GradientColorKey[]{new(Color.white, 0f), new(Color.white, 1f)};
-        defaultGradient.alphaKeys = new GradientAlphaKey[]{new(0.5f, 0f), new(0.5f, 1f)};
-        StartCoroutine(WorldVisUpdateCoroutine());
+        
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+
+    public void ResetWorldVis(){
+        defaultGradient.colorKeys = new GradientColorKey[]{new(Color.white, 0f), new(Color.white, 1f)};
+        defaultGradient.alphaKeys = new GradientAlphaKey[]{new(0.5f, 0f), new(0.5f, 1f)};
+        StopAllCoroutines();
+        RemoveAllCoverageObject();
+        StartCoroutine(WorldVisUpdateCoroutine());
     }
 
     void UpdateFlightPlanVis(){
@@ -102,12 +105,25 @@ public class WorldVisUpdater : MonoBehaviour
         waypoints = wpList.ToArray();
     }
 
-    public void SpawnCoverageObject(){
+    public void SpawnCoverageObject(bool marked){
         GameObject covObj = Instantiate(coverageObject);
         covObj.transform.position = droneParent.position + vectorToSurface;
         covObj.transform.rotation = Quaternion.LookRotation(Vector3.up, -vectorToSurface.normalized);
         covObj.transform.localScale *= vectorToSurface.magnitude;
         covObj.transform.parent = coverage.visRoot;
+        spawnedCoverageObjects.Add(covObj);
+        if(marked){
+            GameObject markObj = Instantiate(markedObject, covObj.transform);
+            markObj.transform.localPosition = Vector3.zero;
+            markObj.transform.localEulerAngles = Vector3.zero;
+            markObj.transform.localScale = Vector3.one;
+        }
+    }
+
+    void RemoveAllCoverageObject(){
+        foreach(GameObject obj in spawnedCoverageObjects){
+            Destroy(obj);
+        }
     }
 
 }

@@ -57,21 +57,20 @@ public class UIUpdater : MonoBehaviour
 
     public float voltage;
 
+    public Vector3 vector2surface;
+
     bool continuous = true;
     float currentMonitoringInterval = 1.2f;
     float monitoringTimer = 0f;
     int defectCount = 0;
     //float progressPercentage = 0f;
-    public string[] flightStateString = {"Landed", "Taking Off", "Hovering", "Navigating", "Landing"};
-    public string[] missionStateString = {"Planning", "Moving to Flight Zone", "In Flight Zone", "Inspecting", "Interrupted", "Returning"};
-    public string[] systemStateString = {"Healthy", "Caution", "Warning", "Emergency"};
-    public string[] controlStateString = {"Auto", "Manual"};
+    string[] flightStateString = {"Landed", "Taking Off", "Hovering", "Navigating", "Landing"};
+    string[] missionStateString = {"Planning", "Moving to Flight Zone", "In Flight Zone", "Inspecting", "Interrupted", "Returning"};
+    string[] systemStateString = {"Healthy", "Caution", "Warning", "Emergency"};
+    string[] controlStateString = {"Auto", "Manual"};
 
-    
-    // Start is called before the first frame update
-    void Start()
-    {
-
+    public void ResetUI(){
+        defectCount = 0;
     }
 
 
@@ -183,13 +182,6 @@ public class UIUpdater : MonoBehaviour
         CheckingSystemState();
 
         UpdateCompassUI();
-
-        //if(uiSelected){
-        //    XRControllerState state = currentRayInteractor.transform.parent.GetComponent<ActionBasedController>().currentControllerState;
-        //    if(state.activateInteractionState.activatedThisFrame){
-        //        ToggleAttachToHead();
-        //    }
-        //}
     }
 
     IEnumerator PlayMonitoringSound()
@@ -315,13 +307,16 @@ public class UIUpdater : MonoBehaviour
 
     public void MarkDefect(ActivateEventArgs args)
     {
-        if (uiSelected || DroneManager.currentMissionState != DroneManager.MissionState.Inspecting)
+        if (uiSelected)
+            return;
+        
+        if(vector2surface.magnitude > 8f)
             return;
 
         defectCount++;
         Color c = cameraBorderUI.color;
         cameraBorderUI.color = new Color(c.r, c.g, c.b, 1f);
-        DroneManager.take_photo_flag = true;
+        DroneManager.mark_defect_flag = true;
         secondaryAudioSource.PlayOneShot(camCapture);
     }
 
@@ -370,6 +365,10 @@ public class UIUpdater : MonoBehaviour
             normalizedAngularValue += 360f;
         }
         return normalizedAngularValue;
+    }
+
+    public int GetDefectCount(){
+        return defectCount;
     }
 
 }

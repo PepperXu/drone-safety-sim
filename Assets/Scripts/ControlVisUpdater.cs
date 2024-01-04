@@ -36,9 +36,6 @@ public class ControlVisUpdater : MonoBehaviour
         updateRate = Time.deltaTime;
         updating = true;
     }
-    void Update(){
-        
-    }
 
     public void SetControlVisActive(bool active)
     {
@@ -227,16 +224,12 @@ public class ControlVisUpdater : MonoBehaviour
     }
 
     void UpdateCameraFrustum(){
-        if(DroneManager.currentMissionState != DroneManager.MissionState.Inspecting){
+        float dis2surf = vectorToNearestSurface.magnitude;
+        if(dis2surf > 8f){
             camFrustum.showVisualization = false;
             return;
         } 
         camFrustum.showVisualization = true;
-
-        float dis2surf = vectorToNearestSurface.magnitude;
-
-        if(dis2surf > 10f)
-        return;
 
         camFrustum.transform.GetChild(0).GetChild(0).localScale = Vector3.one * dis2surf;
     }

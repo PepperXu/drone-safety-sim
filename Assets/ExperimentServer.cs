@@ -36,14 +36,15 @@ public class ExperimentServer : MonoBehaviour
 	public static VisualizationCondition currentVisCondition = VisualizationCondition.Manual;
 
 
-	string[] visConditionString = {"Manual", "Manual Procedual", "System", "System Procedual"};
-	string[] posStatusString = {"Signal Lost", "Unstable Connection", "Position Offset", "Normal"};
+
 
     [SerializeField] private FlightPlanning flightPlanning;
 	[SerializeField] private UIUpdater uIUpdater;
 	[SerializeField] private RandomPulseNoise randomPulseNoise;
 	[SerializeField] private Battery battery;
 	[SerializeField] private PositionalSensorSimulator positionalSensorSimulator;
+	[SerializeField] private DroneManager droneManager;
+	[SerializeField] private Transform droneParent;
 	private string clientMessage = "";
     // Start is called before the first frame update
     void Start()
@@ -57,9 +58,6 @@ public class ExperimentServer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-		if(!flightPlanning.isPathPlanned()){
-        	flightPlanning.SetStartingPoint(4);
-        }
 
 		ProcessClientMessage();
         
@@ -173,6 +171,9 @@ public class ExperimentServer : MonoBehaviour
 			case "positional-signal-level":
 				positionalSensorSimulator.SetSignalLevel(int.Parse(splitMsg[1]));
 				break;
+			case "reset-all-state":
+				droneManager.ResetAllStates();
+				break;
 			default:
 				Debug.Log("Undefined Command: " + clientMessage);
 				break;
@@ -207,23 +208,43 @@ public class ExperimentServer : MonoBehaviour
 	}
 
 	private void SendCurrentState(){
-		string currentState = "current-state;" + uIUpdater.flightStateString[(int)DroneManager.currentFlightState] + ";" +
-			uIUpdater.missionStateString[(int)DroneManager.currentMissionState] + ";" + 
-			uIUpdater.controlStateString[(int)DroneManager.currentControlType] + ";" + 
-			uIUpdater.systemStateString[(int)DroneManager.currentSystemState] + ";" + 
-			visConditionString[(int)currentVisCondition] + ";" + 
-			((int) ((battery.GetBatteryLevel() - 0.2f)/ 0.8f * 100f)) + "%" + ";" + 
-			((int) (battery.GetBatteryVoltage() * 10f)) / 10f + "V" + ";" + 
-			posStatusString[positionalSensorSimulator.GetSignalLevel()];
-		
+		string currentState = "current-state;" + ";" +
+			(int)DroneManager.currentMissionState + ";" + 
+			(int)DroneManager.currentControlType + ";" + 
+			(int)DroneManager.currentSystemState + ";" + 
+			(int)currentVisCondition + ";" + 
+			battery.GetBatteryVoltageLevel() + ";" + 
+			positionalSensorSimulator.GetSignalLevel() + ";" + 
+			uIUpdater.GetDefectCount();
 		SendMessage(currentState);
+	}
 
+	private void SendFlightPlanningInfo(){
+		string currentBatPer = "flight-planning;" + flightPlanning.GetCurrentStartingPointIndex();
+		SendMessage(currentBatPer);
+	}
+	private void SendDroneFlightStatus(){
+		string currentBatPer = "drone-status;" + (int)DroneManager.currentFlightState;
+		SendMessage(currentBatPer);
+	}
+	private void SendCurrentDronePose(){
+		string currentDronePose = "drone-position;" + droneParent.position.x + ";" + droneParent.position.y + ";" + droneParent.position.z;
+		SendMessage(currentDronePose);
+	}
+
+	private void SendBatteryPercentage(){
+		string currentBatPer = "battery-percentage;" + battery.GetBatteryLevel();
+		SendMessage(currentBatPer);
 	}
 
 	IEnumerator UpdateCurrentState(){
 		while(true){
 			SendCurrentState();
+			SendCurrentDronePose();
+			SendBatteryPercentage();
 			yield return new WaitForSeconds(0.5f);
 		}
 	}
+
+
 }
