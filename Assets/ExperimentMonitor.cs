@@ -132,7 +132,7 @@ public class ExperimentMonitor : MonoBehaviour
 				break;
 			case "drone-position":
 				if(currentDroneStatus == 0)
-					currentDronePosition = Vector3.positiveInfinity;
+					currentDronePosition = Vector3.zero;
 				else
 					currentDronePosition = new Vector3(float.Parse(splitMsg[1]), float.Parse(splitMsg[2]), float.Parse(splitMsg[3]));
 				break;
