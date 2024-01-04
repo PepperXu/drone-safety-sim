@@ -44,6 +44,8 @@ public class ExperimentMonitor : MonoBehaviour
 
 	private const float normalBatteryVoltage = 11.4f;
     private const float voltageDropPerLevel = 1f;
+
+	Queue<string> msgQueue = new Queue<string>();
 	// Use this for initialization 	
 	private void Awake() {
 		serverIp = PlayerPrefs.GetString("server-ip");
@@ -56,7 +58,8 @@ public class ExperimentMonitor : MonoBehaviour
 	void Update () {         
 		ProcessReceivedMessage();
 		droneParent.position = currentDronePosition;
-
+		if(msgQueue.Count > 0)
+			SendMessageFromQueue();
 	}  	
 	/// <summary> 	
 	/// Setup socket connection. 	
@@ -173,15 +176,15 @@ public class ExperimentMonitor : MonoBehaviour
 	/// <summary> 	
 	/// Send message to server using socket connection. 	
 	/// </summary> 	
-	private new void SendMessage(string messageContent) {         
+	private void SendMessageFromQueue() {         
 		if (socketConnection == null) {             
 			return;         
 		}  		
 		try { 			
 			// Get a stream object for writing. 			
 			NetworkStream stream = socketConnection.GetStream(); 			
-			if (stream.CanWrite) {                 
-				string clientMessage = messageContent; 				
+			if (stream.CanWrite && stream.Length <= 0) {                 
+				string clientMessage = msgQueue.Dequeue(); 				
 				// Convert string message to byte array.                 
 				byte[] clientMessageAsByteArray = Encoding.ASCII.GetBytes(clientMessage); 				
 				// Write byte array to socketConnection stream.                 
@@ -195,7 +198,7 @@ public class ExperimentMonitor : MonoBehaviour
 	}
 
 	public void SetStartingPoint(int i){
-		SendMessage("starting-point;" + i);
+		msgQueue.Enqueue("starting-point;" + i);
 		currentStartingPointIndex = i;
 		UpdateStartingPointsVisual();
 	}
@@ -213,23 +216,23 @@ public class ExperimentMonitor : MonoBehaviour
 
 
 	public void SetVisCondition(int i){
-		SendMessage("vis-condition;" + i);
+		msgQueue.Enqueue("vis-condition;" + i);
 	}
 
 	public void SendWindCondition(float direction, float strength){
-		SendMessage("wind-condition;" + direction + ";" + strength);
+		msgQueue.Enqueue("wind-condition;" + direction + ";" + strength);
 	}
 
 	public void SendPositoinalSignalLevel(int level){
-		SendMessage("positional-signal-level;" + level);
+		msgQueue.Enqueue("positional-signal-level;" + level);
 	}
 
 	public void SendBatteryVoltageLevel(Slider slider){
-		SendMessage("battery-voltage-level;" + slider.value);
+		msgQueue.Enqueue("battery-voltage-level;" + slider.value);
 	}
 
 	public void ResetAllStates(){
-		SendMessage("reset-all-states");
+		msgQueue.Enqueue("reset-all-states");
 	}
 
 	public void SetServerIp(){

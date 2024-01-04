@@ -37,7 +37,7 @@ public class ExperimentServer : MonoBehaviour
 	public static VisualizationCondition currentVisCondition = VisualizationCondition.Manual;
 
 
-
+	
 
     [SerializeField] private FlightPlanning flightPlanning;
 	[SerializeField] private UIUpdater uIUpdater;
@@ -49,6 +49,7 @@ public class ExperimentServer : MonoBehaviour
 	
     [SerializeField] private XROrigin xrOrigin;
 	private string clientMessage = "";
+	Queue<string> msgQueue = new Queue<string>();
     // Start is called before the first frame update
     void Start()
     {
@@ -192,16 +193,15 @@ public class ExperimentServer : MonoBehaviour
 	/// <summary> 	
 	/// Send message to client using socket connection. 	
 	/// </summary> 	
-	private new void SendMessage(string msg) { 		
-
+	private void SendMessageFromQueue() { 		
 		try {
 			if(connectedTcpClient != null){
 			// Get a stream object for writing. 			
-				NetworkStream stream = connectedTcpClient.GetStream(); 			
-				if (stream.CanWrite) {                 
+				NetworkStream stream = connectedTcpClient.GetStream();	
+				if (stream.CanWrite && stream.Length <= 0) {                 
 					//string serverMessage = "This is a message from your server."; 			
 					// Convert string message to byte array.                 
-					byte[] serverMessageAsByteArray = Encoding.ASCII.GetBytes(msg); 				
+					byte[] serverMessageAsByteArray = Encoding.ASCII.GetBytes(msgQueue.Dequeue());			
 					// Write byte array to socketConnection stream.               
 					stream.Write(serverMessageAsByteArray, 0, serverMessageAsByteArray.Length);               
 					Debug.Log("Server sent his message - should be received by client");           
@@ -229,21 +229,21 @@ public class ExperimentServer : MonoBehaviour
 	}
 
 	private void SendFlightPlanningInfo(){
-		string currentBatPer = "flight-planning;" + flightPlanning.GetCurrentStartingPointIndex();
-		SendMessage(currentBatPer);
+		string currentPlan = "flight-planning;" + flightPlanning.GetCurrentStartingPointIndex();
+		msgQueue.Enqueue(currentPlan);
 	}
 	private void SendDroneFlightStatus(){
-		string currentBatPer = "drone-status;" + (int)DroneManager.currentFlightState;
-		SendMessage(currentBatPer);
+		string currentFlightState = "drone-status;" + (int)DroneManager.currentFlightState;
+		msgQueue.Enqueue(currentFlightState);
 	}
 	private void SendCurrentDronePose(){
 		string currentDronePose = "drone-position;" + droneParent.position.x + ";" + droneParent.position.y + ";" + droneParent.position.z;
-		SendMessage(currentDronePose);
+		msgQueue.Enqueue(currentDronePose);
 	}
 
 	private void SendBatteryPercentage(){
 		string currentBatPer = "battery-percentage;" + battery.GetBatteryLevel();
-		SendMessage(currentBatPer);
+		msgQueue.Enqueue(currentBatPer);
 	}
 
 	IEnumerator UpdateCurrentState(){
@@ -253,7 +253,9 @@ public class ExperimentServer : MonoBehaviour
 			SendDroneFlightStatus();
 			SendCurrentDronePose();
 			SendBatteryPercentage();
-			yield return new WaitForSeconds(0.5f);
+			if(msgQueue.Count > 0)
+				SendMessageFromQueue();
+			yield return new WaitForSeconds(0.1f);
 		}
 	}
 
