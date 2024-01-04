@@ -88,6 +88,9 @@ public class ExperimentServer : MonoBehaviour
 			}
 		}
 
+		if(msgQueue.Count > 0)
+			SendMessageFromQueue();
+
     }
 
 	void ProcessKeyboardInput(){
@@ -198,17 +201,12 @@ public class ExperimentServer : MonoBehaviour
 			if(connectedTcpClient != null){
 			// Get a stream object for writing. 			
 				NetworkStream stream = connectedTcpClient.GetStream();	
-				if (stream.CanWrite) {
-					Byte[] bytes = new Byte[1024];
-					stream.Read(bytes, 0, bytes.Length);
-					if(bytes.Length == 0){        
-						//string serverMessage = "This is a message from your server."; 			
-						// Convert string message to byte array.                 
-						byte[] serverMessageAsByteArray = Encoding.ASCII.GetBytes(msgQueue.Dequeue());			
-						// Write byte array to socketConnection stream.               
-						stream.Write(serverMessageAsByteArray, 0, serverMessageAsByteArray.Length);               
-						Debug.Log("Server sent his message - should be received by client");
-					}           
+				if (stream.CanWrite) {		
+					// Convert string message to byte array.                 
+					byte[] serverMessageAsByteArray = Encoding.ASCII.GetBytes(msgQueue.Dequeue());			
+					// Write byte array to socketConnection stream.               
+					stream.Write(serverMessageAsByteArray, 0, serverMessageAsByteArray.Length);               
+					Debug.Log("Server sent his message - should be received by client");        
 				}  
 			}     
 		} 		
@@ -257,9 +255,8 @@ public class ExperimentServer : MonoBehaviour
 			SendDroneFlightStatus();
 			SendCurrentDronePose();
 			SendBatteryPercentage();
-			if(msgQueue.Count > 0)
-				SendMessageFromQueue();
-			yield return new WaitForSeconds(0.1f);
+
+			yield return new WaitForSeconds(0.5f);
 		}
 	}
 
