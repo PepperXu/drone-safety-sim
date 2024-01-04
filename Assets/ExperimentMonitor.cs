@@ -183,13 +183,17 @@ public class ExperimentMonitor : MonoBehaviour
 		try { 			
 			// Get a stream object for writing. 			
 			NetworkStream stream = socketConnection.GetStream(); 			
-			if (stream.CanWrite && stream.Length <= 0) {                 
-				string clientMessage = msgQueue.Dequeue(); 				
-				// Convert string message to byte array.                 
-				byte[] clientMessageAsByteArray = Encoding.ASCII.GetBytes(clientMessage); 				
-				// Write byte array to socketConnection stream.                 
-				stream.Write(clientMessageAsByteArray, 0, clientMessageAsByteArray.Length);                 
-				Debug.Log("Client sent his message - should be received by server");             
+			if (stream.CanWrite) {        
+				Byte[] bytes = new Byte[1024];
+				stream.Read(bytes, 0, bytes.Length);
+				if(bytes.Length == 0){           
+					string clientMessage = msgQueue.Dequeue(); 				
+					// Convert string message to byte array.                 
+					byte[] clientMessageAsByteArray = Encoding.ASCII.GetBytes(clientMessage); 				
+					// Write byte array to socketConnection stream.                 
+					stream.Write(clientMessageAsByteArray, 0, clientMessageAsByteArray.Length);                 
+					Debug.Log("Client sent his message - should be received by server");  
+				}           
 			}         
 		} 		
 		catch (SocketException socketException) {             
