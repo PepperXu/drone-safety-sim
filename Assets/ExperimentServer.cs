@@ -249,6 +249,8 @@ public class ExperimentServer : MonoBehaviour
 	IEnumerator UpdateCurrentState(){
 		while(true){
 			SendCurrentState();
+			SendFlightPlanningInfo();
+			SendDroneFlightStatus();
 			SendCurrentDronePose();
 			SendBatteryPercentage();
 			yield return new WaitForSeconds(0.5f);

@@ -40,7 +40,7 @@ public class ExperimentMonitor : MonoBehaviour
 	bool isRecording = false;
 	string baseFileName = "exp_recording";
 	string filePath;
-	int[] statusArray = new int[9];
+	int[] statusArray = new int[7];
 
 	private const float normalBatteryVoltage = 11.4f;
     private const float voltageDropPerLevel = 1f;
@@ -111,7 +111,7 @@ public class ExperimentMonitor : MonoBehaviour
 		switch(splitMsg[0]){
 			case "current-state":
 				int[] currentStatus = {int.Parse(splitMsg[1]), int.Parse(splitMsg[2]), int.Parse(splitMsg[3]), int.Parse(splitMsg[4]), 
-				int.Parse(splitMsg[5]), int.Parse(splitMsg[6]), int.Parse(splitMsg[7]), int.Parse(splitMsg[8]), int.Parse(splitMsg[9])};
+				int.Parse(splitMsg[5]), int.Parse(splitMsg[6]), int.Parse(splitMsg[7])};
 				UpdateStatusText(currentStatus);
 				break;
 			case "flight-planning":
