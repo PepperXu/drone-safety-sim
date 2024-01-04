@@ -186,7 +186,7 @@ public class ExperimentServer : MonoBehaviour
 			case "positional-signal-level":
 				positionalSensorSimulator.SetSignalLevel(int.Parse(splitMsg[1]));
 				break;
-			case "reset-all-state":
+			case "reset-all-states":
 				droneManager.ResetAllStates();
 				break;
 			default:
