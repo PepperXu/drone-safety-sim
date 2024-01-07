@@ -166,7 +166,7 @@ public class ExperimentMonitor : MonoBehaviour
 			controlStateString[statusArray[1]]+ "," +
 			systemStateString[statusArray[2]] + "," +
 			visConditionString[statusArray[3]] + "," +
-			((int) (normalBatteryVoltage - (3 - statusArray[4]) * voltageDropPerLevel * 10f)) / 10f + "V" + "," +
+			((int) ((normalBatteryVoltage - (3 - statusArray[4]) * voltageDropPerLevel) * 10f)) / 10f + "V" + "," +
 			posStatusString[statusArray[5]] + "," +
 			statusArray[6] + "," + 
 			currentDronePosition.x + "," + currentDronePosition.y + "," + currentDronePosition.z + "," + 
@@ -229,6 +229,10 @@ public class ExperimentMonitor : MonoBehaviour
 
 	public void SendBatteryVoltageLevel(Slider slider){
 		sendMsgQueue.Enqueue("battery-voltage-level;" + slider.value + "\n");
+	}
+
+	public void SendBatteryCapacityReduceEvent(float percentage){
+		sendMsgQueue.Enqueue("reduce-battery-capacity;" + percentage + "\n");
 	}
 
 	public void ResetAllStates(){

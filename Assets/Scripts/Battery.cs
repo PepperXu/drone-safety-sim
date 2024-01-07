@@ -65,6 +65,10 @@ public class Battery : MonoBehaviour
         currentVoltage = normalBatteryVoltage - (3 - level) * voltageDropPerLevel;
     }
 
+    public void ReduceBatteryCap(float percentage){
+        currentBatteryCapacity = Mathf.Max(0f, currentBatteryCapacity-batteryCapacity*percentage);
+    }
+
     public float GetBatteryLevel(){
         return currentBatteryPercentage;
     }

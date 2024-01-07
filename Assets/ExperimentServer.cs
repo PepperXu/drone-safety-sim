@@ -176,6 +176,9 @@ public class ExperimentServer : MonoBehaviour
 			case "battery-voltage-level":
 				battery.SetVoltageLevel(int.Parse(splitMsg[1]));
 				break;
+			case "reduce-battery-capacity":
+				battery.ReduceBatteryCap(float.Parse(splitMsg[1]));
+				break;
 			case "positional-signal-level":
 				positionalSensorSimulator.SetSignalLevel(int.Parse(splitMsg[1]));
 				break;
