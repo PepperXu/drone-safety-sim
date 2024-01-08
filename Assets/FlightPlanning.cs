@@ -22,7 +22,7 @@ public class FlightPlanning : MonoBehaviour
 
     private bool pathPlanned = false;
     private int verticalSteps = 18;
-    private float distToSurface = 2.5f;
+    private float distToSurface = 4f;
     private int horizontalSteps = 7;
 
     private float groundOffset = 15f;

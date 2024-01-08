@@ -19,10 +19,10 @@ public class WindControl : MonoBehaviour
     float camRotationConstant = 59.005f;
     float currentWindStrength;
     public int minWindStrength = 20;
-    public int maxWindStrength = 80;
+    public int maxWindStrength = 100;
+    public float stepLength = 20f;
 
     int steps = 4;
-    float stepLength = 15f;
     float minScale = 0.8f;
     float maxScale = 2.1f;
     // Start is called before the first frame update

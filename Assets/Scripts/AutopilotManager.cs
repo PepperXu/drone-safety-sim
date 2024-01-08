@@ -102,6 +102,7 @@ public class AutopilotManager : MonoBehaviour
                         {
                             currentWaypointIndex++;
                             uiUpdater.missionProgress = GetMissionProgress();
+                            wordVis.missionProgress = GetMissionProgress();
                             wordVis.currentWaypointIndex = this.currentWaypointIndex;
                             waitTimer = 0f;
                             photoTaken = false;

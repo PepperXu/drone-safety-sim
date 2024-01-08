@@ -13,9 +13,18 @@ public class ControlVisUpdater : MonoBehaviour
     [SerializeField] private VisType futureTrajectory;
     [SerializeField] private VisType attitude;
     [SerializeField] private Image cwise_Pitch_f, cwise_Pitch_b, acwise_Pitch_f, acwise_Pitch_b, cwise_Roll_l, cwise_Roll_r, acwise_Roll_l, acwise_Roll_r;
+    [SerializeField] private VisType posCircle;
     //[SerializeField] private VisType heading;
     [SerializeField] private VisType camFrustum;
 
+    [SerializeField] private VisType windDir;
+    [SerializeField] private ParticleSystem masterParticle;
+
+    [SerializeField] private ParticleSystem[] windParticles;
+    [SerializeField] private VisType batteryRing;
+    [SerializeField] private Image batteryRingImg;
+
+    [SerializeField] private VisType positioning;
     [SerializeField] private LayerMask realObstacleLayerMask;
 
     [SerializeField] private Transform droneParent;
@@ -28,6 +37,12 @@ public class ControlVisUpdater : MonoBehaviour
 
     public Vector3 positionOffset = Vector3.zero;
 
+    public float windStrength;
+    public Quaternion windRotation;
+
+    public float batteryPercentage;
+    public int pos_sig_lvl;
+
     public float updateRate;
     
     public bool updating = true;
@@ -35,6 +50,7 @@ public class ControlVisUpdater : MonoBehaviour
     void Start(){
         updateRate = Time.deltaTime;
         updating = true;
+
     }
 
     public void SetControlVisActive(bool active)
@@ -45,6 +61,7 @@ public class ControlVisUpdater : MonoBehaviour
                 dis2groundVis.showVisualization = true;
                 futureTrajectory.showVisualization = true;
                 attitude.showVisualization = true;
+                batteryRing.showVisualization = true;
                 StartCoroutine(UpdateControlVis());
             }
         } else {
@@ -56,7 +73,9 @@ public class ControlVisUpdater : MonoBehaviour
             dis2boundVis.showVisualization = false;
             dis2SurfaceVis.showVisualization = false;
             camFrustum.showVisualization = false;
-
+            windDir.showVisualization = false;
+            batteryRing.showVisualization = false;
+            positioning.showVisualization = false;
         }
     }
     IEnumerator UpdateControlVis(){
@@ -70,6 +89,9 @@ public class ControlVisUpdater : MonoBehaviour
                 UpdateFutureTrajectory();
                 UpdateAttitudeVis();
                 UpdateCameraFrustum();
+                UpdateWindVis();
+                UpdateBatteryRing();
+                UpdatePositioningIndicator();
             }
             yield return new WaitForSeconds(updateRate);
         }
@@ -86,10 +108,7 @@ public class ControlVisUpdater : MonoBehaviour
             lr.transform.GetChild(1).localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
             lr.transform.GetChild(1).GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2ground * 10f) / 10f + " m";
         }
-        if(DroneManager.currentMissionState == DroneManager.MissionState.Returning)
-            dis2groundVis.SwitchHiddenVisTypeLocal(true);
-        else
-            dis2groundVis.SwitchHiddenVisTypeLocal(false);
+        
     }
 
     void UpdateDistance2Bound()
@@ -149,7 +168,6 @@ public class ControlVisUpdater : MonoBehaviour
             dis2SurfaceVis.SwitchHiddenVisTypeLocal(false);
         }
     }
-
 
 
 
@@ -231,5 +249,68 @@ public class ControlVisUpdater : MonoBehaviour
         camFrustum.showVisualization = true;
 
         camFrustum.transform.GetChild(0).GetChild(0).localScale = Vector3.one * dis2surf;
+    }
+
+    void UpdateWindVis(){
+        if(windStrength < 50f){
+            windDir.showVisualization = false;
+            dis2SurfaceVis.SwitchHiddenVisTypeLocal(false);
+            dis2boundVis.SwitchHiddenVisTypeLocal(false);
+            windDir.SwitchHiddenVisTypeLocal(false);
+            return;
+        }
+        dis2SurfaceVis.SwitchHiddenVisTypeLocal(true);
+        dis2boundVis.SwitchHiddenVisTypeLocal(true);
+        windDir.SwitchHiddenVisTypeLocal(true);
+        windDir.showVisualization = true;
+        windDir.transform.localRotation = windRotation;
+        float windStrengthCoeff = windStrength/50f;
+        //masterParticle.Stop();
+        foreach(ParticleSystem par in windParticles){
+            var main = par.main;
+            main.startSpeed = windStrengthCoeff * 2f;
+            main.startLifetime = 1.8f / windStrengthCoeff;
+            main.startColor = new Color(1f, 2f-windStrengthCoeff, 2f-windStrengthCoeff);
+            //main.duration = 1.8f / windStrengthCoeff * 2f;
+
+            //var burst = par.emission.GetBurst(0);
+            //burst.repeatInterval = 1.8f / windStrengthCoeff / 3f;
+            //par.emission.SetBurst(0, burst);
+        }
+        //masterParticle.Play();
+    }
+    void UpdateBatteryRing(){
+        batteryRingImg.fillAmount = (batteryPercentage - 0.2f)/0.8f;
+        if(batteryPercentage > 0.46667f) {
+            batteryRingImg.color = Color.green;
+            dis2groundVis.SwitchHiddenVisTypeLocal(false);
+            batteryRing.SwitchHiddenVisTypeLocal(false);
+        } else if(batteryPercentage > 0.3f){
+            batteryRingImg.color = Color.yellow;
+            dis2groundVis.SwitchHiddenVisTypeLocal(true);
+            batteryRing.SwitchHiddenVisTypeLocal(true);
+        } else {
+            batteryRingImg.color = Color.red;
+            dis2groundVis.SwitchHiddenVisTypeLocal(true);
+            batteryRing.SwitchHiddenVisTypeLocal(true);
+        }   
+    }
+
+    void UpdatePositioningIndicator(){
+        if(pos_sig_lvl == 3){
+            positioning.showVisualization = false;
+            positioning.SwitchHiddenVisTypeLocal(false);
+            posCircle.SwitchHiddenVisTypeLocal(false);
+            return;
+        }
+        positioning.SwitchHiddenVisTypeLocal(true);
+        posCircle.SwitchHiddenVisTypeLocal(true);
+        if(pos_sig_lvl == 0){
+            positioning.visRoot.GetChild(0).gameObject.SetActive(false);
+            positioning.visRoot.GetChild(0).gameObject.SetActive(true);
+        } else {
+            positioning.visRoot.GetChild(0).gameObject.SetActive(true);
+            positioning.visRoot.GetChild(0).gameObject.SetActive(false);
+        }
     }
 }

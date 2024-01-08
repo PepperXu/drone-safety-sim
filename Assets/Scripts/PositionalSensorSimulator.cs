@@ -29,6 +29,7 @@ public class PositionalSensorSimulator : MonoBehaviour
     void Update()
     {
         uiUpdater.positional_signal_level = positional_signal_level;
+        controlVisUpdater.pos_sig_lvl = positional_signal_level;
 
         if(offsetRefreshTimer <= 0f){
             Vector3 newOffset = Random.onUnitSphere * Random.Range (0f, maxPositionUncertainty);

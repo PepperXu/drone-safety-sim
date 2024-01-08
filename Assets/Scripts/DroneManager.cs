@@ -25,7 +25,7 @@ public class DroneManager : MonoBehaviour
 
     }
 
-    public enum SystemState{
+    public enum SafetyState{
         Healthy,
         Caution,
         Warning,
@@ -49,7 +49,7 @@ public class DroneManager : MonoBehaviour
     //private VisType[] misVis;
 
     public static FlightState currentFlightState = FlightState.Landed;
-    public static SystemState currentSystemState = SystemState.Healthy;
+    public static SafetyState currentSafetyState = SafetyState.Healthy;
     public static ControlType currentControlType = ControlType.Manual;
     public static MissionState currentMissionState = MissionState.MovingToFlightZone;
 
@@ -76,6 +76,7 @@ public class DroneManager : MonoBehaviour
 
     [SerializeField] Battery battery;
     [SerializeField] PositionalSensorSimulator posSensor;
+    [SerializeField] RandomPulseNoise wind;
 
     public static float bufferCautionThreahold = 2.5f, surfaceCautionThreshold = 2f, surfaceWarningThreshold = 1f;
 
@@ -90,7 +91,7 @@ public class DroneManager : MonoBehaviour
         currentFlightState = FlightState.Landed;
         currentMissionState = MissionState.Planning;
         currentControlType = ControlType.Manual;
-        currentSystemState = SystemState.Healthy;
+        currentSafetyState = SafetyState.Healthy;
         VisType.globalVisType = VisType.VisualizationType.MissionOnly;
         controlVisUpdater.SetControlVisActive(false);
         autopilotManager.ResetAutopilot();
@@ -210,7 +211,7 @@ public class DroneManager : MonoBehaviour
                 autopilot_stop_flag = false;
             }
 
-            UpdateSystemState(inBuffer, v2bound.magnitude, v2surf.magnitude, battery.GetBatteryLevel(), battery.GetBatteryVoltage(), posSensor.GetSignalLevel());
+            UpdateSafetyState(inBuffer, v2bound.magnitude, v2surf.magnitude, battery.GetBatteryLevel(), battery.GetBatteryVoltage(), posSensor.GetSignalLevel(), wind.GetCurrentWindStrength());
 
         } else
         {
@@ -297,61 +298,63 @@ public class DroneManager : MonoBehaviour
         }
     }
 
-    void UpdateSystemState(bool inBuffer, float distToBuffer, float distToSurface, float batteryLevel, float voltage, int positional_signal_level){
-        if(currentSystemState == SystemState.Emergency)
+    void UpdateSafetyState(bool inBuffer, float distToBuffer, float distToSurface, float batteryLevel, float voltage, int positional_signal_level, float wind_strength){
+        if(currentSafetyState == SafetyState.Emergency)
             return;
         
 
-        SystemState tempState = SystemState.Healthy;
+        SafetyState tempState = SafetyState.Healthy;
 
-        if(currentMissionState == MissionState.Inspecting && inBuffer){
-            if(distToBuffer < bufferCautionThreahold){
-                tempState = SystemState.Caution;
-            }
+        if(!inBuffer){
+            tempState = SafetyState.Caution;
         }
         
         if(distToSurface < surfaceCautionThreshold){
-            tempState = SystemState.Caution;
+            tempState = SafetyState.Caution;
         }
         if(batteryLevel < 0.46667f){
-            tempState = SystemState.Caution;
+            tempState = SafetyState.Caution;
         }
         if(voltage < 10f){
-            tempState = SystemState.Caution;
+            tempState = SafetyState.Caution;
         }
         if(positional_signal_level == 2){
-            tempState = SystemState.Caution;
+            tempState = SafetyState.Caution;
+        }
+        if(wind_strength > 50f){
+            tempState = SafetyState.Caution;
         }
 
-        if(currentMissionState == MissionState.Inspecting && !inBuffer){
-            tempState = SystemState.Warning;
-        }
+
         if(distToSurface < surfaceWarningThreshold){
-            tempState = SystemState.Warning;
+            tempState = SafetyState.Warning;
         }
-        if(batteryLevel < 0.2f){
-            tempState = SystemState.Caution;
+        if(batteryLevel < 0.3f){
+            tempState = SafetyState.Warning;
         }
         if(voltage < 9f){
-            tempState = SystemState.Warning;
+            tempState = SafetyState.Warning;
         }
         if(vc.collisionHitCount > 0){
-            tempState = SystemState.Warning;
+            tempState = SafetyState.Warning;
         }
         if(positional_signal_level == 1){
-            tempState = SystemState.Warning;
+            tempState = SafetyState.Warning;
         }
         if(positional_signal_level == 0){
-            tempState = SystemState.Warning;
+            tempState = SafetyState.Warning;
+        }
+        if(wind_strength > 80f){
+            tempState = SafetyState.Warning;
         }
 
-        if(batteryLevel <= 0f){
-            tempState = SystemState.Emergency;
-        } else if(vc.collisionHitCount > 10 || vc.out_of_balance){
-            tempState = SystemState.Emergency;
+        if(batteryLevel < 0.2f){
+            tempState = SafetyState.Emergency;
+        } else if(vc.collisionHitCount > 3 || vc.out_of_balance){
+            tempState = SafetyState.Emergency;
         }
 
-        currentSystemState = tempState;
+        currentSafetyState = tempState;
 
     }
 

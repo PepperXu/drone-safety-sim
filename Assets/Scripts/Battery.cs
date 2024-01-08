@@ -30,6 +30,7 @@ public class Battery : MonoBehaviour
     [SerializeField] StateFinder droneState;
     [SerializeField] UIUpdater uiUpdater;
     [SerializeField] RandomPulseNoise randomPulseNoise;
+    [SerializeField] ControlVisUpdater controlVisUpdater;
 
 
     System.Random r;
@@ -57,7 +58,7 @@ public class Battery : MonoBehaviour
         uiUpdater.currentBatteryPercentage = currentBatteryPercentage;
         uiUpdater.remainingTime = remainingTimeInSeconds;
         uiUpdater.voltage = currentVoltage;
-
+        controlVisUpdater.batteryPercentage = currentBatteryPercentage;
     }
 
     public void SetVoltageLevel(int level){

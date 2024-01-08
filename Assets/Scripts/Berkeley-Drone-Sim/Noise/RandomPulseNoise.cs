@@ -68,6 +68,8 @@ public class RandomPulseNoise : MonoBehaviour {
     int motion_mode = 0;
     public bool wind_change_flag = false;
 
+    [SerializeField] ControlVisUpdater controlVisUpdater;
+
 	// Use this for initialization
 	void Start () {
         r = new System.Random();
@@ -160,7 +162,10 @@ public class RandomPulseNoise : MonoBehaviour {
         {
             drone.AddForce(ray * strength_coef, ForceMode.Impulse);
         }
-        Debug.DrawRay(drone.position, ray, Color.green);
+
+        controlVisUpdater.windStrength = strength;
+        controlVisUpdater.windRotation = transform.rotation;
+        //Debug.DrawRay(drone.position, ray, Color.green);
 	}
 
     public float Sample(float mean, float var)

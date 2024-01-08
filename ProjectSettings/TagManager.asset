@@ -28,6 +28,9 @@ TagManager:
   - ball
   - badBanana
   - WindControl
+  - Surface_2
+  - Surface_1
+  - FPVCam
   layers:
   - Default
   - TransparentFX
@@ -43,8 +46,8 @@ TagManager:
   - Bounds
   - BuildingOfInterest
   - DroneVis
-  - 
-  - 
+  - Prediction
+  - FPV-UI
   - 
   - 
   - 
@@ -73,4 +76,7 @@ TagManager:
     locked: 0
   - name: Pitch
     uniqueID: 84789945
+    locked: 0
+  - name: defect
+    uniqueID: 868174129
     locked: 0

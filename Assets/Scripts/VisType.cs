@@ -38,7 +38,7 @@ public class VisType : MonoBehaviour
     void Update()
     {
         if(isRevealing) visType = hiddenVisType; else visType = originalVisType;
-        visRoot.gameObject.SetActive((globalVisType == visType || visType == VisualizationType.Both) && showVisualization);
+        visRoot.gameObject.SetActive((globalVisType == visType || visType == VisualizationType.Both || globalVisType == VisualizationType.Both) && showVisualization);
     }
 
     public static void SwitchVisType()

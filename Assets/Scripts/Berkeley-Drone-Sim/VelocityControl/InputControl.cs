@@ -25,33 +25,33 @@ public class InputControl : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if(ExperimentServer.currentVisCondition == ExperimentServer.VisualizationCondition.Manual){
-			if (Input.GetButtonDown("Switch"))
-			{
-				VisType.SwitchVisType();
-			}
-		} else if(ExperimentServer.currentVisCondition == ExperimentServer.VisualizationCondition.ManualProcedual){
-			if(Input.GetButton("Switch")){
-				VisType.RevealHiddenVisType(true);
-				if(Input.GetAxisRaw("SwitchConfirm") > 0.5f){
-					if(!switched){
-						VisType.SwitchVisType();
-						switched = true;
-					}
-				} else {
-					switched = false;
-				}
-			} else {
-				VisType.RevealHiddenVisType(false);
-				switched = false;
-			}
-		} else if(ExperimentServer.currentVisCondition == ExperimentServer.VisualizationCondition.SystemProcedual){
-			if (Input.GetButtonDown("Switch"))
-			{
-				VisType.SwitchVisType();
-			}
-		}
-
+		//if(ExperimentServer.currentVisCondition == ExperimentServer.VisualizationCondition.Manual){
+		//	if (Input.GetButtonDown("Switch"))
+		//	{
+		//		VisType.SwitchVisType();
+		//	}
+		//} else if(ExperimentServer.currentVisCondition == ExperimentServer.VisualizationCondition.ManualProcedual){
+		//	if(Input.GetButton("Switch")){
+		//		VisType.RevealHiddenVisType(true);
+		//		if(Input.GetAxisRaw("SwitchConfirm") > 0.5f){
+		//			if(!switched){
+		//				VisType.SwitchVisType();
+		//				switched = true;
+		//			}
+		//		} else {
+		//			switched = false;
+		//		}
+		//	} else {
+		//		VisType.RevealHiddenVisType(false);
+		//		switched = false;
+		//	}
+		//} else if(ExperimentServer.currentVisCondition == ExperimentServer.VisualizationCondition.SystemProcedual){
+		//	if (Input.GetButtonDown("Switch"))
+		//	{
+		//		VisType.SwitchVisType();
+		//	}
+		//}
+//
 		if(DroneManager.currentMissionState == DroneManager.MissionState.Planning)
 			return;
 
@@ -68,23 +68,22 @@ public class InputControl : MonoBehaviour {
 			float yaw = Input.GetAxisRaw ("Yaw")* turning_sensitivity;
 			float height_diff = Input.GetAxisRaw("Throttle") * vertical_sensitivity;
 
-			if (Input.GetAxis("Pitch") > 0.1f || Input.GetAxis("Roll") > 0.1f || Input.GetAxis("Yaw") > 0.1f || Input.GetAxis("Throttle") > 0.1f)
-            {
-				DroneManager.autopilot_stop_flag = true;
-				DroneManager.currentMissionState = DroneManager.MissionState.AutopilotInterupted;
-            }
-
 			if (DroneManager.currentControlType == DroneManager.ControlType.Manual)
 			{
 				vc.desired_vx = vx;
 				vc.desired_vy = vy;
 				vc.desired_yaw = yaw;
 				vc.desired_height += height_diff;
-			}
-
-            if (Input.GetButtonDown("AutoPilot"))
-            {
-				DroneManager.autopilot_flag = true;
+				if (Input.GetButtonDown("AutoPilot"))
+            	{
+					DroneManager.autopilot_flag = true;
+				}
+			} else {
+				if (Input.GetButtonDown("AutoPilot") || Input.GetAxis("Pitch") > 0.1f || Input.GetAxis("Roll") > 0.1f || Input.GetAxis("Yaw") > 0.1f || Input.GetAxis("Throttle") > 0.1f)
+            	{
+					DroneManager.autopilot_stop_flag = true;
+					DroneManager.currentMissionState = DroneManager.MissionState.AutopilotInterupted;
+            	}
 			}
 
             if (Input.GetButtonDown("RTH"))

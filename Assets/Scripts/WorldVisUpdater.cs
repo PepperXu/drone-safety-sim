@@ -9,8 +9,10 @@ public class WorldVisUpdater : MonoBehaviour
 
     [SerializeField] VisType flightPlan;
     [SerializeField] VisType coverage;
+    [SerializeField] VisType landing_zones;
     Waypoint[] waypoints;
     public int currentWaypointIndex = -1;
+    public float missionProgress;
 
     [SerializeField] Transform droneParent;
     [SerializeField] GameObject coverageObject, markedObject;
@@ -52,8 +54,10 @@ public class WorldVisUpdater : MonoBehaviour
             traj.colorGradient = defaultGradient;
         } else {
             for(int i = 0; i < waypoints.Length; i++){
-                if(i == currentWaypointIndex)
+                if(i == currentWaypointIndex) {
                     waypoints[i].currentWaypointState = Waypoint.WaypointState.Next;
+                    waypoints[i].missionProgress = missionProgress;
+                }
                 else if(i == currentWaypointIndex+1)
                     waypoints[i].currentWaypointState = Waypoint.WaypointState.NextNext;
                 else

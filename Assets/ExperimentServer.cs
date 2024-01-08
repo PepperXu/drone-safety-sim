@@ -29,13 +29,13 @@ public class ExperimentServer : MonoBehaviour
 
 	public enum VisualizationCondition
     {
-        Manual,
-		ManualProcedual,
-        System,
-		SystemProcedual
+        Always,
+		ControlFirst,
+        Mixed,
+		SafetyFirst
     }
 
-	public static VisualizationCondition currentVisCondition = VisualizationCondition.Manual;
+	public static VisualizationCondition currentVisCondition = VisualizationCondition.ControlFirst;
 
 
 	
@@ -77,17 +77,20 @@ public class ExperimentServer : MonoBehaviour
 		//For Debugging
 		ProcessKeyboardInput();
 
-		if(currentVisCondition == VisualizationCondition.System){
-			if(DroneManager.currentControlType == DroneManager.ControlType.Manual || DroneManager.currentSystemState != DroneManager.SystemState.Healthy){
+		if(currentVisCondition == VisualizationCondition.Always){
+			VisType.globalVisType = VisType.VisualizationType.Both;
+		}else {
+			if(DroneManager.currentControlType == DroneManager.ControlType.Manual){
 				VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
 			} else {
 				VisType.globalVisType = VisType.VisualizationType.MissionOnly;
 			}
-		} else {
-			if(currentVisCondition == VisualizationCondition.SystemProcedual){
+			if(currentVisCondition == VisualizationCondition.Mixed){
 				VisType.RevealHiddenVisType(true);
-			}  else if (currentVisCondition == VisualizationCondition.Manual){
-				VisType.RevealHiddenVisType(false);
+			} else {
+				if(DroneManager.currentSafetyState == DroneManager.SafetyState.Emergency || DroneManager.currentSafetyState == DroneManager.SafetyState.Warning){
+					VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
+				}
 			}
 		}
 
@@ -116,16 +119,16 @@ public class ExperimentServer : MonoBehaviour
         	}
 		} else {
 			if(Input.GetKeyDown(KeyCode.Alpha1)){
-        	    currentVisCondition = VisualizationCondition.Manual;
+        	    currentVisCondition = VisualizationCondition.Always;
         	}
         	if(Input.GetKeyDown(KeyCode.Alpha2)){
-        	    currentVisCondition = VisualizationCondition.ManualProcedual;
+        	    currentVisCondition = VisualizationCondition.ControlFirst;
         	}
         	if(Input.GetKeyDown(KeyCode.Alpha3)){
-        	    currentVisCondition = VisualizationCondition.System;
+        	    currentVisCondition = VisualizationCondition.Mixed;
         	}
         	if(Input.GetKeyDown(KeyCode.Alpha4)){
-        	    currentVisCondition = VisualizationCondition.SystemProcedual;
+        	    currentVisCondition = VisualizationCondition.SafetyFirst;
         	}
 		}
 	}
@@ -220,7 +223,7 @@ public class ExperimentServer : MonoBehaviour
 		string currentState = "current-state;" + 
 			(int)DroneManager.currentMissionState + ";" + 
 			(int)DroneManager.currentControlType + ";" + 
-			(int)DroneManager.currentSystemState + ";" + 
+			(int)DroneManager.currentSafetyState + ";" + 
 			(int)currentVisCondition + ";" + 
 			battery.GetBatteryVoltageLevel() + ";" + 
 			positionalSensorSimulator.GetSignalLevel() + ";" + 

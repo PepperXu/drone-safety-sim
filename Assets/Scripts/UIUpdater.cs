@@ -201,9 +201,9 @@ public class UIUpdater : MonoBehaviour
     }
 
     void CheckingSystemState(){
-        switch (DroneManager.currentSystemState)
+        switch (DroneManager.currentSafetyState)
         {
-            case DroneManager.SystemState.Healthy:
+            case DroneManager.SafetyState.Healthy:
                 systemState.color = Color.green;
                 if(enableSound){
                     if (continuous)
@@ -219,7 +219,7 @@ public class UIUpdater : MonoBehaviour
                         currentMonitoringInterval = healthyInterval;
                 }
                 break;
-            case DroneManager.SystemState.Caution:
+            case DroneManager.SafetyState.Caution:
                 systemState.color = Color.yellow;
                 if(enableSound){
                     if (continuous)
@@ -234,14 +234,14 @@ public class UIUpdater : MonoBehaviour
                         currentMonitoringInterval = warningInterval;
                 }
                 break;
-            case DroneManager.SystemState.Warning:
+            case DroneManager.SafetyState.Warning:
                 systemState.color = new Color(1f, 0.5f, 0f);
                 if(enableSound){
                     if (continuous)
                     {
-                        if (audioSource.clip != monitoring_warn)
+                        if (audioSource.clip != monitoring_alert)
                         {
-                            audioSource.clip = monitoring_warn;
+                            audioSource.clip = monitoring_alert;
                             audioSource.Play();
                         }
                     }
@@ -249,7 +249,7 @@ public class UIUpdater : MonoBehaviour
                         currentMonitoringInterval = warningInterval;
                 }
                 break;
-            case DroneManager.SystemState.Emergency:
+            case DroneManager.SafetyState.Emergency:
                 systemState.color = Color.red;
                 if(enableSound){
                     if (continuous)
