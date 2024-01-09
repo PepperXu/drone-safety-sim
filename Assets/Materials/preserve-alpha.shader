@@ -7,7 +7,7 @@ Shader "Unlit/preserve-alpha"
     SubShader
     {
         Tags {"Queue"="Transparent" "RenderType"="Transparent" }
-        ZWrite Off
+        ZWrite On
         Blend SrcAlpha OneMinusSrcAlpha
         Cull back
         LOD 100

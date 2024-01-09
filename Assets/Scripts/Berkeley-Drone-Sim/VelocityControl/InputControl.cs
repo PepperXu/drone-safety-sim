@@ -102,6 +102,11 @@ public class InputControl : MonoBehaviour {
             {
 				DroneManager.rth_flag = true;
             }
+
+			if(Input.GetButton("Switch"))
+				ExperimentServer.switching_flag = true;
+			else
+				ExperimentServer.switching_flag = false;
 		}
 	}
 

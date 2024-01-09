@@ -303,6 +303,7 @@ public class ControlVisUpdater : MonoBehaviour
             posCircle.SwitchHiddenVisTypeLocal(false);
             return;
         }
+        positioning.showVisualization = true;
         positioning.SwitchHiddenVisTypeLocal(true);
         posCircle.SwitchHiddenVisTypeLocal(true);
         if(pos_sig_lvl == 0){

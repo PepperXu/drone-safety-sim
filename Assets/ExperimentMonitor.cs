@@ -17,7 +17,7 @@ public class ExperimentMonitor : MonoBehaviour
 	#endregion  	
 
     string serverIp = "127.0.0.1";
-	[SerializeField] private TextMeshProUGUI flightStateText, missionStateText, controlTypeText, systemStateText, visCondiText, batteryPercentageText, batteryVoltageText, positionalSignalStatusText, defectCountText;
+	[SerializeField] private TextMeshProUGUI flightStateText, missionStateText, controlTypeText, systemStateText, visCondiText, batteryPercentageText, batteryVoltageText, positionalSignalStatusText, defectCountText, windStrengthText;
 	[SerializeField] private TMP_InputField ipInputField;
 
 	[SerializeField] private Button[] startingPoints;
@@ -25,17 +25,19 @@ public class ExperimentMonitor : MonoBehaviour
 	private int currentStartingPointIndex = 0;
 	private Vector3 currentDronePosition;
 	private float currentBatteryPercentage;
+	private float currentWindStrength;
 	private int currentDroneStatus;
 	[SerializeField] private Transform droneParent;
 	//string serverMessage = "";
 
-	string[] visConditionString = {"Manual", "Manual Procedual", "System", "System Procedual"};
+	string[] visConditionString = {"Always", "Control First", "Mixed", "Safety First"};
 	string[] posStatusString = {"Signal Lost", "Unstable Connection", "Position Offset", "Normal"};
 
 	string[] flightStateString = {"Landed", "Taking Off", "Hovering", "Navigating", "Landing"};
     string[] missionStateString = {"Planning", "Moving to Flight Zone", "In Flight Zone", "Inspecting", "Interrupted", "Returning"};
     string[] systemStateString = {"Healthy", "Caution", "Warning", "Emergency"};
     string[] controlStateString = {"Auto", "Manual"};
+	string[] currentMRViewString = {"Task View", "Pilot View", "Both", "Both(Pressed)"};
 
 	bool isRecording = false;
 	string baseFileName = "exp_recording";
@@ -114,7 +116,7 @@ public class ExperimentMonitor : MonoBehaviour
 		switch(splitMsg[0]){
 			case "current-state":
 				int[] currentStatus = {int.Parse(splitMsg[1]), int.Parse(splitMsg[2]), int.Parse(splitMsg[3]), int.Parse(splitMsg[4]), 
-				int.Parse(splitMsg[5]), int.Parse(splitMsg[6]), int.Parse(splitMsg[7])};
+				int.Parse(splitMsg[5]), int.Parse(splitMsg[6]), int.Parse(splitMsg[7]), int.Parse(splitMsg[8])};
 				UpdateStatusText(currentStatus);
 				break;
 			case "flight-planning":
@@ -143,6 +145,10 @@ public class ExperimentMonitor : MonoBehaviour
 				currentBatteryPercentage = float.Parse(splitMsg[1]);
 				batteryPercentageText.SetText(((int) ((currentBatteryPercentage- 0.2f)/ 0.8f * 100f)) + "%");
 				break;
+			case "wind-strength":
+				currentWindStrength = float.Parse(splitMsg[1]);
+				windStrengthText.SetText(((int)(currentWindStrength * 10f))/10f + "");
+				break;
 			default:
 				Debug.Log("Undefined Header: " + serverMessage);
 				break;
@@ -166,11 +172,12 @@ public class ExperimentMonitor : MonoBehaviour
 			controlStateString[statusArray[1]]+ "," +
 			systemStateString[statusArray[2]] + "," +
 			visConditionString[statusArray[3]] + "," +
+			currentWindStrength + "," +
 			((int) ((normalBatteryVoltage - (3 - statusArray[4]) * voltageDropPerLevel) * 10f)) / 10f + "V" + "," +
-			posStatusString[statusArray[5]] + "," +
+			posStatusString[statusArray[5]] + "," + currentBatteryPercentage + "," + 
 			statusArray[6] + "," + 
 			currentDronePosition.x + "," + currentDronePosition.y + "," + currentDronePosition.z + "," + 
-			currentBatteryPercentage
+			currentMRViewString[statusArray[7]]
 			);
 	}
 	/// <summary> 	

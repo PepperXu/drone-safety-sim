@@ -35,10 +35,9 @@ public class ExperimentServer : MonoBehaviour
 		SafetyFirst
     }
 
-	public static VisualizationCondition currentVisCondition = VisualizationCondition.ControlFirst;
+	public VisualizationCondition currentVisCondition = VisualizationCondition.ControlFirst;
 
-
-	
+	public static bool switching_flag = false;
 
     [SerializeField] private FlightPlanning flightPlanning;
 	[SerializeField] private UIUpdater uIUpdater;
@@ -79,19 +78,26 @@ public class ExperimentServer : MonoBehaviour
 		//For Debugging
 		ProcessKeyboardInput();
 
-		if(currentVisCondition == VisualizationCondition.Always){
+		if(currentVisCondition == VisualizationCondition.Always || switching_flag){
+			VisType.RevealHiddenVisType(false);
 			VisType.globalVisType = VisType.VisualizationType.Both;
 		}else {
-			if(DroneManager.currentControlType == DroneManager.ControlType.Manual){
-				VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
-			} else {
-				VisType.globalVisType = VisType.VisualizationType.MissionOnly;
-			}
 			if(currentVisCondition == VisualizationCondition.Mixed){
 				VisType.RevealHiddenVisType(true);
 			} else {
-				if(DroneManager.currentSafetyState == DroneManager.SafetyState.Emergency || DroneManager.currentSafetyState == DroneManager.SafetyState.Warning){
-					VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
+				VisType.RevealHiddenVisType(false);
+			}
+			if(DroneManager.currentControlType == DroneManager.ControlType.Manual || DroneManager.currentMissionState == DroneManager.MissionState.Returning){
+				VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
+			} else {
+				if(currentVisCondition == VisualizationCondition.SafetyFirst){
+					if(DroneManager.currentSafetyState != DroneManager.SafetyState.Healthy){
+						VisType.globalVisType = VisType.VisualizationType.Both;
+					}else {
+						VisType.globalVisType = VisType.VisualizationType.MissionOnly;
+					}
+				} else {
+					VisType.globalVisType = VisType.VisualizationType.MissionOnly;
 				}
 			}
 		}
@@ -287,7 +293,8 @@ public class ExperimentServer : MonoBehaviour
 			(int)currentVisCondition + ";" + 
 			battery.GetBatteryVoltageLevel() + ";" + 
 			positionalSensorSimulator.GetSignalLevel() + ";" + 
-			uIUpdater.GetDefectCount() + "\n";
+			uIUpdater.GetDefectCount() +  ";" + 
+			(switching_flag?3:(int)VisType.globalVisType) + "\n";
 		msgQueue.Enqueue(currentState);
 	}
 
@@ -309,6 +316,11 @@ public class ExperimentServer : MonoBehaviour
 		msgQueue.Enqueue(currentBatPer);
 	}
 
+	private void SendWindStrength(){
+		string currentWind = "wind-strength;" + randomPulseNoise.GetCurrentWindStrength() + "\n";
+		msgQueue.Enqueue(currentWind);
+	}
+
 	IEnumerator UpdateCurrentState(){
 		while(true){
 			switch (msgSendCounter)
@@ -328,14 +340,17 @@ public class ExperimentServer : MonoBehaviour
 				case 4:
 					SendBatteryPercentage();
 					break;
+				case 5:
+					SendWindStrength();
+					break;
 				default:
 					break;
 			}
 			msgSendCounter++;
-			if(msgSendCounter >= 5){
+			if(msgSendCounter >= 7){
 				msgSendCounter = 0;
 			}
-			yield return new WaitForSeconds(0.1f);
+			yield return new WaitForSeconds(0.05f);
 		}
 	}
 

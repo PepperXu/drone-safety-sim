@@ -5,6 +5,7 @@ using UnityEngine;
 public class FaceCamera : MonoBehaviour
 {
     [SerializeField] Transform mainCamera;
+    public bool alignX;
     // Start is called before the first frame update
     void Start()
     {
@@ -16,8 +17,16 @@ public class FaceCamera : MonoBehaviour
     void Update()
     {
         Vector3 objectCameraDirection = transform.position - mainCamera.position;
-        objectCameraDirection = new Vector3(objectCameraDirection.x, 0, objectCameraDirection.z);
-        transform.LookAt(transform.position + objectCameraDirection.normalized);
+        
+        if(alignX){
+            Vector3 camDirLocal = transform.InverseTransformDirection(-objectCameraDirection);
+            Vector3 camDirXY = new Vector3(camDirLocal.x, camDirLocal.y, 0f).normalized;
+            transform.localRotation = Quaternion.LookRotation(Vector3.forward, new Vector3(camDirXY.y, -camDirXY.x, 0f));
+        }
+        else{
+            Vector3 objectCameraDirectionXZ = new Vector3(objectCameraDirection.x, 0, objectCameraDirection.z);
+            transform.LookAt(transform.position + objectCameraDirectionXZ.normalized);
+        }
         
     }
 }
