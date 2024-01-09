@@ -53,6 +53,8 @@ public class ExperimentServer : MonoBehaviour
 	Queue<string> msgQueue = new Queue<string>();
 	Queue<string> incomingMsgQueue = new Queue<string>();
 	int msgSendCounter = 0;
+
+	int currentDebugMode = 0; //0: wind control (strength only), 1: battery control, 2: position control
     // Start is called before the first frame update
     void Start()
     {
@@ -130,6 +132,64 @@ public class ExperimentServer : MonoBehaviour
         	if(Input.GetKeyDown(KeyCode.Alpha4)){
         	    currentVisCondition = VisualizationCondition.SafetyFirst;
         	}
+			if(Input.GetKeyDown(KeyCode.Tab)){
+				currentDebugMode = (currentDebugMode + 1) % 3;
+				Debug.LogWarning("Current Debug Mode: " + currentDebugMode);
+			}
+			switch(currentDebugMode){
+				case 0:
+					if(Input.GetKeyDown(KeyCode.F1)){
+						randomPulseNoise.strength_mean = 20f;
+						randomPulseNoise.wind_change_flag = true;
+        			}
+        			if(Input.GetKeyDown(KeyCode.F2)){
+        			    randomPulseNoise.strength_mean = 40f;
+						randomPulseNoise.wind_change_flag = true;
+        			}
+        			if(Input.GetKeyDown(KeyCode.F3)){
+        			    randomPulseNoise.strength_mean = 60f;
+						randomPulseNoise.wind_change_flag = true;
+        			}
+        			if(Input.GetKeyDown(KeyCode.F4)){
+        			    randomPulseNoise.strength_mean = 80f;
+						randomPulseNoise.wind_change_flag = true;
+        			}
+					if(Input.GetKeyDown(KeyCode.F5)){
+        			    randomPulseNoise.strength_mean = 100f;
+						randomPulseNoise.wind_change_flag = true;
+        			}
+					break;
+				case 1:
+					if(Input.GetKeyDown(KeyCode.F1)){
+						battery.ReduceBatteryCap(0.1f);
+        			}
+        			if(Input.GetKeyDown(KeyCode.F2)){
+        			    battery.ReduceBatteryCap(0.2f);
+        			}
+        			if(Input.GetKeyDown(KeyCode.F3)){
+        			    battery.ReduceBatteryCap(0.3f);
+        			}
+					break;
+				case 2:
+					if(Input.GetKeyDown(KeyCode.F1)){
+						positionalSensorSimulator.SetSignalLevel(3);
+        			}
+        			if(Input.GetKeyDown(KeyCode.F2)){
+        			    positionalSensorSimulator.SetSignalLevel(2);
+        			}
+        			if(Input.GetKeyDown(KeyCode.F3)){
+        			    positionalSensorSimulator.SetSignalLevel(1);
+        			}
+        			if(Input.GetKeyDown(KeyCode.F4)){
+        			    positionalSensorSimulator.SetSignalLevel(0);
+        			}
+					break;
+				default:
+					break;
+			}
+			if(Input.GetKeyDown(KeyCode.X)){
+				droneManager.ResetAllStates();
+			}
 		}
 	}
 

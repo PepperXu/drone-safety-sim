@@ -10,7 +10,7 @@ public class InputControl : MonoBehaviour {
 	private float abs_height = 1;
 
 	private float horizontal_sensitivity = 7f;
-	private float vertical_sensitivity = 0.2f;
+	private float vertical_sensitivity = 0.08f;
 	private float turning_sensitivity = 4f;
 
 	private bool switched = false;
@@ -63,10 +63,22 @@ public class InputControl : MonoBehaviour {
 
 		if (inputEnabled){
 
-			float vx = Input.GetAxisRaw("Pitch") * horizontal_sensitivity;
-			float vy = Input.GetAxisRaw ("Roll")* horizontal_sensitivity;
-			float yaw = Input.GetAxisRaw ("Yaw")* turning_sensitivity;
-			float height_diff = Input.GetAxisRaw("Throttle") * vertical_sensitivity;
+			float pitchAxis = Input.GetAxisRaw("Pitch");
+			float rollAxis = Input.GetAxisRaw ("Roll");
+			float yawAxis = Input.GetAxisRaw ("Yaw");
+			float throttleAxix = Input.GetAxisRaw("Throttle");
+
+			float vx = pitchAxis * horizontal_sensitivity;
+			float vy = rollAxis * horizontal_sensitivity;
+
+			float yaw = 0f;
+			float height_diff = 0f;
+
+			if(Mathf.Abs(yawAxis) > Mathf.Abs(throttleAxix)){
+				yaw = yawAxis * turning_sensitivity;
+			} else {
+				height_diff = throttleAxix * vertical_sensitivity;
+			}
 
 			if (DroneManager.currentControlType == DroneManager.ControlType.Manual)
 			{
@@ -79,7 +91,7 @@ public class InputControl : MonoBehaviour {
 					DroneManager.autopilot_flag = true;
 				}
 			} else {
-				if (Input.GetButtonDown("AutoPilot") || Input.GetAxis("Pitch") > 0.1f || Input.GetAxis("Roll") > 0.1f || Input.GetAxis("Yaw") > 0.1f || Input.GetAxis("Throttle") > 0.1f)
+				if (Input.GetButtonDown("AutoPilot") || Mathf.Abs(pitchAxis) > 0.1f || Mathf.Abs(rollAxis) > 0.1f || Mathf.Abs(yawAxis) > 0.1f || Mathf.Abs(throttleAxix) > 0.1f)
             	{
 					DroneManager.autopilot_stop_flag = true;
 					DroneManager.currentMissionState = DroneManager.MissionState.AutopilotInterupted;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Searcher;
 using UnityEngine;
 
 public class WorldVisUpdater : MonoBehaviour
@@ -21,6 +22,9 @@ public class WorldVisUpdater : MonoBehaviour
     Color inspectionTrajColor = new Color(0f, 1f, 1f);
 
     public Vector3 vectorToSurface;
+    public Transform currentHomepoint;
+    Transform currentEnabledHomepoint;
+    public float currentBatteryPercentage;
 
     List<GameObject> spawnedCoverageObjects = new List<GameObject>();
 
@@ -37,6 +41,24 @@ public class WorldVisUpdater : MonoBehaviour
         StopAllCoroutines();
         RemoveAllCoverageObject();
         StartCoroutine(WorldVisUpdateCoroutine());
+    }
+
+    void UpdateHomepointVis(){
+
+        if(DroneManager.currentMissionState == DroneManager.MissionState.Returning || currentBatteryPercentage < 0.46667f){
+            //landing_zones.showVisualization = true;
+            landing_zones.SwitchHiddenVisTypeLocal(true);
+        } else {
+            //landing_zones.showVisualization = false;
+            landing_zones.SwitchHiddenVisTypeLocal(false);
+        }
+        if(currentEnabledHomepoint != currentHomepoint){
+            if(currentEnabledHomepoint != null){
+                currentEnabledHomepoint.gameObject.SetActive(false);
+            }
+            currentHomepoint.gameObject.SetActive(true);
+            currentEnabledHomepoint = currentHomepoint;
+        }
     }
 
     void UpdateFlightPlanVis(){
@@ -97,6 +119,7 @@ public class WorldVisUpdater : MonoBehaviour
     IEnumerator WorldVisUpdateCoroutine(){
         while(true){
             UpdateFlightPlanVis();
+            UpdateHomepointVis();
             yield return new WaitForSeconds(0.5f);
         }
     }

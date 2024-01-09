@@ -33,7 +33,7 @@ public class AutopilotManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        StartCoroutine(GetCurrentHomepointCoroutine());
     }
 
     public void ResetAutopilot(){
@@ -164,14 +164,21 @@ public class AutopilotManager : MonoBehaviour
         isRTH = rth;
         if (rth)
         {
-            SetCurrentHomepoint();
+            GetCurrentHomepoint();
         } else {
             wordVis.currentWaypointIndex = this.currentWaypointIndex;
         }
     }
 
-    void SetCurrentHomepoint()
+    IEnumerator GetCurrentHomepointCoroutine()
     {
+        while(true){
+            GetCurrentHomepoint();
+            yield return new WaitForSeconds(1f);
+        }
+    }
+
+    void GetCurrentHomepoint(){
         float shortestDistance = float.MaxValue;
         foreach(Transform homepoint in homePoints)
         {
@@ -180,6 +187,7 @@ public class AutopilotManager : MonoBehaviour
             {
                 shortestDistance = distance.magnitude;
                 currentHomepoint = homepoint;
+                wordVis.currentHomepoint = currentHomepoint;
             }
         }
     }

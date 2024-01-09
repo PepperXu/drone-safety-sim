@@ -40,6 +40,9 @@ public class UIUpdater : MonoBehaviour
     [Header("General References")]
     [SerializeField] GameObject monitoringUI;
     [SerializeField] Image movement_enabled, movement_locked;
+
+    [Header("Current Interface")]
+    [SerializeField] GameObject pilotView, taskView;
     
     private bool attachedToHead = false;
     private bool uiSelected = false;
@@ -156,6 +159,15 @@ public class UIUpdater : MonoBehaviour
         cameraCountUI.text = CameraController.photoTaken.ToString();
         defectCountUI.text = defectCount.ToString();
         progressPercentageUI.text = (int)(missionProgress*100f) + "%";
+
+        if(VisType.globalVisType == VisType.VisualizationType.MissionOnly){
+            taskView.SetActive(true);
+            pilotView.SetActive(false);
+        } else {
+            taskView.SetActive(false);
+            pilotView.SetActive(true);
+        }
+
 
         if (enableSound)
         {
