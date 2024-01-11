@@ -29,7 +29,7 @@ public class ExperimentServer : MonoBehaviour
 
 	public enum VisualizationCondition
     {
-        Always,
+        All,
 		ControlFirst,
         Mixed,
 		SafetyFirst
@@ -78,7 +78,7 @@ public class ExperimentServer : MonoBehaviour
 		//For Debugging
 		ProcessKeyboardInput();
 
-		if(currentVisCondition == VisualizationCondition.Always || switching_flag){
+		if(currentVisCondition == VisualizationCondition.All || switching_flag){
 			VisType.RevealHiddenVisType(false);
 			VisType.globalVisType = VisType.VisualizationType.Both;
 		}else {
@@ -127,7 +127,7 @@ public class ExperimentServer : MonoBehaviour
         	}
 		} else {
 			if(Input.GetKeyDown(KeyCode.Alpha1)){
-        	    currentVisCondition = VisualizationCondition.Always;
+        	    currentVisCondition = VisualizationCondition.All;
         	}
         	if(Input.GetKeyDown(KeyCode.Alpha2)){
         	    currentVisCondition = VisualizationCondition.ControlFirst;

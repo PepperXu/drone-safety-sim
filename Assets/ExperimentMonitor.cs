@@ -30,7 +30,7 @@ public class ExperimentMonitor : MonoBehaviour
 	[SerializeField] private Transform droneParent;
 	//string serverMessage = "";
 
-	string[] visConditionString = {"Always", "Control First", "Mixed", "Safety First"};
+	string[] visConditionString = {"All", "Control First", "Mixed", "Safety First"};
 	string[] posStatusString = {"Signal Lost", "Unstable Connection", "Position Offset", "Normal"};
 
 	string[] flightStateString = {"Landed", "Taking Off", "Hovering", "Navigating", "Landing"};
