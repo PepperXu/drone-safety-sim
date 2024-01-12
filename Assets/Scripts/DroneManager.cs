@@ -79,6 +79,7 @@ public class DroneManager : MonoBehaviour
     [SerializeField] RandomPulseNoise wind;
 
     public static float bufferCautionThreahold = 2.5f, surfaceCautionThreshold = 2f, surfaceWarningThreshold = 1f;
+    private float windStrengthWarningCoolDownTimer, windStrengthWarningCoolDownTime = 3f;
 
 
     // Start is called before the first frame update
@@ -321,7 +322,7 @@ public class DroneManager : MonoBehaviour
         if(positional_signal_level == 2){
             tempState = SafetyState.Caution;
         }
-        if(wind_strength > 50f){
+        if(wind_strength > 40f){
             tempState = SafetyState.Caution;
         }
 
