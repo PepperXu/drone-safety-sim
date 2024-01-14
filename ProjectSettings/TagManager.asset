@@ -31,6 +31,8 @@ TagManager:
   - Surface_2
   - Surface_1
   - FPVCam
+  - GPSWeakZone
+  - WindZone
   layers:
   - Default
   - TransparentFX
@@ -48,7 +50,7 @@ TagManager:
   - DroneVis
   - Prediction
   - FPV-UI
-  - 
+  - Event-Zone
   - 
   - 
   - 

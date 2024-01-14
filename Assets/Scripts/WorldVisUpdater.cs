@@ -17,13 +17,16 @@ public class WorldVisUpdater : MonoBehaviour
     [SerializeField] Transform droneParent;
     [SerializeField] GameObject coverageObject, markedObject;
 
-    Gradient defaultGradient = new Gradient();
+    //Gradient defaultGradient = new Gradient();
     Color inspectionTrajColor = new Color(0f, 1f, 1f);
 
     public Vector3 vectorToSurface;
     public Transform currentHomepoint;
     Transform currentEnabledHomepoint;
     public float currentBatteryPercentage;
+
+    public bool inBuffer;
+    public float distToBuffer;
 
     List<GameObject> spawnedCoverageObjects = new List<GameObject>();
 
@@ -35,11 +38,37 @@ public class WorldVisUpdater : MonoBehaviour
 
 
     public void ResetWorldVis(){
-        defaultGradient.colorKeys = new GradientColorKey[]{new(Color.white, 0f), new(Color.white, 1f)};
-        defaultGradient.alphaKeys = new GradientAlphaKey[]{new(0.5f, 0f), new(0.5f, 1f)};
+        //defaultGradient.colorKeys = new GradientColorKey[]{new(inspectionTrajColor, 0f), new(inspectionTrajColor, 1f)};
+        //defaultGradient.alphaKeys = new GradientAlphaKey[]{new(0.5f, 0f), new(0.5f, 1f)};
+        ResetTrajectoryVis();
         StopAllCoroutines();
         RemoveAllCoverageObject();
         StartCoroutine(WorldVisUpdateCoroutine());
+    }
+
+    void ResetTrajectoryVis(){
+        LineRenderer traj = flightPlan.visRoot.GetChild(0).GetComponent<LineRenderer>();
+        foreach(Waypoint wp in waypoints){
+            wp.currentWaypointState = Waypoint.WaypointState.Neutral;
+        }
+        Gradient g = traj.colorGradient;
+        GradientColorKey[] ck = g.colorKeys;
+        GradientAlphaKey[] ak = g.alphaKeys;
+        if(ck.Length != 2){
+            Array.Resize(ref ck, 2);
+        }
+        ck[0].color = inspectionTrajColor;
+        ck[1].color = inspectionTrajColor;
+        if(ak.Length != 2)
+            Array.Resize(ref ak, 2);
+        ak[0].alpha = 0.5f;
+        ak[0].time = 0f;
+        ak[1].alpha = 0.5f;
+        ak[1].time = 1f;
+        g.colorKeys = ck;
+        g.alphaKeys = ak;
+
+        traj.colorGradient = g;
     }
 
     void UpdateHomepointVis(){
@@ -68,12 +97,7 @@ public class WorldVisUpdater : MonoBehaviour
             return;
         
         LineRenderer traj = flightPlan.visRoot.GetChild(0).GetComponent<LineRenderer>();
-        if(DroneManager.currentMissionState != DroneManager.MissionState.Inspecting){
-            foreach(Waypoint wp in waypoints){
-                wp.currentWaypointState = Waypoint.WaypointState.Neutral;
-            }
-            traj.colorGradient = defaultGradient;
-        } else {
+        if(DroneManager.currentMissionState == DroneManager.MissionState.Inspecting){
             for(int i = 0; i < waypoints.Length; i++){
                 if(i == currentWaypointIndex) {
                     waypoints[i].currentWaypointState = Waypoint.WaypointState.Next;
@@ -119,6 +143,11 @@ public class WorldVisUpdater : MonoBehaviour
         while(true){
             UpdateFlightPlanVis();
             UpdateHomepointVis();
+            if(!inBuffer || distToBuffer < 3f){
+                contingencyBuffer.showVisualization = true;
+            } else {
+                contingencyBuffer.showVisualization = false;
+            }
             yield return new WaitForSeconds(0.5f);
         }
     }

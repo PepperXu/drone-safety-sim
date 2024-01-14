@@ -29,7 +29,9 @@ public class AutopilotManager : MonoBehaviour
     public Vector3 vectorToBuildingSurface;
 
     bool photoTaken = false;
-    public Vector3 positionOffset;
+    //public Vector3 positionOffset;
+
+    bool autopilot_initialized = false;
     // Start is called before the first frame update
     void Start()
     {
@@ -37,6 +39,7 @@ public class AutopilotManager : MonoBehaviour
     }
 
     public void ResetAutopilot(){
+        autopilot_initialized = false;
         isAutopiloting = false;
         isRTH = false;
         currentWaypointIndex = 0;
@@ -88,7 +91,7 @@ public class AutopilotManager : MonoBehaviour
                 Vector3 target = flightPlanning.GetCurrentWaypoint(currentWaypointIndex, out out_of_bound);
                 if (!out_of_bound)
                 {
-                    Vector3 sensedPosition = vc.transform.position + positionOffset;
+                    Vector3 sensedPosition = PositionalSensorSimulator.dronePositionVirtual;
                     //Debug.LogWarning("Moving to waypoint " + currentWaypointIndex);
                     Vector3 offset = target - sensedPosition;
                     if (offset.magnitude < 0.5f)
@@ -154,8 +157,30 @@ public class AutopilotManager : MonoBehaviour
 
     public void EnableAutopilot(bool enable){
         isAutopiloting = enable;
-        wordVis.currentWaypointIndex = this.currentWaypointIndex;
         isRTH = false;
+        if(enable){
+            if(!autopilot_initialized){
+                autopilot_initialized = true;
+            } else {
+                int i = this.currentWaypointIndex;
+                bool out_of_bound;
+                Vector3 target = flightPlanning.GetCurrentWaypoint(i, out out_of_bound);
+                float shortestDistance = (PositionalSensorSimulator.dronePositionVirtual - target).magnitude;
+                while(!out_of_bound){
+                    i++;
+                    target = flightPlanning.GetCurrentWaypoint(i, out out_of_bound);
+                    if((PositionalSensorSimulator.dronePositionVirtual - target).magnitude > shortestDistance || out_of_bound){
+                        this.currentWaypointIndex = i-1;
+                        break;
+                    } else {
+                        shortestDistance = (PositionalSensorSimulator.dronePositionVirtual - target).magnitude;
+                        i++;
+                    }
+                }
+            }
+    
+            wordVis.currentWaypointIndex = this.currentWaypointIndex;
+        }
     }
 
     public void EnableAutopilot(bool enable, bool rth)
@@ -166,7 +191,29 @@ public class AutopilotManager : MonoBehaviour
         {
             GetCurrentHomepoint();
         } else {
-            wordVis.currentWaypointIndex = this.currentWaypointIndex;
+            if(enable){
+                if(!autopilot_initialized){
+                    autopilot_initialized = true;
+                } else {
+                    int i = this.currentWaypointIndex;
+                    bool out_of_bound;
+                    Vector3 target = flightPlanning.GetCurrentWaypoint(i, out out_of_bound);
+                    float shortestDistance = (PositionalSensorSimulator.dronePositionVirtual - target).magnitude;
+                    while(!out_of_bound){
+                        i++;
+                        target = flightPlanning.GetCurrentWaypoint(i, out out_of_bound);
+                        if((PositionalSensorSimulator.dronePositionVirtual - target).magnitude > shortestDistance || out_of_bound){
+                            this.currentWaypointIndex = i-1;
+                            break;
+                        } else {
+                            shortestDistance = (PositionalSensorSimulator.dronePositionVirtual - target).magnitude;
+                            i++;
+                        }
+                    }
+                }
+
+                wordVis.currentWaypointIndex = this.currentWaypointIndex;
+            }
         }
     }
 

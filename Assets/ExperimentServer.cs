@@ -35,7 +35,7 @@ public class ExperimentServer : MonoBehaviour
 		SafetyFirst
     }
 
-	public VisualizationCondition currentVisCondition = VisualizationCondition.ControlFirst;
+	public VisualizationCondition currentVisCondition = VisualizationCondition.All;
 
 	public static bool switching_flag = false;
 

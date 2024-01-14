@@ -78,7 +78,7 @@ public class DroneManager : MonoBehaviour
     [SerializeField] PositionalSensorSimulator posSensor;
     [SerializeField] RandomPulseNoise wind;
 
-    public static float bufferCautionThreahold = 2.5f, surfaceCautionThreshold = 2f, surfaceWarningThreshold = 1f;
+    public static float bufferCautionThreahold = 2.5f, surfaceCautionThreshold = 3.0f, surfaceWarningThreshold = 2.0f;
     private float windStrengthWarningCoolDownTimer, windStrengthWarningCoolDownTime = 3f;
 
 
@@ -128,6 +128,8 @@ public class DroneManager : MonoBehaviour
 
             bool inBuffer = false;
             Vector3 v2bound = CheckPositionInContingencyBuffer(out inBuffer);
+            worldVisUpdater.inBuffer = inBuffer;
+            worldVisUpdater.distToBuffer = v2bound.magnitude;
             controlVisUpdater.vectorToNearestBufferBound = v2bound;
             Vector3 v2surf = CheckDistanceToBuildingSurface();
             controlVisUpdater.vectorToNearestSurface = v2surf;
@@ -267,7 +269,7 @@ public class DroneManager : MonoBehaviour
     }
 
     Vector3 CheckPositionInContingencyBuffer(out bool inBuffer){
-        Vector3 localDronePos = contingencyBuffer.InverseTransformPoint(vc.transform.position);
+        Vector3 localDronePos = contingencyBuffer.InverseTransformPoint(PositionalSensorSimulator.dronePositionVirtual);
         inBuffer = Mathf.Abs(localDronePos.x) < 0.5f && Mathf.Abs(localDronePos.y) < 0.5f && Mathf.Abs(localDronePos.z) < 0.5f;
         if (Mathf.Abs(localDronePos.y) < 0.5f && (Mathf.Abs(localDronePos.x) < 0.5f || Mathf.Abs(localDronePos.z) < 0.5f))
         {
@@ -309,7 +311,6 @@ public class DroneManager : MonoBehaviour
         if(!inBuffer){
             tempState = SafetyState.Caution;
         }
-        
         if(distToSurface < surfaceCautionThreshold){
             tempState = SafetyState.Caution;
         }
@@ -319,10 +320,7 @@ public class DroneManager : MonoBehaviour
         if(voltage < 10f){
             tempState = SafetyState.Caution;
         }
-        if(positional_signal_level == 2){
-            tempState = SafetyState.Caution;
-        }
-        if(wind_strength > 40f){
+        if(wind_strength > 20f){
             tempState = SafetyState.Caution;
         }
 
@@ -339,28 +337,33 @@ public class DroneManager : MonoBehaviour
         if(vc.collisionHitCount > 0){
             tempState = SafetyState.Warning;
         }
+        if(positional_signal_level == 2){
+            tempState = SafetyState.Caution;
+        }
         if(positional_signal_level == 1){
             tempState = SafetyState.Warning;
         }
         if(positional_signal_level == 0){
             tempState = SafetyState.Warning;
         }
-        if(wind_strength > 80f){
+        if(wind_strength > 40f){
             tempState = SafetyState.Warning;
         }
+        
 
-        if(batteryLevel < 0.2f){
-            tempState = SafetyState.Emergency;
-        } else if(vc.collisionHitCount > 3 || vc.out_of_balance){
+        if(vc.collisionHitCount > 0 || vc.out_of_balance){
             tempState = SafetyState.Emergency;
         }
+        if(batteryLevel < 0.2f){
+            tempState = SafetyState.Emergency;
+        } 
 
         currentSafetyState = tempState;
 
     }
 
     Vector3 CheckDistanceToBuildingSurface(){
-        Vector3 localDronePos = buildingCollision.InverseTransformPoint(vc.transform.position);
+        Vector3 localDronePos = buildingCollision.InverseTransformPoint(PositionalSensorSimulator.dronePositionVirtual);
         if(Mathf.Abs(localDronePos.y) >= 0.5f)
             return Vector3.positiveInfinity;
         
@@ -389,12 +392,12 @@ public class DroneManager : MonoBehaviour
 
     Vector3 CheckDistToGround(out bool hitGround)
     {
-        Ray rayDown = new Ray(vc.transform.position, Vector3.down);
+        Ray rayDown = new Ray(PositionalSensorSimulator.dronePositionVirtual, Vector3.down);
         RaycastHit hit;
         if (Physics.Raycast(rayDown, out hit, float.MaxValue, realObstacleLayerMask))
         {
             hitGround = true;
-            return hit.point - vc.transform.position;
+            return hit.point - PositionalSensorSimulator.dronePositionVirtual;
         } else
         {
             hitGround = false;

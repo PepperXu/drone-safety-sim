@@ -42,7 +42,9 @@ public class UIUpdater : MonoBehaviour
     [SerializeField] Image movement_enabled, movement_locked;
 
     [Header("Current Interface")]
-    [SerializeField] GameObject pilotView, taskView;
+    [SerializeField] GameObject pilotView, taskView, allView;
+
+    [SerializeField] Toggle autoPilotToggle;
     
     private bool attachedToHead = false;
     private bool uiSelected = false;
@@ -84,6 +86,10 @@ public class UIUpdater : MonoBehaviour
         missionState.text = missionStateString[(int)DroneManager.currentMissionState];
         //systemState.text = Enum.GetName(typeof(DroneManager.SystemState), DroneManager.currentSystemState);
         controlState.text = controlStateString[(int)DroneManager.currentControlType];
+        if(DroneManager.currentControlType == DroneManager.ControlType.Autonomous)
+            autoPilotToggle.isOn = true;
+        else   
+            autoPilotToggle.isOn = false;
 
         batteryPercentage.text = ((int) ((currentBatteryPercentage - 0.2f)/ 0.8f * 100f)) + "%";
         batteryVoltage.text = ((int) (voltage * 10f)) / 10f + "V";
@@ -163,9 +169,16 @@ public class UIUpdater : MonoBehaviour
         if(VisType.globalVisType == VisType.VisualizationType.MissionOnly){
             taskView.SetActive(true);
             pilotView.SetActive(false);
-        } else {
+            allView.SetActive(false);
+
+        } else if(VisType.globalVisType == VisType.VisualizationType.SafetyOnly){
             taskView.SetActive(false);
             pilotView.SetActive(true);
+            allView.SetActive(false);
+        } else {
+            taskView.SetActive(false);
+            pilotView.SetActive(false);
+            allView.SetActive(true);
         }
 
 
@@ -236,9 +249,9 @@ public class UIUpdater : MonoBehaviour
                 if(enableSound){
                     if (continuous)
                     {
-                        if (audioSource.clip != monitoring_warn)
+                        if (audioSource.clip != monitoring_ok)
                         {
-                            audioSource.clip = monitoring_warn;
+                            audioSource.clip = monitoring_ok;
                             audioSource.Play();
                         }
                     }
@@ -251,9 +264,9 @@ public class UIUpdater : MonoBehaviour
                 if(enableSound){
                     if (continuous)
                     {
-                        if (audioSource.clip != monitoring_alert)
+                        if (audioSource.clip != monitoring_warn)
                         {
-                            audioSource.clip = monitoring_alert;
+                            audioSource.clip = monitoring_warn;
                             audioSource.Play();
                         }
                     }

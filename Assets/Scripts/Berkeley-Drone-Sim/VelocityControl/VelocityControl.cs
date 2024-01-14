@@ -55,6 +55,9 @@ public class VelocityControl : MonoBehaviour {
     [SerializeField] AudioClip take_off, flying, landing;
     AudioSource audioSource;
 
+    [SerializeField] PositionalSensorSimulator pss;
+    [SerializeField] RandomPulseNoise rpn;
+
     // Use this for initialization
     void Start () {
           
@@ -262,5 +265,22 @@ public class VelocityControl : MonoBehaviour {
                 out_of_balance = true;
             DroneManager.autopilot_stop_flag = true;
         }
+    }
+
+    private void OnTriggerEnter(Collider other) {
+        if(other.tag == "GPSWeakZone"){
+            pss.SetSignalLevel(1);
+        } else if(other.tag == "WindZone"){
+            other.gameObject.SetActive(false);
+            rpn.strength_mean = 60f;
+			rpn.wind_change_flag = true;
+        }
+    }
+
+    private void OnTriggerExit(Collider other) {
+        if(other.tag == "GPSWeakZone"){
+            pss.switch_gps_normal = true;
+            pss.SetSignalLevel(3);
+        } 
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit;
 
@@ -21,11 +22,11 @@ public class FlightPlanning : MonoBehaviour
     //private bool enablePlanning = true;
 
     private bool pathPlanned = false;
-    private int verticalSteps = 18;
+    private int verticalSteps = 15;
     private float distToSurface = 4f;
-    private int horizontalSteps = 7;
+    private int horizontalSteps = 6;
 
-    private float groundOffset = 15f;
+    private float groundOffset = 10f;
     private float lrmargin = 1f;
 
     private bool isFromTop = false;
@@ -39,14 +40,27 @@ public class FlightPlanning : MonoBehaviour
     private int currentIndex = -1;
 
     [SerializeField] WorldVisUpdater worldVis;
+
+    public bool autoPlan;
+
+    private float eventZoneXmin = 830.5f, eventZoneXmax = 853.52f, eventZoneZmin = 1070.69f, eventZoneZmax = 1084.61f;
+    private float eventZoneYmin = 10.45f, eventZoneYstepLength = 3.4f, eventZoneYmax = 61.45f;
+
+    public GameObject GPS_Weak_Zone, Wind_Zone;
+
     // Start is called before the first frame update
 
     public void ResetPathPlanning(){
         pathPlanned = false;
         UpdateBoundsGeometry();
-        SetStartingPoint(4);
+        SetStartingPoint(3);
         planningUI.SetActive(true);
         monitoringUI.SetActive(false);
+        if(autoPlan){
+            GenerateEventZone();
+            GenerateFlightTrajectory();
+            FinishPlanning();
+        }
     }
 
     // Update is called once per frame
@@ -66,6 +80,7 @@ public class FlightPlanning : MonoBehaviour
         //for debugging
         if(Input.GetKeyDown(KeyCode.P)){
             //currentSelectedSurfaceIndex = 0;
+            GenerateEventZone();
             GenerateFlightTrajectory();
             FinishPlanning();
         }
@@ -286,6 +301,44 @@ public class FlightPlanning : MonoBehaviour
             VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
         }
     }
+
+    void GenerateEventZone(){
+        int i = Random.Range(1, 7);
+        float j = Random.value;
+        float spawnY;
+        if(isFromTop){
+            spawnY = eventZoneYmax - i * eventZoneYstepLength;
+        } else {
+            spawnY = eventZoneYmin + i * eventZoneYstepLength;  
+        }
+        Vector3 dir = new Vector3(eventZoneXmin, 0f, eventZoneZmax) - new Vector3(eventZoneXmax, 0f, eventZoneZmin);
+        Vector3 startPos = new Vector3(eventZoneXmax, 0f, eventZoneZmin);
+        Vector3 spawnPos = startPos + dir * j + Vector3.up * spawnY;
+        GameObject obj = Instantiate(GPS_Weak_Zone);
+        obj.transform.position = spawnPos;
+
+        int t = Random.Range(1, 7);
+        while(Mathf.Abs(t-i) < 2){
+            t = Random.Range(1, 7);
+        }
+        j = Random.value;
+        if(isFromTop){
+            spawnY = eventZoneYmax - t * eventZoneYstepLength;
+        } else {
+            spawnY = eventZoneYmin + t * eventZoneYstepLength;  
+        }
+        dir = new Vector3(eventZoneXmin, 0f, eventZoneZmax) - new Vector3(eventZoneXmax, 0f, eventZoneZmin);
+        startPos = new Vector3(eventZoneXmax, 0f, eventZoneZmin);
+        spawnPos = startPos + dir * j + Vector3.up * spawnY;
+        obj = Instantiate(Wind_Zone);
+        obj.transform.position = spawnPos;
+
+    }
+
+    //void RandomizeStartFromTop(){
+    //    int i = Random.Range(0, 2);
+    //    isFromTop = i == 0?false:true;
+    //}
 
     private void UpdateBoundsGeometry()
     {

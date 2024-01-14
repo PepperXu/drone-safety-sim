@@ -8,23 +8,24 @@ using UnityEngine.XR.Interaction.Toolkit.Utilities.Tweenables.SmartTweenableVari
 public class Battery : MonoBehaviour
 {
     //private float hoveringDischargeRate = 7.66f;
-    private const float batteryCapacity = 3830f;
+    private const float batteryCapacity = 900;
     //private float optimalFlightSpeed = 6.94f;
     private const float normalDischargeRate = 8.754f;
     private const float normalWindStrength = 20f;
     private const float noWindDischargeRate = 7.66f;
+    const float voltageDropDischargeRateCoeff = 1.5f;
 
     private const float normalBatteryVoltage = 11.4f;
     private const float voltageDropPerLevel = 1f;
     float abnormalDischargeRate = 0f;
-    float voltageDropDischargeRateCoeff = 1.5f;
-    float randomNoise = 0f;
-    float currentBatteryPercentage = 1f;
-    float currentBatteryCapacity = 3830f;
-    float currentDischargeRate = 0f;
-    float dischargeRateWindCoeff = 0f;
+
+    float randomNoise;
+    float currentBatteryPercentage;
+    float currentBatteryCapacity;
+    float currentDischargeRate;
+    float dischargeRateWindCoeff;
     float remainingTimeInSeconds;
-    float currentVoltage = 0f;
+    float currentVoltage;
 
 
     [SerializeField] StateFinder droneState;

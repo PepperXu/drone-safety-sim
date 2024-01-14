@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Rendering.LookDev;
 using UnityEngine;
 
 public class PositionalSensorSimulator : MonoBehaviour
@@ -8,21 +9,28 @@ public class PositionalSensorSimulator : MonoBehaviour
     [SerializeField] UIUpdater uiUpdater;
     [SerializeField] ControlVisUpdater controlVisUpdater;
     [SerializeField] AutopilotManager autopilotManager;
+    [SerializeField] VelocityControl vc;
 
     int positional_signal_level = 3;
     float offsetRefreshIntervalMean = 8f, offsetRefreshIntervalVar = 3f;
     float offsetRefreshTimer = 0f;
 
-    float signalUpdateRateMean = 3f, signalUpdateRateVar = 3f;
+    float signalUpdateRateMean = 3f, signalUpdateRateVar = 5f;
     float maxPositionUncertainty = 3f;
     System.Random r;
 
-    Vector3 positionOffset = Vector3.zero;
+    Vector3 positionOffset = new Vector3(1.5f, 0f, 2.9f);
     float updateRate = 0f;
+
+    public static Vector3 dronePositionVirtual;
+
+    public bool switch_gps_normal, switch_gps_faulty;
     // Start is called before the first frame update
     void Start()
     {
         r = new System.Random();
+        updateRate = Time.deltaTime;
+        StartCoroutine(UpdatePosition());
     }
 
     // Update is called once per frame
@@ -31,33 +39,44 @@ public class PositionalSensorSimulator : MonoBehaviour
         uiUpdater.positional_signal_level = positional_signal_level;
         controlVisUpdater.pos_sig_lvl = positional_signal_level;
 
-        if(offsetRefreshTimer <= 0f){
-            Vector3 newOffset = Random.onUnitSphere * Random.Range (0f, maxPositionUncertainty);
-            positionOffset = (positionOffset + newOffset)/2f;
-            offsetRefreshTimer = SamplePositive(offsetRefreshIntervalMean, offsetRefreshIntervalVar);
-            updateRate = SamplePositive(signalUpdateRateMean, signalUpdateRateVar);
-        } 
-        offsetRefreshTimer -= Time.deltaTime;
+        if(switch_gps_normal){
+            switch_gps_normal = false;
+            dronePositionVirtual = vc.transform.position;
+            updateRate = Time.deltaTime;
+        }
 
-        switch(positional_signal_level){
-            case 3:
-                controlVisUpdater.positionOffset = Vector3.zero;
-                controlVisUpdater.updateRate = Time.deltaTime;
-                controlVisUpdater.updating = true;
-                break;
-            case 2:
-                controlVisUpdater.positionOffset = positionOffset;
-                controlVisUpdater.updateRate = Time.deltaTime;
-                controlVisUpdater.updating = true;
-                break;
-            case 1:
-                controlVisUpdater.positionOffset = positionOffset;
-                controlVisUpdater.updateRate = updateRate;
-                controlVisUpdater.updating = true;
-                break;
-            case 0:
-                controlVisUpdater.updating = false;
-                break;
+        
+
+        //if(offsetRefreshTimer <= 0f){
+        //    Vector3 newOffset = Random.onUnitSphere * Random.Range (0f, maxPositionUncertainty);
+        //    positionOffset = (positionOffset + newOffset)/2f;
+        //    offsetRefreshTimer = SamplePositive(offsetRefreshIntervalMean, offsetRefreshIntervalVar);
+        //    updateRate = SamplePositive(signalUpdateRateMean, signalUpdateRateVar);
+        //} 
+        //offsetRefreshTimer -= Time.deltaTime;
+
+        
+    }
+
+    IEnumerator UpdatePosition(){
+        while(true){
+            switch(positional_signal_level){
+                case 3:
+                    dronePositionVirtual = vc.transform.position;
+                    updateRate = Time.deltaTime;
+                    break;
+                case 2:
+                    dronePositionVirtual = vc.transform.position + positionOffset;
+                    updateRate = Time.deltaTime;
+                    break;
+                case 1:
+                    dronePositionVirtual = vc.transform.position + Random.onUnitSphere * Random.Range (3f, maxPositionUncertainty);;
+                    updateRate = SamplePositive(signalUpdateRateMean, signalUpdateRateVar);;
+                    break;
+                case 0:
+                    break;
+            }
+            yield return new WaitForSeconds(updateRate);
         }
     }
 

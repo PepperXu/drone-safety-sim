@@ -35,7 +35,7 @@ public class ControlVisUpdater : MonoBehaviour
 
     public Vector3 vectorToNearestBufferBound, vectorToGround, vectorToNearestSurface;
 
-    public Vector3 positionOffset = Vector3.zero;
+    //public Vector3 positionOffset = Vector3.zero;
 
     public float windStrength;
     public Quaternion windRotation;
@@ -43,13 +43,13 @@ public class ControlVisUpdater : MonoBehaviour
     public float batteryPercentage;
     public int pos_sig_lvl;
 
-    public float updateRate;
+    //public float updateRate;
     
-    public bool updating = true;
+    //public bool updating = true;
 
     void Start(){
-        updateRate = Time.deltaTime;
-        updating = true;
+        //updateRate = Time.deltaTime;
+        //updating = true;
 
     }
 
@@ -80,20 +80,18 @@ public class ControlVisUpdater : MonoBehaviour
     }
     IEnumerator UpdateControlVis(){
         while(true){
-            if(updating){
-                transform.position = droneParent.position + positionOffset;
-                transform.eulerAngles = new Vector3(0f, droneParent.eulerAngles.y, 0f);
-                UpdateDistance2Ground();
-                UpdateDistance2Bound();
-                UpdateDistance2Surface();
-                UpdateFutureTrajectory();
-                UpdateAttitudeVis();
-                UpdateCameraFrustum();
-                UpdateWindVis();
-                UpdateBatteryRing();
-                UpdatePositioningIndicator();
-            }
-            yield return new WaitForSeconds(updateRate);
+            transform.position = PositionalSensorSimulator.dronePositionVirtual;
+            transform.eulerAngles = new Vector3(0f, droneParent.eulerAngles.y, 0f);
+            UpdateDistance2Ground();
+            UpdateDistance2Bound();
+            UpdateDistance2Surface();
+            UpdateFutureTrajectory();
+            UpdateAttitudeVis();
+            UpdateCameraFrustum();
+            UpdateWindVis();
+            UpdateBatteryRing();
+            UpdatePositioningIndicator();
+            yield return new WaitForEndOfFrame();
         }
     }
 
@@ -287,7 +285,7 @@ public class ControlVisUpdater : MonoBehaviour
             batteryRing.SwitchHiddenVisTypeLocal(false);
         } else if(batteryPercentage > 0.3f){
             batteryRingImg.color = Color.yellow;
-            dis2groundVis.SwitchHiddenVisTypeLocal(true);
+            dis2groundVis.SwitchHiddenVisTypeLocal(false);
             batteryRing.SwitchHiddenVisTypeLocal(true);
         } else {
             batteryRingImg.color = Color.red;
@@ -306,12 +304,12 @@ public class ControlVisUpdater : MonoBehaviour
         positioning.showVisualization = true;
         positioning.SwitchHiddenVisTypeLocal(true);
         posCircle.SwitchHiddenVisTypeLocal(true);
-        if(pos_sig_lvl == 0){
-            positioning.visRoot.GetChild(0).gameObject.SetActive(false);
-            positioning.visRoot.GetChild(0).gameObject.SetActive(true);
-        } else {
-            positioning.visRoot.GetChild(0).gameObject.SetActive(true);
-            positioning.visRoot.GetChild(0).gameObject.SetActive(false);
-        }
+        //if(pos_sig_lvl == 0){
+        //    positioning.visRoot.GetChild(0).gameObject.SetActive(false);
+        //    positioning.visRoot.GetChild(0).gameObject.SetActive(true);
+        //} else {
+        //    positioning.visRoot.GetChild(0).gameObject.SetActive(true);
+        //    positioning.visRoot.GetChild(0).gameObject.SetActive(false);
+        //}
     }
 }

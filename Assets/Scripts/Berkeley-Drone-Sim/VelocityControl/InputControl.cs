@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -15,6 +16,10 @@ public class InputControl : MonoBehaviour {
 
 	private bool switched = false;
 
+	private bool take_off_button_pressed;
+	private bool rth_button_pressed; 
+	private bool autopilot_toggled_on;
+	private bool autopilot_toggled_off;
 
 
 
@@ -55,8 +60,9 @@ public class InputControl : MonoBehaviour {
 		if(DroneManager.currentMissionState == DroneManager.MissionState.Planning)
 			return;
 
-		if (Input.GetButtonDown("TakeOff"))
+		if (Input.GetButtonDown("TakeOff") || take_off_button_pressed)
 		{
+			take_off_button_pressed = false;
 			vc.take_off_flag = true;
 		}
 
@@ -86,20 +92,23 @@ public class InputControl : MonoBehaviour {
 				vc.desired_vy = vy;
 				vc.desired_yaw = yaw;
 				vc.desired_height += height_diff;
-				if (Input.GetButtonDown("AutoPilot"))
+				if (Input.GetButtonDown("AutoPilot") || autopilot_toggled_on)
             	{
+					autopilot_toggled_on = false;
 					DroneManager.autopilot_flag = true;
 				}
 			} else {
-				if (Input.GetButtonDown("AutoPilot") || Mathf.Abs(pitchAxis) > 0.1f || Mathf.Abs(rollAxis) > 0.1f || Mathf.Abs(yawAxis) > 0.1f || Mathf.Abs(throttleAxix) > 0.1f)
+				if (Input.GetButtonDown("AutoPilot") || autopilot_toggled_off || Mathf.Abs(pitchAxis) > 0.1f || Mathf.Abs(rollAxis) > 0.1f || Mathf.Abs(yawAxis) > 0.1f || Mathf.Abs(throttleAxix) > 0.1f)
             	{
 					DroneManager.autopilot_stop_flag = true;
+					autopilot_toggled_off = false;
 					DroneManager.currentMissionState = DroneManager.MissionState.AutopilotInterupted;
             	}
 			}
 
-            if (Input.GetButtonDown("RTH"))
+            if (Input.GetButtonDown("RTH") || rth_button_pressed)
             {
+				rth_button_pressed = false;
 				DroneManager.rth_flag = true;
             }
 
@@ -108,6 +117,27 @@ public class InputControl : MonoBehaviour {
 			else
 				ExperimentServer.switching_flag = false;
 		}
+	}
+
+	public void ButtonPressed(string buttonName){
+		switch(buttonName){
+			case "TakeOff":
+				take_off_button_pressed = true;
+				break;
+			case "RTH":
+				rth_button_pressed = true;
+				break;
+			default:
+				Debug.LogWarning("Button Name Undefined");
+				break;
+		}
+	}
+
+	public void AutopilotTogglePressed(bool toggle_ON){
+		if(toggle_ON && DroneManager.currentControlType != DroneManager.ControlType.Autonomous)
+			autopilot_toggled_on = true;
+		else if(!toggle_ON && DroneManager.currentControlType != DroneManager.ControlType.Manual)
+			autopilot_toggled_off = true;
 	}
 
 	public void EnableControl(bool enabled){
