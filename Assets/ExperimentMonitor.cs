@@ -17,7 +17,7 @@ public class ExperimentMonitor : MonoBehaviour
 	#endregion  	
 
     string serverIp = "127.0.0.1";
-	[SerializeField] private TextMeshProUGUI flightStateText, missionStateText, controlTypeText, systemStateText, visCondiText, batteryPercentageText, batteryVoltageText, positionalSignalStatusText, defectCountText, windStrengthText;
+	[SerializeField] private TextMeshProUGUI flightStateText, missionStateText, controlTypeText, systemStateText, currentMRViewText, visCondiText, batteryPercentageText, batteryVoltageText, positionalSignalStatusText, defectCountText, windStrengthText, testRunText, flightStartPointText, configIDText;
 	[SerializeField] private TMP_InputField ipInputField;
 
 	[SerializeField] private Button[] startingPoints;
@@ -27,6 +27,8 @@ public class ExperimentMonitor : MonoBehaviour
 	private float currentBatteryPercentage;
 	private float currentWindStrength;
 	private int currentDroneStatus;
+
+	private int isTestRun, isFromTop, currentConfig;
 	[SerializeField] private Transform droneParent;
 	//string serverMessage = "";
 
@@ -37,7 +39,7 @@ public class ExperimentMonitor : MonoBehaviour
     string[] missionStateString = {"Planning", "Moving to Flight Zone", "In Flight Zone", "Inspecting", "Interrupted", "Returning"};
     string[] systemStateString = {"Healthy", "Caution", "Warning", "Emergency"};
     string[] controlStateString = {"Auto", "Manual"};
-	string[] currentMRViewString = {"Task View", "Pilot View", "Both", "Both(Pressed)"};
+	string[] currentMRViewString = {"Task View", "Pilot View", "All", "All(Pressed)"};
 
 	bool isRecording = false;
 	string baseFileName = "exp_recording";
@@ -149,6 +151,18 @@ public class ExperimentMonitor : MonoBehaviour
 				currentWindStrength = float.Parse(splitMsg[1]);
 				windStrengthText.SetText(((int)(currentWindStrength * 10f))/10f + "");
 				break;
+			case "test-run":
+				isTestRun = int.Parse(splitMsg[1]);
+				testRunText.SetText(isTestRun == 1?"True":"False");
+				break;
+			case "is-from-top":
+				isFromTop = int.Parse(splitMsg[1]);
+				flightStartPointText.SetText(isFromTop == 1?"Top":"Bottom");
+				break;
+			case "current-config":
+				currentConfig = int.Parse(splitMsg[1]);
+				configIDText.SetText(currentConfig + 1 + "");
+				break;
 			default:
 				Debug.Log("Undefined Header: " + serverMessage);
 				break;
@@ -163,6 +177,7 @@ public class ExperimentMonitor : MonoBehaviour
 		missionStateText.SetText(missionStateString[statusArray[0]]);
 		controlTypeText.SetText(controlStateString[statusArray[1]]);
 		systemStateText.SetText(systemStateString[statusArray[2]]);
+		currentMRViewText.SetText(currentMRViewString[statusArray[7]]);
 		visCondiText.SetText(visConditionString[statusArray[3]]);
 		batteryVoltageText.SetText((int) (normalBatteryVoltage - (3 - statusArray[4]) * voltageDropPerLevel) * 10f / 10f + "V");
 		positionalSignalStatusText.SetText(posStatusString[statusArray[5]]);
@@ -249,6 +264,18 @@ public class ExperimentMonitor : MonoBehaviour
 	public void SetServerIp(){
 		serverIp = ipInputField.text;
 		PlayerPrefs.SetString("server-ip", serverIp);
+	}
+
+	public void SetTestRun(int isTest){
+		sendMsgQueue.Enqueue("test-run;" + isTest + "\n");
+	}
+
+	public void SetFromTop(int isFromTop){
+		sendMsgQueue.Enqueue("is-from-top;" + isFromTop + "\n");
+	}
+
+	public void SetConfiguration(int index){
+		sendMsgQueue.Enqueue("current-config;" + index + "\n");
 	}
 
 	private void InitializeIpInputField(){

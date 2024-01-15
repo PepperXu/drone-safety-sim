@@ -160,7 +160,7 @@ public class DroneManager : MonoBehaviour
 
             if(mark_defect_flag){
                 mark_defect_flag = false;
-                camController.TakePhoto();
+                camController.TakePhoto(true);
                 worldVisUpdater.SpawnCoverageObject(true); 
             }
 
@@ -181,7 +181,7 @@ public class DroneManager : MonoBehaviour
                 if(take_photo_flag)
                 {
                     take_photo_flag = false;
-                    camController.TakePhoto();
+                    camController.TakePhoto(false);
                     worldVisUpdater.SpawnCoverageObject(false);
                 }
             }

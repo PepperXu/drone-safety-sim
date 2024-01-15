@@ -9,7 +9,8 @@ using UnityEngine.XR.Interaction.Toolkit;
 public class UIUpdater : MonoBehaviour
 {
     [Header("System and States")]
-    [SerializeField] TextMeshProUGUI flightState, controlState;
+    [SerializeField] TextMeshProUGUI flightState;
+    [SerializeField] TextMeshProUGUI controlState;
     [SerializeField] Image systemState;
     [SerializeField] Image batteryIcon;
     [SerializeField] Sprite[] batterySprites;
@@ -21,16 +22,19 @@ public class UIUpdater : MonoBehaviour
 
 
     [Header("Flight Telemetry")]
-    [SerializeField] TextMeshProUGUI distToHome, altitude, horiSpeed, vertSpeed, vps;
+    [SerializeField] TextMeshProUGUI distToHome;
+    [SerializeField] TextMeshProUGUI altitude, horiSpeed, vertSpeed, vps;
     [SerializeField] Transform northIcon, headingIcon, attitudeIconAnchor;
 
 
     [Header("Mission States")]
-    [SerializeField] TextMeshProUGUI missionState, cameraCountUI, defectCountUI, progressPercentageUI;
+    [SerializeField] TextMeshProUGUI missionState;
+    [SerializeField] TextMeshProUGUI cameraCountUI, defectCountUI, progressPercentageUI, defectCountPlusUI;
     [SerializeField] Image cameraBorderUI;
 
     [Header("Audio")]
-    [SerializeField] AudioSource audioSource, secondaryAudioSource;
+    [SerializeField] AudioSource audioSource;
+    [SerializeField] AudioSource secondaryAudioSource;
     [SerializeField] AudioClip beep, monitoring_ok, monitoring_warn, monitoring_alert, camCapture;
     
     [Header("External Anchors")]
@@ -42,8 +46,10 @@ public class UIUpdater : MonoBehaviour
     [SerializeField] Image movement_enabled, movement_locked;
 
     [Header("Current Interface")]
-    [SerializeField] GameObject pilotView, taskView, allView;
+    [SerializeField] GameObject pilotView; 
+    [SerializeField] GameObject taskView, allView;
 
+    [Header("Buttons")]
     [SerializeField] Toggle autoPilotToggle;
     
     private bool attachedToHead = false;
@@ -51,7 +57,8 @@ public class UIUpdater : MonoBehaviour
     private XRRayInteractor currentRayInteractor = null;
 
     [Header("Public Parameters")]
-    public float healthyInterval = 1.2f, warningInterval = 0.8f, emergencyInterval = 0.4f;
+    public float healthyInterval = 1.2f; 
+    public float warningInterval = 0.8f, emergencyInterval = 0.4f;
     public bool enableSound = false;
     public float vpsHeight = 0f;
     public float missionProgress = 0f;
@@ -342,6 +349,20 @@ public class UIUpdater : MonoBehaviour
         Color c = cameraBorderUI.color;
         cameraBorderUI.color = new Color(c.r, c.g, c.b, 1f);
         DroneManager.mark_defect_flag = true;
+        defectCountPlusUI.color = Color.red;
+        secondaryAudioSource.PlayOneShot(camCapture);
+    }
+
+    public void MarkDefect()
+    {
+        if(vector2surface.magnitude > 8f)
+            return;
+
+        defectCount++;
+        Color c = cameraBorderUI.color;
+        cameraBorderUI.color = new Color(c.r, c.g, c.b, 1f);
+        DroneManager.mark_defect_flag = true;
+        defectCountPlusUI.color = Color.red;
         secondaryAudioSource.PlayOneShot(camCapture);
     }
 

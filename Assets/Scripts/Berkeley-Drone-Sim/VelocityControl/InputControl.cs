@@ -21,6 +21,7 @@ public class InputControl : MonoBehaviour {
 	private bool autopilot_toggled_on;
 	private bool autopilot_toggled_off;
 
+	[SerializeField] UIUpdater uiUpdater;
 
 
 	// Use this for initialization
@@ -116,6 +117,11 @@ public class InputControl : MonoBehaviour {
 				ExperimentServer.switching_flag = true;
 			else
 				ExperimentServer.switching_flag = false;
+
+			if(Input.GetButtonDown("MarkDefect")){
+				uiUpdater.MarkDefect();
+			}
+			
 		}
 	}
 

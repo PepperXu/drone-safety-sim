@@ -254,6 +254,15 @@ public class ExperimentServer : MonoBehaviour
 			case "reset-all-states":
 				droneManager.ResetAllStates();
 				break;
+			case "test-run":
+				flightPlanning.SetIsTestRun(int.Parse(splitMsg[1]));
+				break;
+			case "is-from-top":
+				flightPlanning.SetIsFromTop(int.Parse(splitMsg[1]));
+				break;
+			case "current-config":
+				flightPlanning.SetCurrentFacadeConfig(int.Parse(splitMsg[1]));
+				break;
 			default:
 				Debug.Log("Undefined Command: " + clientMessage);
 				break;
@@ -299,26 +308,41 @@ public class ExperimentServer : MonoBehaviour
 	}
 
 	private void SendFlightPlanningInfo(){
-		string currentPlan = "flight-planning;" + flightPlanning.GetCurrentStartingPointIndex() + "\n";
-		msgQueue.Enqueue(currentPlan);
+		string msg = "flight-planning;" + flightPlanning.GetCurrentStartingPointIndex() + "\n";
+		msgQueue.Enqueue(msg);
 	}
 	private void SendDroneFlightStatus(){
-		string currentFlightState = "drone-status;" + (int)DroneManager.currentFlightState + "\n";
-		msgQueue.Enqueue(currentFlightState);
+		string msg = "drone-status;" + (int)DroneManager.currentFlightState + "\n";
+		msgQueue.Enqueue(msg);
 	}
 	private void SendCurrentDronePose(){
-		string currentDronePose = "drone-position;" + droneParent.position.x + ";" + droneParent.position.y + ";" + droneParent.position.z + "\n";
-		msgQueue.Enqueue(currentDronePose);
+		string msg = "drone-position;" + droneParent.position.x + ";" + droneParent.position.y + ";" + droneParent.position.z + "\n";
+		msgQueue.Enqueue(msg);
 	}
 
 	private void SendBatteryPercentage(){
-		string currentBatPer = "battery-percentage;" + battery.GetBatteryLevel() + "\n";
-		msgQueue.Enqueue(currentBatPer);
+		string msg = "battery-percentage;" + battery.GetBatteryLevel() + "\n";
+		msgQueue.Enqueue(msg);
 	}
 
 	private void SendWindStrength(){
-		string currentWind = "wind-strength;" + randomPulseNoise.GetCurrentWindStrength() + "\n";
-		msgQueue.Enqueue(currentWind);
+		string msg = "wind-strength;" + randomPulseNoise.GetCurrentWindStrength() + "\n";
+		msgQueue.Enqueue(msg);
+	}
+
+	private void SendIsTestRun(){
+		string msg = "test-run;" + flightPlanning.GetIsTestRun() + "\n";
+		msgQueue.Enqueue(msg);
+	}
+
+	private void SendIsFromTop(){
+		string msg = "is-from-top;" + flightPlanning.GetIsFromTop() + "\n";
+		msgQueue.Enqueue(msg);
+	}
+
+	private void SendConfiguration(){
+		string msg = "current-config;" + flightPlanning.GetCurrentFacadeConfig() + "\n";
+		msgQueue.Enqueue(msg);
 	}
 
 	IEnumerator UpdateCurrentState(){
@@ -343,14 +367,23 @@ public class ExperimentServer : MonoBehaviour
 				case 5:
 					SendWindStrength();
 					break;
+				case 6:
+					SendIsTestRun();
+					break;
+				case 7:
+					SendIsFromTop();
+					break;
+				case 8:
+					SendConfiguration();
+					break;
 				default:
 					break;
 			}
 			msgSendCounter++;
-			if(msgSendCounter >= 7){
+			if(msgSendCounter >= 9){
 				msgSendCounter = 0;
 			}
-			yield return new WaitForSeconds(0.05f);
+			yield return new WaitForEndOfFrame();
 		}
 	}
 

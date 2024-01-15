@@ -22,14 +22,21 @@ public class FlightPlanning : MonoBehaviour
     //private bool enablePlanning = true;
 
     private bool pathPlanned = false;
-    private int verticalSteps = 15;
+    private int verticalSteps = 12;
+
+    private float vertStepLength;
     private float distToSurface = 4f;
     private int horizontalSteps = 6;
 
-    private float groundOffset = 10f;
+    private float groundOffset = 12f;
     private float lrmargin = 1f;
 
     private bool isFromTop = false;
+
+    private bool isTest = true;
+
+    private int configIndex = 3;
+
     
     [SerializeField] GameObject planningUI, monitoringUI;
     [SerializeField] private Transform[] startingPoints;
@@ -44,9 +51,12 @@ public class FlightPlanning : MonoBehaviour
     public bool autoPlan;
 
     private float eventZoneXmin = 830.5f, eventZoneXmax = 853.52f, eventZoneZmin = 1070.69f, eventZoneZmax = 1084.61f;
-    private float eventZoneYmin = 10.45f, eventZoneYstepLength = 3.4f, eventZoneYmax = 61.45f;
+
 
     public GameObject GPS_Weak_Zone, Wind_Zone;
+    private GameObject gpsZoneObj, windZoneObj;
+
+    public GameObject[] facade_surfaces;
 
     // Start is called before the first frame update
 
@@ -57,9 +67,7 @@ public class FlightPlanning : MonoBehaviour
         planningUI.SetActive(true);
         monitoringUI.SetActive(false);
         if(autoPlan){
-            GenerateEventZone();
-            GenerateFlightTrajectory();
-            FinishPlanning();
+            UpdatePlanning();
         }
     }
 
@@ -69,118 +77,14 @@ public class FlightPlanning : MonoBehaviour
         if (DroneManager.currentMissionState != DroneManager.MissionState.Planning)
             return;
 
-        //if (selectingSurface)
-        //{
-        //    HighlightSurface();
-        //} else
-        //{
-        //    StopHighlightingSurface();
-        //}
 
         //for debugging
         if(Input.GetKeyDown(KeyCode.P)){
             //currentSelectedSurfaceIndex = 0;
-            GenerateEventZone();
-            GenerateFlightTrajectory();
-            FinishPlanning();
+            UpdatePlanning();
         }
     }
 
-    //public void StartSelectingSurface(HoverEnterEventArgs args)
-    //{
-    //    if (DroneManager.currentMissionState != DroneManager.MissionState.Planning || pathPlanned)
-    //        return;
-    //    selectingSurface = true;
-    //    currentRayInteractor = (XRRayInteractor)args.interactorObject;
-    //}
-//
-    //public void EndSelectingSurface(HoverExitEventArgs args)
-    //{
-    //    if (DroneManager.currentMissionState != DroneManager.MissionState.Planning || pathPlanned)
-    //        return;
-    //    if ((XRRayInteractor)args.interactorObject == currentRayInteractor)
-    //    {
-    //        selectingSurface = false;
-    //        currentRayInteractor = null;
-//
-    //    }
-    //}
-
-    //public void SelectSurface()
-    //{
-    //    if (DroneManager.currentMissionState != DroneManager.MissionState.Planning || pathPlanned)
-    //        return;
-    //    if ((XRRayInteractor)args.interactorObject == currentRayInteractor)
-    //    {
-    //        for (int i = 0; i < surfaceSelected.Length; i++)
-    //        {
-    //            if (i == currentHoveringSurfaceIndex)
-    //            {
-    //                if (currentHoveringSurfaceIndex != currentSelectedSurfaceIndex)
-    //                {
-    //                    surfaceSelected[i].SetActive(true);
-    //                    if(!planningUI.activeInHierarchy)
-    //                        planningUI.SetActive(true);
-    //                    currentSelectedSurfaceIndex = currentHoveringSurfaceIndex;
-    //                }else
-    //                {
-    //                    surfaceSelected[i].SetActive(false);
-    //                    currentSelectedSurfaceIndex = -1;
-    //                }
-//
-    //            }
-    //            else
-    //            {
-    //                surfaceSelected[i].SetActive(false);
-    //            }
-    //        }
-    //    }
-    //}
-//
-    //void HighlightSurface()
-    //{
-    //    Vector3 hitPosition, hitNormal;
-    //    currentRayInteractor.TryGetHitInfo(out hitPosition, out hitNormal, out _, out _);
-    //    Vector3 localNormal = transform.InverseTransformDirection(hitNormal).normalized;
-    //    if ((localNormal + Vector3.right).magnitude < 0.02f)
-    //    {
-    //        currentHoveringSurfaceIndex = 0;
-    //    }
-    //    else if ((localNormal + Vector3.forward).magnitude < 0.02f)
-    //    {
-    //        currentHoveringSurfaceIndex = 1;
-    //    }
-    //    else if ((localNormal - Vector3.right).magnitude < 0.02f)
-    //    {
-    //        currentHoveringSurfaceIndex = 2;
-    //    }
-    //    else if ((localNormal - Vector3.forward).magnitude < 0.02f)
-    //    {
-    //        currentHoveringSurfaceIndex = 3;
-    //    } else
-    //    {
-    //        currentHoveringSurfaceIndex = -1;
-    //    }
-    //    for(int i = 0; i < surfaceHighlights.Length; i++)
-    //    {
-    //        if(i == currentHoveringSurfaceIndex)
-    //        {
-    //            surfaceHighlights[i].SetActive(true);
-    //        } else
-    //        {
-    //            surfaceHighlights[i].SetActive(false);
-    //        }
-    //    }
-    //}
-//
-    //public void StopHighlightingSurface()
-    //{
-    //    for (int i = 0; i < surfaceHighlights.Length; i++)
-    //    {
-    //        surfaceHighlights[i].SetActive(false);
-    //    }
-    //}
-//
     public void GenerateFlightTrajectory(int currentSelectedSurfaceIndex)
     {
         //if (currentSelectedSurfaceIndex < 0)
@@ -195,7 +99,7 @@ public class FlightPlanning : MonoBehaviour
         List<Vector3> path = new List<Vector3>();
         bool flipped = false;
         Vector3 surfaceNormal = (surfaceVerts[currentSelectedSurfaceIndex, 0] - surfaceVerts[(currentSelectedSurfaceIndex + 3) % 4, 0]).normalized;
-        float vertStepLength = (currentSurfaceVertices[3].y - currentSurfaceVertices[0].y - groundOffset)/verticalSteps;
+        vertStepLength = (currentSurfaceVertices[3].y - currentSurfaceVertices[0].y - groundOffset)/verticalSteps;
         
         if(isFromTop){
             Vector3 v = currentSurfaceVertices[3];
@@ -303,36 +207,54 @@ public class FlightPlanning : MonoBehaviour
     }
 
     void GenerateEventZone(){
-        int i = Random.Range(1, 7);
-        float j = Random.value;
+        if(gpsZoneObj)
+            Destroy(gpsZoneObj);
+        
+        if(windZoneObj)
+            Destroy(windZoneObj);
+        
+        int i = isTest?2:Random.Range(1, 7);
+        float j = isTest?0.7f:Random.value;
+        
         float spawnY;
         if(isFromTop){
-            spawnY = eventZoneYmax - i * eventZoneYstepLength;
+            spawnY = groundOffset + (verticalSteps - i ) * vertStepLength;
         } else {
-            spawnY = eventZoneYmin + i * eventZoneYstepLength;  
+            spawnY = groundOffset + i * vertStepLength;  
         }
         Vector3 dir = new Vector3(eventZoneXmin, 0f, eventZoneZmax) - new Vector3(eventZoneXmax, 0f, eventZoneZmin);
         Vector3 startPos = new Vector3(eventZoneXmax, 0f, eventZoneZmin);
         Vector3 spawnPos = startPos + dir * j + Vector3.up * spawnY;
-        GameObject obj = Instantiate(GPS_Weak_Zone);
-        obj.transform.position = spawnPos;
+        gpsZoneObj = Instantiate(GPS_Weak_Zone);
+        gpsZoneObj.transform.position = spawnPos;
 
-        int t = Random.Range(1, 7);
-        while(Mathf.Abs(t-i) < 2){
-            t = Random.Range(1, 7);
+        int t = isTest?1:Random.Range(1, 7);
+        if(!isTest){
+            while(Mathf.Abs(t-i) < 2){
+                t = Random.Range(1, 7);
+            }
         }
-        j = Random.value;
+        j = isTest?0.5f:Random.value;
         if(isFromTop){
-            spawnY = eventZoneYmax - t * eventZoneYstepLength;
+            spawnY = groundOffset + (verticalSteps - t ) * vertStepLength;
         } else {
-            spawnY = eventZoneYmin + t * eventZoneYstepLength;  
+            spawnY = groundOffset + t * vertStepLength;  
         }
         dir = new Vector3(eventZoneXmin, 0f, eventZoneZmax) - new Vector3(eventZoneXmax, 0f, eventZoneZmin);
         startPos = new Vector3(eventZoneXmax, 0f, eventZoneZmin);
         spawnPos = startPos + dir * j + Vector3.up * spawnY;
-        obj = Instantiate(Wind_Zone);
-        obj.transform.position = spawnPos;
+        windZoneObj = Instantiate(Wind_Zone);
+        windZoneObj.transform.position = spawnPos;
 
+    }
+
+    void UpdateCurrentFacade(){
+        for(int i = 0; i < facade_surfaces.Length; i++){
+            if(i == configIndex)
+                facade_surfaces[i].SetActive(true);
+            else    
+                facade_surfaces[i].SetActive(false);
+        }
     }
 
     //void RandomizeStartFromTop(){
@@ -415,42 +337,42 @@ public class FlightPlanning : MonoBehaviour
         isFromTop = toggle.isOn; 
     }
 
-    //public void SetStartingPoint(Dropdown dropdown){
-    //    switch(dropdown.value){
-    //        case 0:
-    //            camRig.position = startingPoints[0].position;
-    //            camRig.rotation = startingPoints[0].rotation;
-    //            droneRig.position = startingPoints[0].GetChild(0).position;
-    //            droneRig.rotation = startingPoints[0].GetChild(0).rotation;
-    //            break;
-    //        case 1:
-    //            camRig.position = startingPoints[1].position;
-    //            camRig.rotation = startingPoints[1].rotation;
-    //            droneRig.position = startingPoints[1].GetChild(0).position;
-    //            droneRig.rotation = startingPoints[1].GetChild(0).rotation;
-    //            break;
-    //        case 2:
-    //            camRig.position = startingPoints[2].position;
-    //            camRig.rotation = startingPoints[2].rotation;
-    //            droneRig.position = startingPoints[2].GetChild(0).position;
-    //            droneRig.rotation = startingPoints[2].GetChild(0).rotation;
-    //            break;
-    //        case 3:
-    //            camRig.position = startingPoints[3].position;
-    //            camRig.rotation = startingPoints[3].rotation;
-    //            droneRig.position = startingPoints[3].GetChild(0).position;
-    //            droneRig.rotation = startingPoints[3].GetChild(0).rotation;
-    //            break;
-    //        case 4:
-    //            camRig.position = startingPoints[4].position;
-    //            camRig.rotation = startingPoints[4].rotation;
-    //            droneRig.position = startingPoints[4].GetChild(0).position;
-    //            droneRig.rotation = startingPoints[4].GetChild(0).rotation;
-    //            break;
-    //        default:
-    //            break;
-    //    }
-    //}
+    public void SetIsFromTop(int isFromTop){
+        this.isFromTop = isFromTop == 1;
+    }
+
+    public int GetIsFromTop(){
+        return isFromTop?1:0;
+    }
+
+    public void SetIsTestRun(int isTestRun){
+        isTest = isTestRun == 1;
+    }
+
+    public int GetIsTestRun(){
+        return isTest?1:0;
+    }
+
+    public void SetCurrentFacadeConfig(int index){
+        configIndex = index;
+    }
+
+    public int GetCurrentFacadeConfig(){
+        return configIndex;
+    }
+
+
+    void UpdatePlanning(){
+        if(isTest){
+            SetCurrentFacadeConfig(3);
+            isFromTop = false;
+        }
+        UpdateCurrentFacade();
+        GenerateFlightTrajectory();
+        GenerateEventZone();
+        FinishPlanning();
+    }
+
 
     public void SetStartingPoint(int index){
         switch(index){
