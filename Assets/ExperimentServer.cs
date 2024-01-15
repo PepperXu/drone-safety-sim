@@ -49,7 +49,8 @@ public class ExperimentServer : MonoBehaviour
 	
     [SerializeField] private XROrigin xrOrigin;
 	//private string clientMessage = "";
-	Queue<string> msgQueue = new Queue<string>();
+	//Queue<string> msgQueue = new Queue<string>();
+	string msgString;
 	Queue<string> incomingMsgQueue = new Queue<string>();
 	int msgSendCounter = 0;
 
@@ -102,8 +103,9 @@ public class ExperimentServer : MonoBehaviour
 			}
 		}
 
-		if(msgQueue.Count > 0)
-			SendMessageFromQueue();
+		//if(msgQueue.Count > 0)
+		//	SendMessageFromQueue();
+		
     }
 
 	void ProcessKeyboardInput(){
@@ -215,7 +217,7 @@ public class ExperimentServer : MonoBehaviour
 						StreamReader sr = new StreamReader(stream);
 						do{
 							incomingMsgQueue.Enqueue(sr.ReadLine());
-						} while(sr.ReadLine() != null);		
+						} while(sr.ReadLine() != null);
 					} 				
 				} 			
 			} 		
@@ -226,62 +228,70 @@ public class ExperimentServer : MonoBehaviour
 	}
 
 	private void ProcessClientMessage(){
-		string clientMessage = incomingMsgQueue.Dequeue();
-		string[] splitMsg = clientMessage.Split(';');
-		switch(splitMsg[0]){
-			case "starting-point":
-				if(DroneManager.currentMissionState == DroneManager.MissionState.Planning){
-					flightPlanning.SetStartingPoint(int.Parse(splitMsg[1]));
-				}
-				break;
-			case "vis-condition":
-				currentVisCondition = (VisualizationCondition) int.Parse(splitMsg[1]);
-				break;
-			case "wind-condition":
-				randomPulseNoise.yawCenter = float.Parse(splitMsg[1]);
-				randomPulseNoise.strength_mean = float.Parse(splitMsg[2]);
-				randomPulseNoise.wind_change_flag = true;
-				break;
-			case "battery-voltage-level":
-				battery.SetVoltageLevel(int.Parse(splitMsg[1]));
-				break;
-			case "reduce-battery-capacity":
-				battery.ReduceBatteryCap(float.Parse(splitMsg[1]));
-				break;
-			case "positional-signal-level":
-				positionalSensorSimulator.SetSignalLevel(int.Parse(splitMsg[1]));
-				break;
-			case "reset-all-states":
-				droneManager.ResetAllStates();
-				break;
-			case "test-run":
-				flightPlanning.SetIsTestRun(int.Parse(splitMsg[1]));
-				break;
-			case "is-from-top":
-				flightPlanning.SetIsFromTop(int.Parse(splitMsg[1]));
-				break;
-			case "current-config":
-				flightPlanning.SetCurrentFacadeConfig(int.Parse(splitMsg[1]));
-				break;
-			default:
-				Debug.Log("Undefined Command: " + clientMessage);
-				break;
+		foreach(string incomingMsg in incomingMsgQueue){
+			string clientMessage = incomingMsg;
+			Debug.Log("Processing Client Message: " + clientMessage);
+			string[] splitMsg = clientMessage.Split(';');
+			switch(splitMsg[0]){
+				case "starting-point":
+					if(DroneManager.currentMissionState == DroneManager.MissionState.Planning){
+						flightPlanning.SetStartingPoint(int.Parse(splitMsg[1]));
+					}
+					break;
+				case "vis-condition":
+					currentVisCondition = (VisualizationCondition) int.Parse(splitMsg[1]);
+					break;
+				case "wind-condition":
+					randomPulseNoise.yawCenter = float.Parse(splitMsg[1]);
+					randomPulseNoise.strength_mean = float.Parse(splitMsg[2]);
+					randomPulseNoise.wind_change_flag = true;
+					break;
+				case "battery-voltage-level":
+					battery.SetVoltageLevel(int.Parse(splitMsg[1]));
+					break;
+				case "reduce-battery-capacity":
+					battery.ReduceBatteryCap(float.Parse(splitMsg[1]));
+					break;
+				case "positional-signal-level":
+					positionalSensorSimulator.SetSignalLevel(int.Parse(splitMsg[1]));
+					break;
+				case "reset-all-states":
+					droneManager.ResetAllStates();
+					break;
+				case "test-run":
+					flightPlanning.SetIsTestRun(int.Parse(splitMsg[1]));
+					break;
+				case "is-from-top":
+					flightPlanning.SetIsFromTop(int.Parse(splitMsg[1]));
+					break;
+				case "current-config":
+					flightPlanning.SetCurrentFacadeConfig(int.Parse(splitMsg[1]));
+					break;
+				default:
+					Debug.Log("Undefined Command: " + clientMessage);
+					break;
+			}
 		}
-		clientMessage = "";
+		incomingMsgQueue.Clear();
 	}
 	/// <summary> 	
 	/// Send message to client using socket connection. 	
 	/// </summary> 	
-	private void SendMessageFromQueue() { 		
+	private void SendServerMessage() { 	
+		if(msgString == "")
+			return;	
 		try {
 			if(connectedTcpClient != null){
 			// Get a stream object for writing. 			
 				NetworkStream stream = connectedTcpClient.GetStream();	
 				if (stream.CanWrite) {
 					// Convert string message to byte array.                 
-					byte[] serverMessageAsByteArray = Encoding.ASCII.GetBytes(msgQueue.Dequeue());			
+					//byte[] serverMessageAsByteArray = Encoding.ASCII.GetBytes(msgQueue.Dequeue());			
+					byte[] serverMessageAsByteArray = Encoding.ASCII.GetBytes(msgString);
+					
 					// Write byte array to socketConnection stream.               
 					stream.Write(serverMessageAsByteArray, 0, serverMessageAsByteArray.Length);               
+					msgString = "";
 					Debug.Log("Server sent his message - should be received by client");   
 				}  
 			}     
@@ -304,86 +314,71 @@ public class ExperimentServer : MonoBehaviour
 			positionalSensorSimulator.GetSignalLevel() + ";" + 
 			uIUpdater.GetDefectCount() +  ";" + 
 			(switching_flag?3:(int)VisType.globalVisType) + "\n";
-		msgQueue.Enqueue(currentState);
+		//msgQueue.Enqueue(currentState);
+		msgString += currentState;
 	}
 
 	private void SendFlightPlanningInfo(){
 		string msg = "flight-planning;" + flightPlanning.GetCurrentStartingPointIndex() + "\n";
-		msgQueue.Enqueue(msg);
+		//msgQueue.Enqueue(msg);
+		msgString += msg;
 	}
 	private void SendDroneFlightStatus(){
 		string msg = "drone-status;" + (int)DroneManager.currentFlightState + "\n";
-		msgQueue.Enqueue(msg);
+		//msgQueue.Enqueue(msg);
+		msgString += msg;
 	}
 	private void SendCurrentDronePose(){
 		string msg = "drone-position;" + droneParent.position.x + ";" + droneParent.position.y + ";" + droneParent.position.z + "\n";
-		msgQueue.Enqueue(msg);
+		//msgQueue.Enqueue(msg);
+		msgString += msg;
 	}
 
 	private void SendBatteryPercentage(){
 		string msg = "battery-percentage;" + battery.GetBatteryLevel() + "\n";
-		msgQueue.Enqueue(msg);
+		//msgQueue.Enqueue(msg);
+		msgString += msg;
 	}
 
 	private void SendWindStrength(){
 		string msg = "wind-strength;" + randomPulseNoise.GetCurrentWindStrength() + "\n";
-		msgQueue.Enqueue(msg);
+		//msgQueue.Enqueue(msg);
+		msgString += msg;
 	}
 
 	private void SendIsTestRun(){
 		string msg = "test-run;" + flightPlanning.GetIsTestRun() + "\n";
-		msgQueue.Enqueue(msg);
+		//msgQueue.Enqueue(msg);
+		msgString += msg;
 	}
 
 	private void SendIsFromTop(){
 		string msg = "is-from-top;" + flightPlanning.GetIsFromTop() + "\n";
-		msgQueue.Enqueue(msg);
+		//msgQueue.Enqueue(msg);
+		msgString += msg;
 	}
 
 	private void SendConfiguration(){
 		string msg = "current-config;" + flightPlanning.GetCurrentFacadeConfig() + "\n";
-		msgQueue.Enqueue(msg);
+		//msgQueue.Enqueue(msg);
+		msgString += msg;
 	}
 
 	IEnumerator UpdateCurrentState(){
 		while(true){
-			switch (msgSendCounter)
-			{
-				case 0:
-					SendCurrentState();
-					break;
-				case 1:
-					SendFlightPlanningInfo();
-					break;
-				case 2:
-					SendDroneFlightStatus();
-					break;
-				case 3:
-					SendCurrentDronePose();
-					break;
-				case 4:
-					SendBatteryPercentage();
-					break;
-				case 5:
-					SendWindStrength();
-					break;
-				case 6:
-					SendIsTestRun();
-					break;
-				case 7:
-					SendIsFromTop();
-					break;
-				case 8:
-					SendConfiguration();
-					break;
-				default:
-					break;
-			}
-			msgSendCounter++;
-			if(msgSendCounter >= 9){
-				msgSendCounter = 0;
-			}
-			yield return new WaitForEndOfFrame();
+
+			SendCurrentState();
+			SendFlightPlanningInfo();
+			SendDroneFlightStatus();
+			SendCurrentDronePose();
+			SendBatteryPercentage();
+			SendWindStrength();
+			SendIsTestRun();
+			SendIsFromTop();
+			SendConfiguration();
+
+			SendServerMessage();
+			yield return new WaitForSeconds(0.1f);
 		}
 	}
 

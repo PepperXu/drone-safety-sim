@@ -53,7 +53,7 @@ public class ExperimentMonitor : MonoBehaviour
 
 	Queue<string> incomingMsgQueue = new Queue<string>();
 
-	Queue<string> sendMsgQueue = new Queue<string>();
+	//Queue<string> sendMsgQueue = new Queue<string>();
 	// Use this for initialization 	
 	private void Awake() {
 		serverIp = PlayerPrefs.GetString("server-ip");
@@ -67,8 +67,8 @@ public class ExperimentMonitor : MonoBehaviour
 		if(incomingMsgQueue.Count > 0)
 			ProcessReceivedMessage();
 		droneParent.position = currentDronePosition;
-		if(sendMsgQueue.Count > 0)
-			SendMessageFromQueue();
+		//if(sendMsgQueue.Count > 0)
+		//	SendMessageFromQueue();
 		if(isRecording)
 			expTimer += Time.deltaTime;
 	}  	
@@ -113,61 +113,63 @@ public class ExperimentMonitor : MonoBehaviour
 
 
 	private void ProcessReceivedMessage(){
-		string serverMessage = incomingMsgQueue.Dequeue();
-		string[] splitMsg = serverMessage.Split(';');
-		switch(splitMsg[0]){
-			case "current-state":
-				int[] currentStatus = {int.Parse(splitMsg[1]), int.Parse(splitMsg[2]), int.Parse(splitMsg[3]), int.Parse(splitMsg[4]), 
-				int.Parse(splitMsg[5]), int.Parse(splitMsg[6]), int.Parse(splitMsg[7]), int.Parse(splitMsg[8])};
-				UpdateStatusText(currentStatus);
-				break;
-			case "flight-planning":
-				int startingPoint = int.Parse(splitMsg[1]);
-				if(startingPoint != currentStartingPointIndex){
-					currentStartingPointIndex = startingPoint;
-					UpdateStartingPointsVisual();
-				}
-				break;
-			case "drone-status":
-				currentDroneStatus = int.Parse(splitMsg[1]);
-				flightStateText.SetText(flightStateString[currentDroneStatus]);
-				if(currentDroneStatus != 0 && !isRecording){
-					StartRecording();
-				} else if(currentDroneStatus == 0){
-					StopRecording();
-				}
-				break;
-			case "drone-position":
-				if(currentDroneStatus == 0)
-					currentDronePosition = Vector3.zero;
-				else
-					currentDronePosition = new Vector3(float.Parse(splitMsg[1]), float.Parse(splitMsg[2]), float.Parse(splitMsg[3]));
-				break;
-			case "battery-percentage":
-				currentBatteryPercentage = float.Parse(splitMsg[1]);
-				batteryPercentageText.SetText(((int) ((currentBatteryPercentage- 0.2f)/ 0.8f * 100f)) + "%");
-				break;
-			case "wind-strength":
-				currentWindStrength = float.Parse(splitMsg[1]);
-				windStrengthText.SetText(((int)(currentWindStrength * 10f))/10f + "");
-				break;
-			case "test-run":
-				isTestRun = int.Parse(splitMsg[1]);
-				testRunText.SetText(isTestRun == 1?"True":"False");
-				break;
-			case "is-from-top":
-				isFromTop = int.Parse(splitMsg[1]);
-				flightStartPointText.SetText(isFromTop == 1?"Top":"Bottom");
-				break;
-			case "current-config":
-				currentConfig = int.Parse(splitMsg[1]);
-				configIDText.SetText(currentConfig + 1 + "");
-				break;
-			default:
-				Debug.Log("Undefined Header: " + serverMessage);
-				break;
+		foreach(string incomingMsg in incomingMsgQueue){
+			string serverMessage = incomingMsg;
+			string[] splitMsg = serverMessage.Split(';');
+			switch(splitMsg[0]){
+				case "current-state":
+					int[] currentStatus = {int.Parse(splitMsg[1]), int.Parse(splitMsg[2]), int.Parse(splitMsg[3]), int.Parse(splitMsg[4]), 
+					int.Parse(splitMsg[5]), int.Parse(splitMsg[6]), int.Parse(splitMsg[7]), int.Parse(splitMsg[8])};
+					UpdateStatusText(currentStatus);
+					break;
+				case "flight-planning":
+					int startingPoint = int.Parse(splitMsg[1]);
+					if(startingPoint != currentStartingPointIndex){
+						currentStartingPointIndex = startingPoint;
+						UpdateStartingPointsVisual();
+					}
+					break;
+				case "drone-status":
+					currentDroneStatus = int.Parse(splitMsg[1]);
+					flightStateText.SetText(flightStateString[currentDroneStatus]);
+					if(currentDroneStatus != 0 && !isRecording){
+						StartRecording();
+					} else if(currentDroneStatus == 0){
+						StopRecording();
+					}
+					break;
+				case "drone-position":
+					if(currentDroneStatus == 0)
+						currentDronePosition = Vector3.zero;
+					else
+						currentDronePosition = new Vector3(float.Parse(splitMsg[1]), float.Parse(splitMsg[2]), float.Parse(splitMsg[3]));
+					break;
+				case "battery-percentage":
+					currentBatteryPercentage = float.Parse(splitMsg[1]);
+					batteryPercentageText.SetText(((int) ((currentBatteryPercentage- 0.2f)/ 0.8f * 100f)) + "%");
+					break;
+				case "wind-strength":
+					currentWindStrength = float.Parse(splitMsg[1]);
+					windStrengthText.SetText(((int)(currentWindStrength * 10f))/10f + "");
+					break;
+				case "test-run":
+					isTestRun = int.Parse(splitMsg[1]);
+					testRunText.SetText(isTestRun == 1?"True":"False");
+					break;
+				case "is-from-top":
+					isFromTop = int.Parse(splitMsg[1]);
+					flightStartPointText.SetText(isFromTop == 1?"Top":"Bottom");
+					break;
+				case "current-config":
+					currentConfig = int.Parse(splitMsg[1]);
+					configIDText.SetText(currentConfig + 1 + "");
+					break;
+				default:
+					Debug.Log("Undefined Header: " + serverMessage);
+					break;
+			}
 		}
-		serverMessage = "";
+		//serverMessage = "";
 	}
 
 	private void UpdateStatusText(int[] currentStatus){
@@ -198,7 +200,7 @@ public class ExperimentMonitor : MonoBehaviour
 	/// <summary> 	
 	/// Send message to server using socket connection. 	
 	/// </summary> 	
-	private void SendMessageFromQueue() {         
+	private void SendClientMessage(string msg) {         
 		if (socketConnection == null) {             
 			return;         
 		}  		
@@ -206,7 +208,7 @@ public class ExperimentMonitor : MonoBehaviour
 			// Get a stream object for writing. 			
 			NetworkStream stream = socketConnection.GetStream(); 			
 			if (stream.CanWrite) {
-				string clientMessage = sendMsgQueue.Dequeue();
+				string clientMessage = msg;
 				// Convert string message to byte array.                 
 				byte[] clientMessageAsByteArray = Encoding.ASCII.GetBytes(clientMessage); 				
 				// Write byte array to socketConnection stream.                 
@@ -220,7 +222,7 @@ public class ExperimentMonitor : MonoBehaviour
 	}
 
 	public void SetStartingPoint(int i){
-		sendMsgQueue.Enqueue("starting-point;" + i);
+		SendClientMessage("starting-point;" + i + "\n");
 		currentStartingPointIndex = i;
 		UpdateStartingPointsVisual();
 	}
@@ -238,44 +240,40 @@ public class ExperimentMonitor : MonoBehaviour
 
 
 	public void SetVisCondition(int i){
-		sendMsgQueue.Enqueue("vis-condition;" + i + "\n");
+		SendClientMessage("vis-condition;" + i + "\n");
 	}
 
 	public void SendWindCondition(float direction, float strength){
-		sendMsgQueue.Enqueue("wind-condition;" + direction + ";" + strength + "\n");
+		SendClientMessage("wind-condition;" + direction + ";" + strength + "\n");
 	}
 
 	public void SendPositoinalSignalLevel(int level){
-		sendMsgQueue.Enqueue("positional-signal-level;" + level + "\n");
+		SendClientMessage("positional-signal-level;" + level + "\n");
 	}
 
 	public void SendBatteryVoltageLevel(Slider slider){
-		sendMsgQueue.Enqueue("battery-voltage-level;" + slider.value + "\n");
+		SendClientMessage("battery-voltage-level;" + slider.value + "\n");
 	}
 
 	public void SendBatteryCapacityReduceEvent(float percentage){
-		sendMsgQueue.Enqueue("reduce-battery-capacity;" + percentage + "\n");
+		SendClientMessage("reduce-battery-capacity;" + percentage + "\n");
 	}
 
 	public void ResetAllStates(){
-		sendMsgQueue.Enqueue("reset-all-states" + "\n");
+		SendClientMessage("reset-all-states" + "\n");
 	}
 
-	public void SetServerIp(){
-		serverIp = ipInputField.text;
-		PlayerPrefs.SetString("server-ip", serverIp);
-	}
 
 	public void SetTestRun(int isTest){
-		sendMsgQueue.Enqueue("test-run;" + isTest + "\n");
+		SendClientMessage("test-run;" + isTest + "\n");
 	}
 
 	public void SetFromTop(int isFromTop){
-		sendMsgQueue.Enqueue("is-from-top;" + isFromTop + "\n");
+		SendClientMessage("is-from-top;" + isFromTop + "\n");
 	}
 
 	public void SetConfiguration(int index){
-		sendMsgQueue.Enqueue("current-config;" + index + "\n");
+		SendClientMessage("current-config;" + index + "\n");
 	}
 
 	private void InitializeIpInputField(){
@@ -307,6 +305,11 @@ public class ExperimentMonitor : MonoBehaviour
 			};
 			
 		}
+	}
+
+	public void SetServerIp(){
+		serverIp = ipInputField.text;
+		PlayerPrefs.SetString("server-ip", serverIp);
 	}
 
 	private void OnApplicationQuit() {
