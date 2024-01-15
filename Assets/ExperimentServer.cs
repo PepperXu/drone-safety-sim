@@ -52,7 +52,6 @@ public class ExperimentServer : MonoBehaviour
 	//Queue<string> msgQueue = new Queue<string>();
 	string msgString;
 	List<string> incomingMsgList = new List<string>();
-	int msgSendCounter = 0;
 
 	int currentDebugMode = 0; //0: wind control (strength only), 1: battery control, 2: position control
     // Start is called before the first frame update
@@ -230,6 +229,8 @@ public class ExperimentServer : MonoBehaviour
 	private void ProcessClientMessage(){
 		foreach(string incomingMsg in incomingMsgList){
 			string clientMessage = incomingMsg;
+			if(clientMessage == null)
+				break;
 			Debug.Log("Processing Client Message: " + clientMessage);
 			string[] splitMsg = clientMessage.Split(';');
 			switch(splitMsg[0]){
@@ -257,6 +258,7 @@ public class ExperimentServer : MonoBehaviour
 					break;
 				case "reset-all-states":
 					droneManager.ResetAllStates();
+					SendServerMessage("state-reset-confirmed");
 					break;
 				case "test-run":
 					flightPlanning.SetIsTestRun(int.Parse(splitMsg[1]));
@@ -277,9 +279,7 @@ public class ExperimentServer : MonoBehaviour
 	/// <summary> 	
 	/// Send message to client using socket connection. 	
 	/// </summary> 	
-	private void SendServerMessage() { 	
-		if(msgString == "")
-			return;	
+	private void SendServerMessage(string msg) { 	
 		try {
 			if(connectedTcpClient != null){
 			// Get a stream object for writing. 			
@@ -287,7 +287,7 @@ public class ExperimentServer : MonoBehaviour
 				if (stream.CanWrite) {
 					// Convert string message to byte array.                 
 					//byte[] serverMessageAsByteArray = Encoding.ASCII.GetBytes(msgQueue.Dequeue());			
-					byte[] serverMessageAsByteArray = Encoding.ASCII.GetBytes(msgString);
+					byte[] serverMessageAsByteArray = Encoding.ASCII.GetBytes(msg);
 					
 					// Write byte array to socketConnection stream.               
 					stream.Write(serverMessageAsByteArray, 0, serverMessageAsByteArray.Length);               
@@ -377,7 +377,7 @@ public class ExperimentServer : MonoBehaviour
 			SendIsFromTop();
 			SendConfiguration();
 
-			SendServerMessage();
+			SendServerMessage(msgString);
 			yield return new WaitForSeconds(0.1f);
 		}
 	}

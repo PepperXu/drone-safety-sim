@@ -19,6 +19,7 @@ public class ExperimentMonitor : MonoBehaviour
     string serverIp = "127.0.0.1";
 	[SerializeField] private TextMeshProUGUI flightStateText, missionStateText, controlTypeText, systemStateText, currentMRViewText, visCondiText, batteryPercentageText, batteryVoltageText, positionalSignalStatusText, defectCountText, windStrengthText, testRunText, flightStartPointText, configIDText;
 	[SerializeField] private TMP_InputField ipInputField;
+	[SerializeField] private GameObject flightPlanUpdateWarning;
 
 	[SerializeField] private Button[] startingPoints;
 	
@@ -33,7 +34,7 @@ public class ExperimentMonitor : MonoBehaviour
 	//string serverMessage = "";
 
 	string[] visConditionString = {"All", "Control First", "Mixed", "Safety First"};
-	string[] posStatusString = {"Signal Lost", "Unstable Connection", "Position Offset", "Normal"};
+	string[] posStatusString = {"Lost", "Unstable", "Offset", "Normal"};
 
 	string[] flightStateString = {"Landed", "Taking Off", "Hovering", "Navigating", "Landing"};
     string[] missionStateString = {"Planning", "Moving to Flight Zone", "In Flight Zone", "Inspecting", "Interrupted", "Returning"};
@@ -115,6 +116,8 @@ public class ExperimentMonitor : MonoBehaviour
 	private void ProcessReceivedMessage(){
 		foreach(string incomingMsg in incomingMsgList){
 			string serverMessage = incomingMsg;
+			if(serverMessage == null)
+				break;
 			string[] splitMsg = serverMessage.Split(';');
 			switch(splitMsg[0]){
 				case "current-state":
@@ -163,6 +166,9 @@ public class ExperimentMonitor : MonoBehaviour
 				case "current-config":
 					currentConfig = int.Parse(splitMsg[1]);
 					configIDText.SetText(currentConfig + 1 + "");
+					break;
+				case "state-reset-confirmed":
+					flightPlanUpdateWarning.SetActive(false);
 					break;
 				default:
 					Debug.Log("Undefined Header: " + serverMessage);
@@ -266,14 +272,17 @@ public class ExperimentMonitor : MonoBehaviour
 
 	public void SetTestRun(int isTest){
 		SendClientMessage("test-run;" + isTest + "\n");
+		flightPlanUpdateWarning.SetActive(true);
 	}
 
 	public void SetFromTop(int isFromTop){
 		SendClientMessage("is-from-top;" + isFromTop + "\n");
+		flightPlanUpdateWarning.SetActive(true);
 	}
 
 	public void SetConfiguration(int index){
 		SendClientMessage("current-config;" + index + "\n");
+		flightPlanUpdateWarning.SetActive(true);
 	}
 
 	private void InitializeIpInputField(){
