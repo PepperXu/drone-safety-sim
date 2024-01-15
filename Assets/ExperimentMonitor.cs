@@ -51,7 +51,7 @@ public class ExperimentMonitor : MonoBehaviour
 
 	private float expTimer = 0f;
 
-	Queue<string> incomingMsgQueue = new Queue<string>();
+ 	List<string> incomingMsgList = new List<string>();
 
 	//Queue<string> sendMsgQueue = new Queue<string>();
 	// Use this for initialization 	
@@ -64,7 +64,7 @@ public class ExperimentMonitor : MonoBehaviour
 	}  	
 	// Update is called once per frame
 	void Update () {
-		if(incomingMsgQueue.Count > 0)
+		if(incomingMsgList.Count > 0)
 			ProcessReceivedMessage();
 		droneParent.position = currentDronePosition;
 		//if(sendMsgQueue.Count > 0)
@@ -101,7 +101,7 @@ public class ExperimentMonitor : MonoBehaviour
 				using (NetworkStream stream = socketConnection.GetStream()) { 		
 					StreamReader sr = new StreamReader(stream);
 					do{
-						incomingMsgQueue.Enqueue(sr.ReadLine());
+						incomingMsgList.Add(sr.ReadLine());
 					} while(sr.ReadLine() != null);	
 				} 			
 			}         
@@ -113,7 +113,7 @@ public class ExperimentMonitor : MonoBehaviour
 
 
 	private void ProcessReceivedMessage(){
-		foreach(string incomingMsg in incomingMsgQueue){
+		foreach(string incomingMsg in incomingMsgList){
 			string serverMessage = incomingMsg;
 			string[] splitMsg = serverMessage.Split(';');
 			switch(splitMsg[0]){
@@ -169,7 +169,7 @@ public class ExperimentMonitor : MonoBehaviour
 					break;
 			}
 		}
-		//serverMessage = "";
+		incomingMsgList.Clear();
 	}
 
 	private void UpdateStatusText(int[] currentStatus){

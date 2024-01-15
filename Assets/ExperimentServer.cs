@@ -51,7 +51,7 @@ public class ExperimentServer : MonoBehaviour
 	//private string clientMessage = "";
 	//Queue<string> msgQueue = new Queue<string>();
 	string msgString;
-	Queue<string> incomingMsgQueue = new Queue<string>();
+	List<string> incomingMsgList = new List<string>();
 	int msgSendCounter = 0;
 
 	int currentDebugMode = 0; //0: wind control (strength only), 1: battery control, 2: position control
@@ -73,7 +73,7 @@ public class ExperimentServer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-		if(incomingMsgQueue.Count > 0)
+		if(incomingMsgList.Count > 0)
 			ProcessClientMessage();
         
 		//For Debugging
@@ -216,7 +216,7 @@ public class ExperimentServer : MonoBehaviour
 					using (NetworkStream stream = connectedTcpClient.GetStream()) { 						
 						StreamReader sr = new StreamReader(stream);
 						do{
-							incomingMsgQueue.Enqueue(sr.ReadLine());
+							incomingMsgList.Add(sr.ReadLine());
 						} while(sr.ReadLine() != null);
 					} 				
 				} 			
@@ -228,7 +228,7 @@ public class ExperimentServer : MonoBehaviour
 	}
 
 	private void ProcessClientMessage(){
-		foreach(string incomingMsg in incomingMsgQueue){
+		foreach(string incomingMsg in incomingMsgList){
 			string clientMessage = incomingMsg;
 			Debug.Log("Processing Client Message: " + clientMessage);
 			string[] splitMsg = clientMessage.Split(';');
@@ -272,7 +272,7 @@ public class ExperimentServer : MonoBehaviour
 					break;
 			}
 		}
-		incomingMsgQueue.Clear();
+		incomingMsgList.Clear();
 	}
 	/// <summary> 	
 	/// Send message to client using socket connection. 	
