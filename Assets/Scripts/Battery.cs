@@ -61,6 +61,7 @@ public class Battery : MonoBehaviour
         uiUpdater.remainingTime = remainingTimeInSeconds;
         uiUpdater.voltage = currentVoltage;
         controlVisUpdater.batteryPercentage = currentBatteryPercentage;
+        controlVisUpdater.remainingTimeInSeconds = remainingTimeInSeconds;
         worldVisUpdater.currentBatteryPercentage = currentBatteryPercentage;
     }
 

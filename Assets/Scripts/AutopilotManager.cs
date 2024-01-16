@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Properties;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Utilities.Tweenables.Primitives;
 
@@ -32,6 +33,7 @@ public class AutopilotManager : MonoBehaviour
     //public Vector3 positionOffset;
 
     bool autopilot_initialized = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -104,8 +106,7 @@ public class AutopilotManager : MonoBehaviour
                         if (waitTimer >= waitTime)
                         {
                             currentWaypointIndex++;
-                            uiUpdater.missionProgress = GetMissionProgress();
-                            wordVis.missionProgress = GetMissionProgress();
+                            //uiUpdater.missionProgress = GetMissionProgress();
                             wordVis.currentWaypointIndex = this.currentWaypointIndex;
                             waitTimer = 0f;
                             photoTaken = false;
@@ -156,6 +157,8 @@ public class AutopilotManager : MonoBehaviour
     }
 
     public void EnableAutopilot(bool enable){
+
+        vc.SetMaxPitchRoll(enable?0.175f:0.3f);
         isAutopiloting = enable;
         isRTH = false;
         if(enable){
@@ -185,6 +188,8 @@ public class AutopilotManager : MonoBehaviour
 
     public void EnableAutopilot(bool enable, bool rth)
     {
+        vc.SetMaxPitchRoll(enable?0.175f:0.3f);
+
         isAutopiloting = enable;
         isRTH = rth;
         if (rth)
@@ -239,8 +244,8 @@ public class AutopilotManager : MonoBehaviour
         }
     }
 
-    float GetMissionProgress()
-    {
-        return (currentWaypointIndex + 1f) / flightPlanning.GetTotalWaypointCount();
-    }
+    //float GetMissionProgress()
+    //{
+    //    return (currentWaypointIndex + 1f) / flightPlanning.GetTotalWaypointCount();
+    //}
 }

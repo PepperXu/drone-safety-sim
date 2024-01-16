@@ -23,6 +23,8 @@ public class ControlVisUpdater : MonoBehaviour
     [SerializeField] private ParticleSystem[] windParticles;
     [SerializeField] private VisType batteryRing;
     [SerializeField] private Image batteryRingImg;
+    [SerializeField] private TextMeshProUGUI batteryRemainingTimeText;
+    [SerializeField] private Transform batteryRingTextAnchor;
 
     [SerializeField] private VisType positioning;
     [SerializeField] private LayerMask realObstacleLayerMask;
@@ -33,6 +35,7 @@ public class ControlVisUpdater : MonoBehaviour
 
     public Vector3[] predictedPoints;
 
+    public bool inBuffer;
     public Vector3 vectorToNearestBufferBound, vectorToGround, vectorToNearestSurface;
 
     //public Vector3 positionOffset = Vector3.zero;
@@ -40,7 +43,7 @@ public class ControlVisUpdater : MonoBehaviour
     public float windStrength;
     public Quaternion windRotation;
 
-    public float batteryPercentage;
+    public float batteryPercentage, remainingTimeInSeconds;
     public int pos_sig_lvl;
 
     //public float updateRate;
@@ -129,7 +132,7 @@ public class ControlVisUpdater : MonoBehaviour
             lr.transform.GetChild(0).position = hitPoint - vectorToNearestBufferBound.normalized * 0.01f;
             lr.transform.GetChild(0).localRotation =  Quaternion.LookRotation(localHitPos, Vector3.up);
             lr.transform.GetChild(1).localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
-            lr.transform.GetChild(1).GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2bound * 10f) / 10f + " m";
+            lr.transform.GetChild(1).GetComponentInChildren<TextMeshPro>().text = (inBuffer?"-":"") + Mathf.Round(dis2bound * 10f) / 10f + " m";
         }
         if(dis2bound < DroneManager.bufferCautionThreahold){
             dis2boundVis.SwitchHiddenVisTypeLocal(true);
@@ -279,6 +282,9 @@ public class ControlVisUpdater : MonoBehaviour
     }
     void UpdateBatteryRing(){
         batteryRingImg.fillAmount = (batteryPercentage - 0.2f)/0.8f;
+        int remainingTimeMinutes = Mathf.FloorToInt(remainingTimeInSeconds/60);
+        batteryRemainingTimeText.text = remainingTimeMinutes + ":" + Mathf.FloorToInt(remainingTimeInSeconds - remainingTimeMinutes * 60);
+        batteryRingTextAnchor.transform.localEulerAngles = new Vector3(0f,0f,-(1f-(batteryPercentage - 0.2f)/0.8f)*180f);
         if(batteryPercentage > 0.46667f) {
             batteryRingImg.color = Color.green;
             dis2groundVis.SwitchHiddenVisTypeLocal(false);

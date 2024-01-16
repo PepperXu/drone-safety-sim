@@ -449,10 +449,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca04ccb4b7bebdc499abe65639532835, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scaleDistRatio: 0.02
+  scaleDistRatio: 0.01
   mainCamera: {fileID: 0}
   Clamp: 1
-  baseScale: 0.7
+  baseScale: 0.35
 --- !u!1 &8966665880613062297
 GameObject:
   m_ObjectHideFlags: 0

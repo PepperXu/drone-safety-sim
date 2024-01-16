@@ -105,7 +105,7 @@ public class FlightPlanning : MonoBehaviour
         
         if(isFromTop){
             Vector3 v = currentSurfaceVertices[3];
-            for (int j = 0; j < verticalSteps + 1; j++)
+            for (int j = 0; j < verticalSteps; j++)
             {
                 if (!flipped)
                 {
@@ -122,7 +122,7 @@ public class FlightPlanning : MonoBehaviour
             }
         } else{
             Vector3 v = currentSurfaceVertices[0] + Vector3.up * groundOffset;
-            for (int j = 0; j < verticalSteps + 1; j++)
+            for (int j = 0; j < verticalSteps; j++)
             {
                 if (!flipped)
                 {
@@ -218,12 +218,12 @@ public class FlightPlanning : MonoBehaviour
         if(windZoneObj)
             Destroy(windZoneObj);
         
-        int i = isTest?2:Random.Range(1, 7);
+        int i = isTest?2:Random.Range(1, 5);
         float j = isTest?0.7f:Random.value;
         
         float spawnY;
         if(isFromTop){
-            spawnY = groundOffset + (verticalSteps - i ) * vertStepLength;
+            spawnY = groundOffset + (verticalSteps - i) * vertStepLength;
         } else {
             spawnY = groundOffset + i * vertStepLength;  
         }
@@ -233,10 +233,10 @@ public class FlightPlanning : MonoBehaviour
         gpsZoneObj = Instantiate(GPS_Weak_Zone);
         gpsZoneObj.transform.position = spawnPos;
 
-        int t = isTest?1:Random.Range(1, 7);
+        int t = isTest?1:Random.Range(1, 5);
         if(!isTest){
-            while(Mathf.Abs(t-i) < 2){
-                t = Random.Range(1, 7);
+            while(Mathf.Abs(t-i) < 1){
+                t = Random.Range(1, 5);
             }
         }
         j = isTest?0.5f:Random.value;
@@ -250,7 +250,6 @@ public class FlightPlanning : MonoBehaviour
         spawnPos = startPos + dir * j + Vector3.up * spawnY;
         windZoneObj = Instantiate(Wind_Zone);
         windZoneObj.transform.position = spawnPos;
-
     }
 
     void UpdateCurrentFacade(){

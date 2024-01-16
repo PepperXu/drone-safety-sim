@@ -130,6 +130,7 @@ public class DroneManager : MonoBehaviour
             Vector3 v2bound = CheckPositionInContingencyBuffer(out inBuffer);
             worldVisUpdater.inBuffer = inBuffer;
             worldVisUpdater.distToBuffer = v2bound.magnitude;
+            controlVisUpdater.inBuffer = inBuffer;
             controlVisUpdater.vectorToNearestBufferBound = v2bound;
             Vector3 v2surf = CheckDistanceToBuildingSurface();
             controlVisUpdater.vectorToNearestSurface = v2surf;

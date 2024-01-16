@@ -18,8 +18,8 @@ public class VelocityControl : MonoBehaviour {
     private float time_constant_alpha_xy_rate = 0.05f; // Normal-person coordinates (roll/pitch)
     private float time_constant_alpha_z_rate = 0.05f; // Normal-person coordinates (yaw)
 
-    private float max_pitch = 0.175f; // 10 Degrees in radians, otherwise small-angle approximation dies 
-    private float max_roll = 0.175f; // 10 Degrees in radians, otherwise small-angle approximation dies
+    private float max_pitch = 0.3f; // 10 Degrees in radians, otherwise small-angle approximation dies 
+    private float max_roll = 0.3f; // 10 Degrees in radians, otherwise small-angle approximation dies
     private float max_alpha = 10.0f;
     //must set this
     public float desired_height = 0.0f;
@@ -272,7 +272,7 @@ public class VelocityControl : MonoBehaviour {
             pss.SetSignalLevel(1);
         } else if(other.tag == "WindZone"){
             other.gameObject.SetActive(false);
-            rpn.strength_mean = 60f;
+            rpn.strength_mean = 80f;
 			rpn.wind_change_flag = true;
         }
     }
@@ -282,5 +282,10 @@ public class VelocityControl : MonoBehaviour {
             pss.switch_gps_normal = true;
             pss.SetSignalLevel(3);
         } 
+    }
+
+    public void SetMaxPitchRoll(float value){
+        max_pitch = value;
+        max_roll = value;
     }
 }

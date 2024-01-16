@@ -20,8 +20,8 @@ public class FaceCamera : MonoBehaviour
         
         if(alignX){
             Vector3 camDirLocal = transform.InverseTransformDirection(-objectCameraDirection);
-            Vector3 camDirXY = new Vector3(camDirLocal.x, camDirLocal.y, 0f).normalized;
-            transform.localRotation = Quaternion.LookRotation(Vector3.forward, new Vector3(camDirXY.y, -camDirXY.x, 0f));
+            Vector3 camDirXY = transform.TransformDirection(new Vector3(camDirLocal.x, camDirLocal.y, 0f)).normalized;
+            transform.rotation = Quaternion.LookRotation(transform.forward, Quaternion.AngleAxis(-90f, transform.forward) * camDirXY);
         }
         else{
             Vector3 objectCameraDirectionXZ = new Vector3(objectCameraDirection.x, 0, objectCameraDirection.z);

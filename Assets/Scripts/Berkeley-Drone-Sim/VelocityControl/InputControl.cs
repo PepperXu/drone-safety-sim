@@ -70,10 +70,10 @@ public class InputControl : MonoBehaviour {
 
 		if (inputEnabled){
 
-			float pitchAxis = Input.GetAxisRaw("Pitch");
-			float rollAxis = Input.GetAxisRaw ("Roll");
-			float yawAxis = Input.GetAxisRaw ("Yaw");
-			float throttleAxix = Input.GetAxisRaw("Throttle");
+			float pitchAxis = Input.GetAxis("Pitch");
+			float rollAxis = Input.GetAxis ("Roll");
+			float yawAxis = Input.GetAxis ("Yaw");
+			float throttleAxix = Input.GetAxis("Throttle");
 
 			float vx = pitchAxis * horizontal_sensitivity;
 			float vy = rollAxis * horizontal_sensitivity;
@@ -113,9 +113,10 @@ public class InputControl : MonoBehaviour {
 				DroneManager.rth_flag = true;
             }
 
-			if(Input.GetButton("Switch"))
+			if(Input.GetButtonDown("Switch"))
 				ExperimentServer.switching_flag = true;
-			else
+
+			if(Input.GetButtonUp("Switch"))
 				ExperimentServer.switching_flag = false;
 
 			if(Input.GetButtonDown("MarkDefect")){

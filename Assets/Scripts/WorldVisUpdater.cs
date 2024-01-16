@@ -12,7 +12,7 @@ public class WorldVisUpdater : MonoBehaviour
     [SerializeField] VisType landing_zones;
     Waypoint[] waypoints;
     public int currentWaypointIndex = -1;
-    public float missionProgress;
+    //public float missionProgress;
 
     //[SerializeField] Transform droneParent;
     [SerializeField] GameObject coverageObject, markedObject;
@@ -98,46 +98,46 @@ public class WorldVisUpdater : MonoBehaviour
         if(waypoints == null || waypoints.Length <= 0)
             return;
         
-        LineRenderer traj = flightPlan.visRoot.GetChild(0).GetComponent<LineRenderer>();
+        //LineRenderer traj = flightPlan.visRoot.GetChild(0).GetComponent<LineRenderer>();
         if(DroneManager.currentMissionState == DroneManager.MissionState.Inspecting){
             for(int i = 0; i < waypoints.Length; i++){
                 if(i == currentWaypointIndex) {
                     waypoints[i].currentWaypointState = Waypoint.WaypointState.Next;
-                    waypoints[i].missionProgress = missionProgress;
+                    waypoints[i].missionProgress = (float)currentWaypointIndex/waypoints.Length;
                 }
                 else if(i == currentWaypointIndex+1)
                     waypoints[i].currentWaypointState = Waypoint.WaypointState.NextNext;
                 else
                     waypoints[i].currentWaypointState = Waypoint.WaypointState.Hidden;
             }
-            Gradient g = traj.colorGradient;
-            GradientColorKey[] ck = g.colorKeys;
-            GradientAlphaKey[] ak = g.alphaKeys;
-            if(ck.Length != 2){
-                Array.Resize(ref ck, 2);
-            }
-            ck[0].color = inspectionTrajColor;
-            ck[1].color = inspectionTrajColor;
-            if(ak.Length != 6)
-                Array.Resize(ref ak, 6);
-            ak[0].alpha = 0f;
-            ak[0].time = 0f;
-            ak[1].alpha = 0f;
-            ak[1].time = Mathf.Max(0f, (currentWaypointIndex - 10f)/waypoints.Length);
-            ak[2].alpha = 1f;
-            ak[2].time = Mathf.Max(0f, (currentWaypointIndex - 3f)/waypoints.Length);
-            ak[3].alpha = 1f;
-            ak[3].time = Mathf.Min(1f, (currentWaypointIndex + 3f)/waypoints.Length);
-            ak[4].alpha = 0f;
-            ak[4].time = Mathf.Min(1f, (currentWaypointIndex + 10f)/waypoints.Length);
-            ak[5].alpha = 0f;
-            ak[5].time = 1f;
-//
-//
-            g.colorKeys = ck;
-            g.alphaKeys = ak;
-//
-            traj.colorGradient = g;
+            //Gradient g = traj.colorGradient;
+            //GradientColorKey[] ck = g.colorKeys;
+            //GradientAlphaKey[] ak = g.alphaKeys;
+            //if(ck.Length != 2){
+            //    Array.Resize(ref ck, 2);
+            //}
+            //ck[0].color = inspectionTrajColor;
+            //ck[1].color = inspectionTrajColor;
+            //if(ak.Length != 6)
+            //    Array.Resize(ref ak, 6);
+            //ak[0].alpha = 0f;
+            //ak[0].time = 0f;
+            //ak[1].alpha = 0f;
+            //ak[1].time = Mathf.Max(0f, (currentWaypointIndex - 10f)/waypoints.Length);
+            //ak[2].alpha = 1f;
+            //ak[2].time = Mathf.Max(0f, (currentWaypointIndex - 3f)/waypoints.Length);
+            //ak[3].alpha = 1f;
+            //ak[3].time = Mathf.Min(1f, (currentWaypointIndex + 3f)/waypoints.Length);
+            //ak[4].alpha = 0f;
+            //ak[4].time = Mathf.Min(1f, (currentWaypointIndex + 10f)/waypoints.Length);
+            //ak[5].alpha = 0f;
+            //ak[5].time = 1f;
+////
+////
+            //g.colorKeys = ck;
+            //g.alphaKeys = ak;
+////
+            //traj.colorGradient = g;
         }
     }
 
