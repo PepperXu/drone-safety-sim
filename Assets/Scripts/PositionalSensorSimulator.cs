@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Rendering.LookDev;
 using UnityEngine;
 
 public class PositionalSensorSimulator : MonoBehaviour
@@ -8,6 +7,7 @@ public class PositionalSensorSimulator : MonoBehaviour
     //int currentSatelliteCount = 35;
     [SerializeField] UIUpdater uiUpdater;
     [SerializeField] ControlVisUpdater controlVisUpdater;
+    [SerializeField] WorldVisUpdater worldVisUpdater;
     [SerializeField] AutopilotManager autopilotManager;
     [SerializeField] VelocityControl vc;
 
@@ -38,6 +38,7 @@ public class PositionalSensorSimulator : MonoBehaviour
     {
         uiUpdater.positional_signal_level = positional_signal_level;
         controlVisUpdater.pos_sig_lvl = positional_signal_level;
+        worldVisUpdater.pos_sig_lvl = positional_signal_level;
 
         if(switch_gps_normal){
             switch_gps_normal = false;

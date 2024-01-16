@@ -58,6 +58,8 @@ public class FlightPlanning : MonoBehaviour
 
     public GameObject[] facade_surfaces;
 
+    private List<Waypoint> wpList = new List<Waypoint>();
+
     // Start is called before the first frame update
 
     public void ResetPathPlanning(){
@@ -148,6 +150,8 @@ public class FlightPlanning : MonoBehaviour
         }
 
         int i = 0;
+        
+        wpList.Clear();
 
         Transform wpParent = pathVisualization.transform.GetChild(0);
 
@@ -193,6 +197,7 @@ public class FlightPlanning : MonoBehaviour
         GameObject wp = Instantiate(waypoint, parent);
         wp.transform.position = position;
         wp.transform.rotation = currentIndex == 0? transform.rotation*Quaternion.FromToRotation(Vector3.forward, Vector3.right):transform.rotation;
+        wpList.Add(wp.GetComponent<Waypoint>());
     }
 
     public void FinishPlanning(){
@@ -201,7 +206,7 @@ public class FlightPlanning : MonoBehaviour
             planningUI.SetActive(false);
             //currentSelectedSurfaceIndex = -1;
             monitoringUI.SetActive(true);
-            worldVis.UpdateWaypontList();
+            worldVis.UpdateWaypontList(wpList.ToArray());
             VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
         }
     }

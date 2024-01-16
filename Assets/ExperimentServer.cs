@@ -258,7 +258,7 @@ public class ExperimentServer : MonoBehaviour
 					break;
 				case "reset-all-states":
 					droneManager.ResetAllStates();
-					SendServerMessage("state-reset-confirmed");
+					SendServerMessage("state-reset-confirmed;");
 					break;
 				case "test-run":
 					flightPlanning.SetIsTestRun(int.Parse(splitMsg[1]));

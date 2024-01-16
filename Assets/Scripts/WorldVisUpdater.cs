@@ -14,7 +14,7 @@ public class WorldVisUpdater : MonoBehaviour
     public int currentWaypointIndex = -1;
     public float missionProgress;
 
-    [SerializeField] Transform droneParent;
+    //[SerializeField] Transform droneParent;
     [SerializeField] GameObject coverageObject, markedObject;
 
     //Gradient defaultGradient = new Gradient();
@@ -24,6 +24,8 @@ public class WorldVisUpdater : MonoBehaviour
     public Transform currentHomepoint;
     Transform currentEnabledHomepoint;
     public float currentBatteryPercentage;
+
+    public int pos_sig_lvl;
 
     public bool inBuffer;
     public float distToBuffer;
@@ -121,20 +123,20 @@ public class WorldVisUpdater : MonoBehaviour
             ak[0].alpha = 0f;
             ak[0].time = 0f;
             ak[1].alpha = 0f;
-            ak[1].time = Mathf.Max(0f, (currentWaypointIndex - 2f)/waypoints.Length);
+            ak[1].time = Mathf.Max(0f, (currentWaypointIndex - 10f)/waypoints.Length);
             ak[2].alpha = 1f;
-            ak[2].time = Mathf.Max(0f, (currentWaypointIndex - 1f)/waypoints.Length);
+            ak[2].time = Mathf.Max(0f, (currentWaypointIndex - 3f)/waypoints.Length);
             ak[3].alpha = 1f;
-            ak[3].time = Mathf.Min(1f, (float)currentWaypointIndex/waypoints.Length);
+            ak[3].time = Mathf.Min(1f, (currentWaypointIndex + 3f)/waypoints.Length);
             ak[4].alpha = 0f;
-            ak[4].time = Mathf.Min(1f, (currentWaypointIndex + 2f)/waypoints.Length);
+            ak[4].time = Mathf.Min(1f, (currentWaypointIndex + 10f)/waypoints.Length);
             ak[5].alpha = 0f;
             ak[5].time = 1f;
-
-
+//
+//
             g.colorKeys = ck;
             g.alphaKeys = ak;
-
+//
             traj.colorGradient = g;
         }
     }
@@ -152,17 +154,15 @@ public class WorldVisUpdater : MonoBehaviour
         }
     }
 
-    public void UpdateWaypontList(){
-        List<Waypoint> wpList = new List<Waypoint>();
-        foreach(Transform wp in flightPlan.visRoot.GetChild(0).GetChild(0)){
-            wpList.Add(wp.GetComponent<Waypoint>());
-        }
-        waypoints = wpList.ToArray();
+    public void UpdateWaypontList(Waypoint[] wps){
+        waypoints = wps;
     }
 
     public void SpawnCoverageObject(bool marked){
+        if(pos_sig_lvl != 3)
+            return;
         GameObject covObj = Instantiate(coverageObject);
-        covObj.transform.position = droneParent.position + vectorToSurface;
+        covObj.transform.position = PositionalSensorSimulator.dronePositionVirtual + vectorToSurface;
         covObj.transform.rotation = Quaternion.LookRotation(Vector3.up, -vectorToSurface.normalized);
         covObj.transform.localScale *= vectorToSurface.magnitude;
         covObj.transform.parent = coverage.visRoot;
