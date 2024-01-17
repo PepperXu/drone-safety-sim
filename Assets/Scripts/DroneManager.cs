@@ -178,7 +178,9 @@ public class DroneManager : MonoBehaviour
                     autopilot_flag = false;
                 }
             } else if(currentMissionState == MissionState.Inspecting){
-                
+                if(!inBuffer){
+                    currentMissionState = MissionState.MovingToFlightZone;
+                }
                 if(take_photo_flag)
                 {
                     take_photo_flag = false;
@@ -388,7 +390,8 @@ public class DroneManager : MonoBehaviour
     void OnExitBuffer(){
        //if(currentSystemState != SystemState.Emergency)
        //    currentSystemState = SystemState.Warning;
-        autopilot_stop_flag = true;
+       if(currentMissionState != MissionState.Returning)
+            autopilot_stop_flag = true;
     }
 
     Vector3 CheckDistToGround(out bool hitGround)

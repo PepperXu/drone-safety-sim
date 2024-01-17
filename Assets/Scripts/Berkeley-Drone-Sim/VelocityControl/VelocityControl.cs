@@ -269,7 +269,7 @@ public class VelocityControl : MonoBehaviour {
 
     private void OnTriggerEnter(Collider other) {
         if(other.tag == "GPSWeakZone"){
-            pss.SetSignalLevel(1);
+            pss.SetSignalLevel(0);
         } else if(other.tag == "WindZone"){
             other.gameObject.SetActive(false);
             rpn.strength_mean = 80f;

@@ -8,7 +8,7 @@ using UnityEngine.XR.Interaction.Toolkit.Utilities.Tweenables.SmartTweenableVari
 public class Battery : MonoBehaviour
 {
     //private float hoveringDischargeRate = 7.66f;
-    private const float batteryCapacity = 900;
+    private const float batteryCapacity = 1440f;
     //private float optimalFlightSpeed = 6.94f;
     private const float normalDischargeRate = 8.754f;
     private const float normalWindStrength = 20f;

@@ -8,6 +8,7 @@ using System.Threading;
 using UnityEngine;  
 using Unity.XR.CoreUtils;
 using System.IO;
+using System.Data.Common;
 
 public class ExperimentServer : MonoBehaviour
 {
@@ -140,8 +141,25 @@ public class ExperimentServer : MonoBehaviour
         	    currentVisCondition = VisualizationCondition.SafetyFirst;
         	}
 			if(Input.GetKeyDown(KeyCode.Tab)){
-				currentDebugMode = (currentDebugMode + 1) % 3;
-				Debug.LogWarning("Current Debug Mode: " + currentDebugMode);
+				currentDebugMode = (currentDebugMode + 1) % 4;
+				string debugModeText = "";
+				switch(currentDebugMode){
+					case 0:
+						debugModeText = "wind turbulence";
+						break;
+					case 1:
+						debugModeText = "reduce battery";
+						break;
+					case 2:
+						debugModeText = "gps instable";
+						break;
+					case 3:
+						debugModeText = "facade config";
+						break;
+					default:
+						break;
+				}
+				Debug.LogWarning("Current Debug Mode: " + debugModeText);
 			}
 			switch(currentDebugMode){
 				case 0:
@@ -191,11 +209,34 @@ public class ExperimentServer : MonoBehaviour
         			    positionalSensorSimulator.SetSignalLevel(0);
         			}
 					break;
+				case 3:
+					if(Input.GetKeyDown(KeyCode.F1)){
+						flightPlanning.SetCurrentFacadeConfig(0);
+        			}
+        			if(Input.GetKeyDown(KeyCode.F2)){
+        			    flightPlanning.SetCurrentFacadeConfig(1);
+        			}
+        			if(Input.GetKeyDown(KeyCode.F3)){
+        			   flightPlanning.SetCurrentFacadeConfig(2);
+        			}
+        			if(Input.GetKeyDown(KeyCode.F4)){
+        			    flightPlanning.SetCurrentFacadeConfig(3);
+        			}
+					break;
 				default:
 					break;
 			}
 			if(Input.GetKeyDown(KeyCode.X)){
 				droneManager.ResetAllStates();
+			}
+			if(Input.GetKeyDown(KeyCode.V)){
+				flightPlanning.SetIsFromTop(1);
+			}
+			if(Input.GetKeyDown(KeyCode.B)){
+				flightPlanning.SetIsFromTop(0);
+			}
+			if(Input.GetKeyDown(KeyCode.Z)){
+				flightPlanning.SetIsTestRun((flightPlanning.GetIsTestRun() + 1)%2);
 			}
 		}
 	}

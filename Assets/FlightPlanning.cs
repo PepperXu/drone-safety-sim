@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.UI;
@@ -54,7 +56,7 @@ public class FlightPlanning : MonoBehaviour
 
 
     public GameObject GPS_Weak_Zone, Wind_Zone;
-    private GameObject gpsZoneObj, windZoneObj;
+    private List<GameObject> gpsZoneObjs = new List<GameObject>(), windZoneObjs = new List<GameObject>();
 
     public GameObject[] facade_surfaces;
 
@@ -105,6 +107,7 @@ public class FlightPlanning : MonoBehaviour
         
         if(isFromTop){
             Vector3 v = currentSurfaceVertices[3];
+            v -= Vector3.up * vertStepLength;
             for (int j = 0; j < verticalSteps; j++)
             {
                 if (!flipped)
@@ -211,45 +214,63 @@ public class FlightPlanning : MonoBehaviour
         }
     }
 
-    void GenerateEventZone(){
-        if(gpsZoneObj)
-            Destroy(gpsZoneObj);
+    void GenerateEventZone(int num){
+        foreach(GameObject obj in gpsZoneObjs)
+            if(obj){
+                Destroy(obj);
+            }
+                
+        gpsZoneObjs.Clear();
+
+        foreach(GameObject obj in windZoneObjs)
+            if(obj){
+                Destroy(obj);
+            }
         
-        if(windZoneObj)
-            Destroy(windZoneObj);
-        
-        int i = isTest?2:Random.Range(1, 5);
+        windZoneObjs.Clear();
+
+        if(num == 1){
+            EventZonesInLevels(1, 6);
+        }else if(num == 2){
+            EventZonesInLevels(1, 6);
+            EventZonesInLevels(6, 10);
+        }
+            
+    }
+
+    void EventZonesInLevels(int minInclusive, int maxExclusive){
+        int i = isTest?(minInclusive+1):Random.Range(minInclusive, maxExclusive);
         float j = isTest?0.7f:Random.value;
         
         float spawnY;
         if(isFromTop){
-            spawnY = groundOffset + (verticalSteps - i) * vertStepLength;
+            spawnY = groundOffset + (verticalSteps - 1 - i) * vertStepLength;
         } else {
             spawnY = groundOffset + i * vertStepLength;  
         }
         Vector3 dir = new Vector3(eventZoneXmin, 0f, eventZoneZmax) - new Vector3(eventZoneXmax, 0f, eventZoneZmin);
         Vector3 startPos = new Vector3(eventZoneXmax, 0f, eventZoneZmin);
         Vector3 spawnPos = startPos + dir * j + Vector3.up * spawnY;
-        gpsZoneObj = Instantiate(GPS_Weak_Zone);
-        gpsZoneObj.transform.position = spawnPos;
+        gpsZoneObjs.Add(Instantiate(GPS_Weak_Zone));
+        gpsZoneObjs.Last().transform.position = spawnPos;
 
-        int t = isTest?1:Random.Range(1, 5);
+        int t = isTest?minInclusive:Random.Range(minInclusive, maxExclusive);
         if(!isTest){
             while(Mathf.Abs(t-i) < 1){
-                t = Random.Range(1, 5);
+                t = Random.Range(minInclusive, maxExclusive);
             }
         }
         j = isTest?0.5f:Random.value;
         if(isFromTop){
-            spawnY = groundOffset + (verticalSteps - t ) * vertStepLength;
+            spawnY = groundOffset + (verticalSteps - 1 - t ) * vertStepLength;
         } else {
             spawnY = groundOffset + t * vertStepLength;  
         }
         dir = new Vector3(eventZoneXmin, 0f, eventZoneZmax) - new Vector3(eventZoneXmax, 0f, eventZoneZmin);
         startPos = new Vector3(eventZoneXmax, 0f, eventZoneZmin);
         spawnPos = startPos + dir * j + Vector3.up * spawnY;
-        windZoneObj = Instantiate(Wind_Zone);
-        windZoneObj.transform.position = spawnPos;
+        windZoneObjs.Add(Instantiate(Wind_Zone));
+        windZoneObjs.Last().transform.position = spawnPos;
     }
 
     void UpdateCurrentFacade(){
@@ -373,7 +394,7 @@ public class FlightPlanning : MonoBehaviour
         }
         UpdateCurrentFacade();
         GenerateFlightTrajectory();
-        GenerateEventZone();
+        GenerateEventZone(2);
         FinishPlanning();
     }
 
