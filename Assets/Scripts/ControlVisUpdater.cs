@@ -27,6 +27,8 @@ public class ControlVisUpdater : MonoBehaviour
     [SerializeField] private Transform batteryRingTextAnchor;
 
     [SerializeField] private VisType positioning;
+
+    [SerializeField] private GameObject flightStatusTakeOff, flightStatusInspecting, flightStatusLanding;
     [SerializeField] private LayerMask realObstacleLayerMask;
 
     [SerializeField] private Transform droneParent;
@@ -94,6 +96,7 @@ public class ControlVisUpdater : MonoBehaviour
             UpdateWindVis();
             UpdateBatteryRing();
             UpdatePositioningIndicator();
+            UpdateFlightStatus();
             yield return new WaitForEndOfFrame();
         }
     }
@@ -317,5 +320,25 @@ public class ControlVisUpdater : MonoBehaviour
         //    positioning.visRoot.GetChild(0).gameObject.SetActive(true);
         //    positioning.visRoot.GetChild(0).gameObject.SetActive(false);
         //}
+    }
+
+    void UpdateFlightStatus(){
+        if(DroneManager.currentFlightState == DroneManager.FlightState.TakingOff){
+            flightStatusTakeOff.SetActive(true);
+            flightStatusInspecting.SetActive(false);
+            flightStatusLanding.SetActive(false);
+        } else if(DroneManager.currentMissionState == DroneManager.MissionState.Inspecting) {
+            flightStatusTakeOff.SetActive(false);
+            flightStatusInspecting.SetActive(true);
+            flightStatusLanding.SetActive(false);
+        } else if(DroneManager.currentMissionState == DroneManager.MissionState.Returning) {
+            flightStatusTakeOff.SetActive(false);
+            flightStatusInspecting.SetActive(false);
+            flightStatusLanding.SetActive(true);
+        } else {
+            flightStatusTakeOff.SetActive(false);
+            flightStatusInspecting.SetActive(false);
+            flightStatusLanding.SetActive(false);
+        }
     }
 }
