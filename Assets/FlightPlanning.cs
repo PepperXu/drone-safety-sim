@@ -205,9 +205,8 @@ public class FlightPlanning : MonoBehaviour
 
     public void FinishPlanning(){
         if(pathPlanned){
-            DroneManager.currentMissionState = DroneManager.MissionState.MovingToFlightZone;
+            DroneManager.finish_planning_flag = true;
             planningUI.SetActive(false);
-            //currentSelectedSurfaceIndex = -1;
             monitoringUI.SetActive(true);
             worldVis.UpdateWaypontList(wpList.ToArray());
             VisType.globalVisType = VisType.VisualizationType.SafetyOnly;

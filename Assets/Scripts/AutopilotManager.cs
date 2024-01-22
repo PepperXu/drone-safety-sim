@@ -156,35 +156,6 @@ public class AutopilotManager : MonoBehaviour
         }
     }
 
-    public void EnableAutopilot(bool enable){
-
-        vc.SetMaxPitchRoll(enable?0.175f:0.3f);
-        isAutopiloting = enable;
-        isRTH = false;
-        if(enable){
-            if(!autopilot_initialized){
-                autopilot_initialized = true;
-            } else {
-                int i = this.currentWaypointIndex;
-                bool out_of_bound;
-                Vector3 target = flightPlanning.GetCurrentWaypoint(i, out out_of_bound);
-                float shortestDistance = (PositionalSensorSimulator.dronePositionVirtual - target).magnitude;
-                while(!out_of_bound){
-                    i++;
-                    target = flightPlanning.GetCurrentWaypoint(i, out out_of_bound);
-                    if((PositionalSensorSimulator.dronePositionVirtual - target).magnitude > shortestDistance || out_of_bound){
-                        this.currentWaypointIndex = i-1;
-                        break;
-                    } else {
-                        shortestDistance = (PositionalSensorSimulator.dronePositionVirtual - target).magnitude;
-                        i++;
-                    }
-                }
-            }
-    
-            wordVis.currentWaypointIndex = this.currentWaypointIndex;
-        }
-    }
 
     public void EnableAutopilot(bool enable, bool rth)
     {
@@ -194,11 +165,18 @@ public class AutopilotManager : MonoBehaviour
         isRTH = rth;
         if (rth)
         {
-            GetCurrentHomepoint();
+            if(enable){
+                int idx = GetCurrentHomepoint();
+                ExperimentServer.RecordData("Start Returning To Homepoint", idx + "", "");
+            } else {
+                ExperimentServer.RecordData("Stop Returning To Homepoint", "", "");
+            }
+
         } else {
             if(enable){
                 if(!autopilot_initialized){
                     autopilot_initialized = true;
+                    ExperimentServer.RecordData("Start Inspection From Waypoint", "0", "");
                 } else {
                     int i = this.currentWaypointIndex;
                     bool out_of_bound;
@@ -218,6 +196,9 @@ public class AutopilotManager : MonoBehaviour
                 }
 
                 wordVis.currentWaypointIndex = this.currentWaypointIndex;
+                ExperimentServer.RecordData("Start Inspection From Waypoint", this.currentWaypointIndex +"", "");
+            } else {
+                ExperimentServer.RecordData("Stop Inspection", "", "");
             }
         }
     }
@@ -230,18 +211,22 @@ public class AutopilotManager : MonoBehaviour
         }
     }
 
-    void GetCurrentHomepoint(){
+    int GetCurrentHomepoint(){
         float shortestDistance = float.MaxValue;
-        foreach(Transform homepoint in homePoints)
+        int shortestDistIndex = 0;
+        for(int i = 0; i < homePoints.Length; i++)
         {
+            Transform homepoint = homePoints[i];
             Vector3 distance = homepoint.position - vc.transform.position;
             if(distance.magnitude < shortestDistance)
             {
                 shortestDistance = distance.magnitude;
                 currentHomepoint = homepoint;
                 wordVis.currentHomepoint = currentHomepoint;
+                shortestDistIndex = i;
             }
         }
+        return shortestDistIndex;
     }
 
     //float GetMissionProgress()

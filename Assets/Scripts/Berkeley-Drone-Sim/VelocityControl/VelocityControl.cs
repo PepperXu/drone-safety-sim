@@ -264,23 +264,28 @@ public class VelocityControl : MonoBehaviour {
             if(transform.up.y < 0.6f)
                 out_of_balance = true;
             DroneManager.autopilot_stop_flag = true;
+            ExperimentServer.RecordData("Drone Collides with Building at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
         }
     }
 
     private void OnTriggerEnter(Collider other) {
         if(other.tag == "GPSWeakZone"){
             pss.SetSignalLevel(0);
+            ExperimentServer.RecordData("Drone Enters GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
         } else if(other.tag == "WindZone"){
             other.gameObject.SetActive(false);
             rpn.strength_mean = 80f;
+            rpn.pulse_duration_mean = 20f;
+            ExperimentServer.RecordData("Wind Turbulence Starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength|duration:" + 80 + "|" + 20);
 			rpn.wind_change_flag = true;
         }
     }
 
     private void OnTriggerExit(Collider other) {
         if(other.tag == "GPSWeakZone"){
-            pss.switch_gps_normal = true;
             pss.SetSignalLevel(3);
+            pss.switch_gps_normal = true;
+            ExperimentServer.RecordData("Drone Exits GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
         } 
     }
 

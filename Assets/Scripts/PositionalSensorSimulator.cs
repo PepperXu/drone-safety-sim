@@ -33,6 +33,11 @@ public class PositionalSensorSimulator : MonoBehaviour
         StartCoroutine(UpdatePosition());
     }
 
+    public void ResetSignalLevel(){
+        SetSignalLevel(3);
+        switch_gps_normal = true;
+    }
+
     // Update is called once per frame
     void Update()
     {

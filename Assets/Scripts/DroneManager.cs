@@ -49,16 +49,15 @@ public class DroneManager : MonoBehaviour
     //private VisType[] misVis;
 
     public static FlightState currentFlightState = FlightState.Landed;
-    public static SafetyState currentSafetyState = SafetyState.Healthy;
-    public static ControlType currentControlType = ControlType.Manual;
-    public static MissionState currentMissionState = MissionState.MovingToFlightZone;
+    public static SafetyState currentSafetyState {get; private set;}
+    public static ControlType currentControlType {get; private set;}
+    public static MissionState currentMissionState {get; private set;}
 
     //private StateFinder.Pose originalPose;
 
     private bool controlActive = false;
-    private bool preInBuffer = false;
 
-    public static bool autopilot_flag = false, autopilot_stop_flag = false, rth_flag = false, take_photo_flag = false, mark_defect_flag = false;
+    public static bool autopilot_flag = false, autopilot_stop_flag = false, rth_flag = false, take_photo_flag = false, mark_defect_flag = false, finish_planning_flag = false;
 
     [SerializeField] float predictStepLength = 1f;
     [SerializeField] int predictSteps = 3;
@@ -89,6 +88,7 @@ public class DroneManager : MonoBehaviour
     }
 
     public void ResetAllStates(){
+        finish_planning_flag = false;
         currentFlightState = FlightState.Landed;
         currentMissionState = MissionState.Planning;
         currentControlType = ControlType.Manual;
@@ -104,17 +104,23 @@ public class DroneManager : MonoBehaviour
         uiUpdater.ResetUI();
         camController.ResetCamera();
         battery.ResetBattery();
+        posSensor.ResetSignalLevel();
         autopilot_flag = false;
         autopilot_stop_flag = false;  
         rth_flag = false; 
         take_photo_flag = false;
         mark_defect_flag = false;
-
     }
 
     // Update is called once per frame
     void Update()
     {
+
+        if(currentMissionState == MissionState.Planning && finish_planning_flag){
+            finish_planning_flag = false;
+            currentMissionState = MissionState.MovingToFlightZone;
+        }
+
         if(currentFlightState == FlightState.TakingOff){
             if(Mathf.Abs(state.Altitude - vc.desired_height)< 0.1f){
                 currentFlightState = FlightState.Hovering;
@@ -140,15 +146,6 @@ public class DroneManager : MonoBehaviour
             
             if(currentMissionState != MissionState.Inspecting && currentMissionState != MissionState.Returning)
                 currentMissionState = inBuffer?MissionState.InFlightZone:MissionState.MovingToFlightZone;
-
-            if(inBuffer != preInBuffer){
-                if(inBuffer)
-                    OnEnterBuffer();
-                else
-                    OnExitBuffer();
-            }
-
-            preInBuffer = inBuffer;
 
 
             if (rth_flag)
@@ -179,7 +176,7 @@ public class DroneManager : MonoBehaviour
                 }
             } else if(currentMissionState == MissionState.Inspecting){
                 if(!inBuffer){
-                    currentMissionState = MissionState.MovingToFlightZone;
+                    autopilot_stop_flag = true;
                 }
                 if(take_photo_flag)
                 {
@@ -214,6 +211,7 @@ public class DroneManager : MonoBehaviour
             if(autopilot_stop_flag){
                 DisengageAutoPilot();
                 currentControlType = ControlType.Manual;
+                currentMissionState = MissionState.AutopilotInterupted;
                 autopilot_stop_flag = false;
             }
 
@@ -382,17 +380,6 @@ public class DroneManager : MonoBehaviour
         return -buildingCollision.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * buildingCollision.localScale.x; 
     }
 
-    void OnEnterBuffer(){
-        //if(currentSystemState != SystemState.Emergency)
-        //    currentSystemState = SystemState.Healthy;
-    }
-
-    void OnExitBuffer(){
-       //if(currentSystemState != SystemState.Emergency)
-       //    currentSystemState = SystemState.Warning;
-       if(currentMissionState != MissionState.Returning)
-            autopilot_stop_flag = true;
-    }
 
     Vector3 CheckDistToGround(out bool hitGround)
     {
@@ -414,7 +401,7 @@ public class DroneManager : MonoBehaviour
     }
 
     void DisengageAutoPilot(){
-        autopilotManager.EnableAutopilot(false);
+        autopilotManager.EnableAutopilot(false, false);
     }
 
     

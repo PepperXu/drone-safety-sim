@@ -103,7 +103,7 @@ public class InputControl : MonoBehaviour {
             	{
 					DroneManager.autopilot_stop_flag = true;
 					autopilot_toggled_off = false;
-					DroneManager.currentMissionState = DroneManager.MissionState.AutopilotInterupted;
+					//DroneManager.currentMissionState = DroneManager.MissionState.AutopilotInterupted;
             	}
 			}
 
@@ -113,11 +113,15 @@ public class InputControl : MonoBehaviour {
 				DroneManager.rth_flag = true;
             }
 
-			if(Input.GetButtonDown("Switch"))
+			if(Input.GetButtonDown("Switch")){
 				ExperimentServer.switching_flag = true;
+				ExperimentServer.RecordData("Force Show All Visualization", "", "");
+			}
 
-			if(Input.GetButtonUp("Switch"))
+			if(Input.GetButtonUp("Switch")){
 				ExperimentServer.switching_flag = false;
+				ExperimentServer.RecordData("Stop Forcing Show All Visualization", "", "");
+			}
 
 			if(Input.GetButtonDown("MarkDefect")){
 				uiUpdater.MarkDefect();

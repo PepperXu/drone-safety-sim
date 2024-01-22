@@ -312,7 +312,6 @@ public class ExperimentMonitor : MonoBehaviour
             using (StreamWriter writer = new StreamWriter(filePath, true)) {
 				 writer.WriteLine(line);
 			};
-			
 		}
 	}
 

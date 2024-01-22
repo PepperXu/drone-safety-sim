@@ -8,6 +8,7 @@ public class CameraController : MonoBehaviour
     public static int photoTaken = 0;
     [SerializeField] RenderTexture camRT;
     [SerializeField] MeshRenderer frameFreezerRen;
+    [SerializeField] UIUpdater uIUpdater;
 
     Texture2D tex;
     // Start is called before the first frame update
@@ -23,7 +24,8 @@ public class CameraController : MonoBehaviour
 
     public void TakePhoto(bool marked){
         photoTaken++;
-        SaveRenderTextureToFile(marked);
+        if(ExperimentServer.isRecording)
+            SaveRenderTextureToFile(marked);
     }
 
     IEnumerator FreezeFrame(){
@@ -46,8 +48,8 @@ public class CameraController : MonoBehaviour
         tex.Apply();
         
         RenderTexture.active = oldRt;
-        string fileName = "capture_" +DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + (marked?"marked_":"") ;
-        System.IO.File.WriteAllBytes(Application.persistentDataPath + "/" + fileName + ".png", tex.EncodeToPNG());
+        string fileName = (marked?"marked_" + uIUpdater.GetDefectCount() :"capture_" + photoTaken) + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
+        System.IO.File.WriteAllBytes(ExperimentServer.folderPath + "/" + fileName + ".png", tex.EncodeToPNG());
 
         if(marked)
             StartCoroutine(FreezeFrame());

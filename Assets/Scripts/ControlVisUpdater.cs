@@ -7,9 +7,13 @@ using UnityEngine.UI;
 public class ControlVisUpdater : MonoBehaviour
 {
     private bool visActive = false;
+
+    [Header("3D Sensing")]
     [SerializeField] private VisType dis2groundVis;
     [SerializeField] private VisType dis2boundVis;
     [SerializeField] private VisType dis2SurfaceVis;
+
+    [Header("Drone Telemetry")]
     [SerializeField] private VisType futureTrajectory;
     [SerializeField] private VisType attitude;
     [SerializeField] private Image cwise_Pitch_f, cwise_Pitch_b, acwise_Pitch_f, acwise_Pitch_b, cwise_Roll_l, cwise_Roll_r, acwise_Roll_l, acwise_Roll_r;
@@ -17,24 +21,37 @@ public class ControlVisUpdater : MonoBehaviour
     //[SerializeField] private VisType heading;
     [SerializeField] private VisType camFrustum;
 
+    [Header("Wind")]
     [SerializeField] private VisType windDir;
     [SerializeField] private ParticleSystem masterParticle;
 
     [SerializeField] private ParticleSystem[] windParticles;
+
+    [Header("Battery")]
     [SerializeField] private VisType batteryRing;
     [SerializeField] private Image batteryRingImg;
     [SerializeField] private TextMeshProUGUI batteryRemainingTimeText;
     [SerializeField] private Transform batteryRingTextAnchor;
 
+    [Header("GPS")]
     [SerializeField] private VisType positioning;
 
-    [SerializeField] private GameObject flightStatusTakeOff, flightStatusInspecting, flightStatusLanding;
+
+    [Header("Drone Status")]
+    [SerializeField] private GameObject flightStatusTakeOff;
+    [SerializeField] private GameObject flightStatusInspecting, flightStatusLanding;
+
+
+    [Header("Other References")]
     [SerializeField] private LayerMask realObstacleLayerMask;
 
     [SerializeField] private Transform droneParent;
 
+
     private float dis2ground;
 
+
+    [Header("Public Fields (Do not modify)")]
     public Vector3[] predictedPoints;
 
     public bool inBuffer;
@@ -63,24 +80,15 @@ public class ControlVisUpdater : MonoBehaviour
         if(active){
             if(!visActive){
                 visActive = true;
-                dis2groundVis.showVisualization = true;
-                futureTrajectory.showVisualization = true;
-                attitude.showVisualization = true;
-                batteryRing.showVisualization = true;
+                foreach(VisType vis in GetComponentsInChildren<VisType>())
+                    vis.showVisualization = true;
                 StartCoroutine(UpdateControlVis());
             }
         } else {
             visActive = false;
             StopAllCoroutines();
-            dis2groundVis.showVisualization = false;
-            futureTrajectory.showVisualization = false;
-            attitude.showVisualization = false;
-            dis2boundVis.showVisualization = false;
-            dis2SurfaceVis.showVisualization = false;
-            camFrustum.showVisualization = false;
-            windDir.showVisualization = false;
-            batteryRing.showVisualization = false;
-            positioning.showVisualization = false;
+            foreach(VisType vis in GetComponentsInChildren<VisType>())
+                vis.showVisualization = false;
         }
     }
     IEnumerator UpdateControlVis(){
@@ -294,10 +302,12 @@ public class ControlVisUpdater : MonoBehaviour
             batteryRing.SwitchHiddenVisTypeLocal(false);
         } else if(batteryPercentage > 0.3f){
             batteryRingImg.color = Color.yellow;
+            ExperimentServer.RecordData("Battery low", "", "");
             dis2groundVis.SwitchHiddenVisTypeLocal(false);
             batteryRing.SwitchHiddenVisTypeLocal(true);
         } else {
             batteryRingImg.color = Color.red;
+            ExperimentServer.RecordData("Battery critically low", "", "");
             dis2groundVis.SwitchHiddenVisTypeLocal(true);
             batteryRing.SwitchHiddenVisTypeLocal(true);
         }   

@@ -8,7 +8,6 @@ using System.Threading;
 using UnityEngine;  
 using Unity.XR.CoreUtils;
 using System.IO;
-using System.Data.Common;
 
 public class ExperimentServer : MonoBehaviour
 {
@@ -37,6 +36,9 @@ public class ExperimentServer : MonoBehaviour
     }
 
 	public VisualizationCondition currentVisCondition = VisualizationCondition.All;
+	private VisualizationCondition currentBufferedVisCondition;
+
+	string[] visConditionString = {"All", "Control First", "Mixed", "Safety First"};
 
 	public static bool switching_flag = false;
 
@@ -54,6 +56,14 @@ public class ExperimentServer : MonoBehaviour
 	string msgString;
 	List<string> incomingMsgList = new List<string>();
 
+	public static bool isRecording {get; private set;}
+	const string baseFileName = "log";
+	static string filePath;
+
+	public static string folderPath {get; private set;}
+
+	static float expTimer;
+
 	int currentDebugMode = 0; //0: wind control (strength only), 1: battery control, 2: position control
     // Start is called before the first frame update
     void Start()
@@ -61,6 +71,8 @@ public class ExperimentServer : MonoBehaviour
 		tcpListenerThread = new Thread (new ThreadStart(ListenForIncommingRequests)); 		
 		tcpListenerThread.IsBackground = true; 		
 		tcpListenerThread.Start(); 
+		currentBufferedVisCondition = currentVisCondition;
+		isRecording = false;
 		StartCoroutine(UpdateCurrentState());
 		StartCoroutine(DelayedInitializeTrackingOriginMode());
     }
@@ -73,6 +85,23 @@ public class ExperimentServer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+		if(isRecording)
+			expTimer += Time.deltaTime;
+
+		if(DroneManager.currentFlightState == DroneManager.FlightState.TakingOff && !isRecording){
+			StartRecording();
+			RecordData("Visualization Condition", visConditionString[(int)currentVisCondition] , "");
+		}
+
+		if(DroneManager.currentFlightState == DroneManager.FlightState.Landed && isRecording){
+			StopRecording();
+		}
+
+		if(currentVisCondition != currentBufferedVisCondition){
+			RecordData("Switch Visualization Condition to", visConditionString[(int)currentVisCondition] , "");
+			currentBufferedVisCondition = currentVisCondition;
+		}
+
 		if(incomingMsgList.Count > 0)
 			ProcessClientMessage();
         
@@ -432,5 +461,30 @@ public class ExperimentServer : MonoBehaviour
 		}
 	}
 
+	void StartRecording(){
+		string folderName = baseFileName + "_" + (flightPlanning.GetIsTestRun() == 1?"training":"full") + "_config_" + (flightPlanning.GetCurrentFacadeConfig() + 1) + "_" +  (flightPlanning.GetIsFromTop() == 1? "top":"bottom") + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
+        folderPath = Application.persistentDataPath + "/" + folderName;
+		Directory.CreateDirectory(folderPath);
+		filePath = Application.persistentDataPath + "/"  + folderName + "/log.csv";
+		using (StreamWriter writer = new StreamWriter(filePath, true)) {
+			writer.WriteLine("Timestamp, Msg, Param, Param2");
+		};
+		expTimer = 0f;
+        isRecording = true;
+	}
+
+	void StopRecording(){
+		isRecording = false;
+	}
+
+	public static void RecordData(string logMsg, string param, string param2){
+		if (isRecording)
+        {
+            using (StreamWriter writer = new StreamWriter(filePath, true)) {
+				 writer.WriteLine(expTimer + "," + logMsg + "," + param + "," + param2);
+				 Debug.Log("log entry generated: " + logMsg);
+			};
+		}
+	}
 
 }

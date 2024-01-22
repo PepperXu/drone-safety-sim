@@ -83,6 +83,7 @@ public class UIUpdater : MonoBehaviour
 
     public void ResetUI(){
         defectCount = 0;
+        vector2surface = Vector3.positiveInfinity;
     }
 
 
@@ -346,6 +347,7 @@ public class UIUpdater : MonoBehaviour
             return;
 
         defectCount++;
+        ExperimentServer.RecordData("Defect Marked at", droneState.pose.WorldPosition.x + "|" + droneState.pose.WorldPosition.y + "|" + droneState.pose.WorldPosition.z, "id: " + defectCount);
         Color c = cameraBorderUI.color;
         cameraBorderUI.color = new Color(c.r, c.g, c.b, 1f);
         DroneManager.mark_defect_flag = true;
@@ -359,6 +361,9 @@ public class UIUpdater : MonoBehaviour
             return;
 
         defectCount++;
+
+        ExperimentServer.RecordData("Defect Marked at", droneState.pose.WorldPosition.x + "|" + droneState.pose.WorldPosition.y + "|" + droneState.pose.WorldPosition.z, "id: " + defectCount);
+        //Debug.Log("Marked Defect should be recorded now");
         Color c = cameraBorderUI.color;
         cameraBorderUI.color = new Color(c.r, c.g, c.b, 1f);
         DroneManager.mark_defect_flag = true;
