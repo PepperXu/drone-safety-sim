@@ -14,12 +14,12 @@ public class VelocityControl : MonoBehaviour {
     private float gravity = 9.81f;
     private float time_constant_z_velocity = 1.0f; // Normal-person coordinates
     private float time_constant_acceleration = 0.5f;
-    private float time_constant_omega_xy_rate = 0.1f; // Normal-person coordinates (roll/pitch)
-    private float time_constant_alpha_xy_rate = 0.05f; // Normal-person coordinates (roll/pitch)
+    private float time_constant_omega_xy_rate = 0.01f; // Normal-person coordinates (roll/pitch)
+    private float time_constant_alpha_xy_rate = 0.01f; // Normal-person coordinates (roll/pitch)
     private float time_constant_alpha_z_rate = 0.05f; // Normal-person coordinates (yaw)
 
-    private float max_pitch = 0.3f; // 10 Degrees in radians, otherwise small-angle approximation dies 
-    private float max_roll = 0.3f; // 10 Degrees in radians, otherwise small-angle approximation dies
+    private float max_pitch = 0.175f; // 10 Degrees in radians, otherwise small-angle approximation dies 
+    private float max_roll = 0.175f; // 10 Degrees in radians, otherwise small-angle approximation dies
     private float max_alpha = 10.0f;
     //must set this
     public float desired_height = 0.0f;
@@ -57,6 +57,11 @@ public class VelocityControl : MonoBehaviour {
 
     [SerializeField] PositionalSensorSimulator pss;
     [SerializeField] RandomPulseNoise rpn;
+
+    float windStrength = 50f;
+    float windDuration = 20f;
+    int abnormalSigLevel = 1;
+    int windTurbSigLevel = 0;
 
     // Use this for initialization
     void Start () {
@@ -205,7 +210,7 @@ public class VelocityControl : MonoBehaviour {
         desiredThrust = Mathf.Min (desiredThrust, 2.0f * gravity);
         desiredThrust = Mathf.Max (desiredThrust, 0.0f);
 
-        Vector3 desiredTorque = Vector3.Scale (desiredAlpha, state.Inertia);
+        Vector3 desiredTorque = Vector3.Scale (desiredAlpha, state.Inertia * 2f);
         Vector3 desiredForce = new Vector3 (0.0f, desiredThrust * state.Mass, 0.0f);
 
         rb.AddRelativeTorque (desiredTorque, ForceMode.Acceleration);
@@ -270,13 +275,14 @@ public class VelocityControl : MonoBehaviour {
 
     private void OnTriggerEnter(Collider other) {
         if(other.tag == "GPSWeakZone"){
-            pss.SetSignalLevel(0);
+            pss.SetSignalLevel(abnormalSigLevel);
             ExperimentServer.RecordData("Drone Enters GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
         } else if(other.tag == "WindZone"){
             other.gameObject.SetActive(false);
-            rpn.strength_mean = 80f;
-            rpn.pulse_duration_mean = 20f;
-            ExperimentServer.RecordData("Wind Turbulence Starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength|duration:" + 80 + "|" + 20);
+            StartCoroutine(SetSignaForWindTurbulence());
+            rpn.strength_mean = windStrength;
+            rpn.pulse_duration_mean = windDuration;
+            ExperimentServer.RecordData("Wind Turbulence Starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength|duration:" + windStrength + "|" + windDuration);
 			rpn.wind_change_flag = true;
         }
     }
@@ -292,5 +298,12 @@ public class VelocityControl : MonoBehaviour {
     public void SetMaxPitchRoll(float value){
         max_pitch = value;
         max_roll = value;
+    }
+
+    IEnumerator SetSignaForWindTurbulence(){
+        pss.SetSignalLevel(windTurbSigLevel);
+        yield return new WaitForSeconds(windDuration);
+        pss.SetSignalLevel(3);
+        pss.switch_gps_normal = true;
     }
 }

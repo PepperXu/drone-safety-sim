@@ -66,6 +66,7 @@ public class StateFinder : MonoBehaviour {
 
 		if (flag) {
 			Inertia = vc.transform.GetComponent<Rigidbody> ().inertiaTensor;
+			//Debug.Log(Inertia.ToString());
 			Mass = vc.transform.GetComponent<Rigidbody> ().mass;
 			flag = false;
 		}

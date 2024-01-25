@@ -159,7 +159,7 @@ public class AutopilotManager : MonoBehaviour
 
     public void EnableAutopilot(bool enable, bool rth)
     {
-        vc.SetMaxPitchRoll(enable?0.175f:0.3f);
+        //vc.SetMaxPitchRoll(enable?0.175f:0.3f);
 
         isAutopiloting = enable;
         isRTH = rth;
