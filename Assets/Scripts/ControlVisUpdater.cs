@@ -110,6 +110,8 @@ public class ControlVisUpdater : MonoBehaviour
     }
 
     void UpdateDistance2Ground(){
+        if(!dis2groundVis.gameObject.activeInHierarchy)
+            return;
         dis2ground = vectorToGround.magnitude;
         LineRenderer lr = dis2groundVis.transform.GetComponentInChildren<LineRenderer>();
         if (lr)
@@ -125,6 +127,8 @@ public class ControlVisUpdater : MonoBehaviour
 
     void UpdateDistance2Bound()
     {
+        if(!dis2boundVis.gameObject.activeInHierarchy)
+            return;
         float dis2bound = vectorToNearestBufferBound.magnitude;
         if (dis2bound > 10f)
         {
@@ -154,6 +158,8 @@ public class ControlVisUpdater : MonoBehaviour
 
     void UpdateDistance2Surface()
     {
+        if(!dis2SurfaceVis.gameObject.activeInHierarchy)
+            return;
         float dis2surf = vectorToNearestSurface.magnitude;
         if (dis2surf > 10f)
         {
@@ -185,6 +191,8 @@ public class ControlVisUpdater : MonoBehaviour
 
     void UpdateFutureTrajectory()
     {
+        if(!futureTrajectory.gameObject.activeInHierarchy)
+            return;
         List<Vector3> trajectory = new List<Vector3>
         {
             Vector3.zero
@@ -204,6 +212,8 @@ public class ControlVisUpdater : MonoBehaviour
 
     void UpdateAttitudeVis()
     {
+        if(!attitude.gameObject.activeInHierarchy)
+            return;
         float pitch = droneParent.localEulerAngles.x;
         while (pitch >= 180f)
         {
@@ -253,6 +263,8 @@ public class ControlVisUpdater : MonoBehaviour
     }
 
     void UpdateCameraFrustum(){
+        if(!camFrustum.gameObject.activeInHierarchy)
+            return;
         float dis2surf = vectorToNearestSurface.magnitude;
         if(dis2surf > 8f){
             camFrustum.showVisualization = false;
@@ -264,6 +276,8 @@ public class ControlVisUpdater : MonoBehaviour
     }
 
     void UpdateWindVis(){
+        if(!windDir.gameObject.activeInHierarchy)
+            return;
         if(windStrength < 50f){
             windDir.showVisualization = false;
             dis2SurfaceVis.SwitchHiddenVisTypeLocal(false);
@@ -292,6 +306,8 @@ public class ControlVisUpdater : MonoBehaviour
         //masterParticle.Play();
     }
     void UpdateBatteryRing(){
+        if(!batteryRing.gameObject.activeInHierarchy)
+            return;
         batteryRingImg.fillAmount = (batteryPercentage - 0.2f)/0.8f;
         int remainingTimeMinutes = Mathf.FloorToInt(remainingTimeInSeconds/60);
         batteryRemainingTimeText.text = remainingTimeMinutes + ":" + Mathf.FloorToInt(remainingTimeInSeconds - remainingTimeMinutes * 60);
@@ -314,6 +330,8 @@ public class ControlVisUpdater : MonoBehaviour
     }
 
     void UpdatePositioningIndicator(){
+        if(!positioning.gameObject.activeInHierarchy)
+            return;
         if(pos_sig_lvl == 3){
             positioning.showVisualization = false;
             positioning.SwitchHiddenVisTypeLocal(false);
