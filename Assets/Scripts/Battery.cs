@@ -27,6 +27,8 @@ public class Battery : MonoBehaviour
     float remainingTimeInSeconds;
     float currentVoltage;
 
+    int batteryLevel = -1;
+
 
     [SerializeField] StateFinder droneState;
     [SerializeField] UIUpdater uiUpdater;
@@ -74,8 +76,40 @@ public class Battery : MonoBehaviour
         currentBatteryCapacity = Mathf.Max(0f, currentBatteryCapacity-batteryCapacity*percentage);
     }
 
-    public float GetBatteryLevel(){
+    public void BatteryDropToCritical(){
+        currentBatteryCapacity = batteryCapacity * 0.3f;
+    }
+
+    public float GetBatteryPercentage(){
         return currentBatteryPercentage;
+    }
+
+    public int GetBatteryLevel(){
+        int batteryLevel;
+        if(currentBatteryPercentage > 0.46667f){
+            batteryLevel = 3;
+        } else if(currentBatteryPercentage > 0.3f){
+            batteryLevel = 2;
+        } else if(currentBatteryPercentage > 0.2){
+            batteryLevel = 1;
+        } else {
+            batteryLevel = 0;
+        }
+
+        if(this.batteryLevel != batteryLevel){
+            if(batteryLevel == 3) {
+                ExperimentServer.RecordData("Battery full", "", "");
+            } else if (batteryLevel == 2){
+                ExperimentServer.RecordData("Battery low", "", "");
+            } else if (batteryLevel == 1){
+                ExperimentServer.RecordData("Battery critically low!", "", "");
+            } else {
+                ExperimentServer.RecordData("Battery empty!", "", "");
+            }
+        }
+
+        this.batteryLevel = batteryLevel;
+        return batteryLevel;
     }
 
     public int GetBatteryVoltageLevel(){

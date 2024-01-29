@@ -33,6 +33,7 @@ TagManager:
   - FPVCam
   - GPSWeakZone
   - WindZone
+  - BatteryDrop
   layers:
   - Default
   - TransparentFX

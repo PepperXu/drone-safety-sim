@@ -27,7 +27,7 @@ public class FlightPlanning : MonoBehaviour
     private int verticalSteps = 12;
 
     private float vertStepLength;
-    private float distToSurface = 4f;
+    private float distToSurface = 6.5f;
     private int horizontalSteps = 6;
 
     private float groundOffset = 12f;
@@ -35,18 +35,19 @@ public class FlightPlanning : MonoBehaviour
 
     private bool isFromTop = false;
 
-    private bool isTest = true;
+    //private bool isTest = true;
 
-    private int configIndex = 3;
+    private int configIndex = 0;
 
-    
+    public int ConfigIndex {get {return configIndex;} set {configIndex = value;}}
+
     [SerializeField] GameObject planningUI, monitoringUI;
     [SerializeField] private Transform[] startingPoints;
 
-    private int currentStartingPoint = 0;
+    //private int currentStartingPoint = 0;
     [SerializeField] private Transform camRig, droneRig;
 
-    private int currentIndex = -1;
+    //private int currentSurfIndex = -1;
 
     [SerializeField] WorldVisUpdater worldVis;
 
@@ -55,10 +56,12 @@ public class FlightPlanning : MonoBehaviour
     private float eventZoneXmin = 830.5f, eventZoneXmax = 853.52f, eventZoneZmin = 1070.69f, eventZoneZmax = 1084.61f;
 
 
-    public GameObject GPS_Weak_Zone, Wind_Zone;
-    private List<GameObject> gpsZoneObjs = new List<GameObject>(), windZoneObjs = new List<GameObject>();
+    //public GameObject GPS_Weak_Zone, Wind_Zone;
+    //private List<GameObject> gpsZoneObjs = new List<GameObject>(), windZoneObjs = new List<GameObject>();
 
-    public GameObject[] facade_surfaces;
+    //public GameObject[] facade_surfaces;
+
+    public GameObject[] configs;
 
     private List<Waypoint> wpList = new List<Waypoint>();
 
@@ -67,7 +70,7 @@ public class FlightPlanning : MonoBehaviour
     public void ResetPathPlanning(){
         pathPlanned = false;
         UpdateBoundsGeometry();
-        SetStartingPoint(3);
+        //SetStartingPoint(0);
         planningUI.SetActive(true);
         monitoringUI.SetActive(false);
         if(autoPlan){
@@ -88,118 +91,141 @@ public class FlightPlanning : MonoBehaviour
             UpdatePlanning();
         }
     }
+    
 
-    public void GenerateFlightTrajectory(int currentSelectedSurfaceIndex)
+    void UpdatePlanning(){
+        //UpdateCurrentFacade();
+        GenerateFlightTrajectory();
+        //GenerateEventZone(2);
+        FinishPlanning();
+    }
+
+
+    public void GenerateFlightTrajectory()
     {
         //if (currentSelectedSurfaceIndex < 0)
         //    return;
 
         //DroneManager.currentMissionState = DroneManager.MissionState.MovingToFlightZone;
-        currentIndex = currentSelectedSurfaceIndex;
+        //currentSurfIndex = currentSelectedSurfaceIndex;
+        
+        List<Vector3> path = new List<Vector3>();
+        wpList.Clear();
+        Transform wpParent = pathVisualization.transform.GetChild(0);
+        foreach(Transform waypoint in wpParent){
+            Destroy(waypoint.gameObject);
+        }
+
+    
+        if(configIndex == 0){
+            configs[0].SetActive(true);
+            configs[1].SetActive(false);
+            configs[2].SetActive(false);
+            GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
+            GenerateTrajectoryOnSurface(ref path, wpParent, 1, true, false);
+            //GenerateTrajectoryOnSurface(ref path, wpParent, currentSelectedSurfaceIndex, isFromTop, false);
+        } else if (configIndex == 1){
+            configs[0].SetActive(false);
+            configs[1].SetActive(true);
+            configs[2].SetActive(false);
+            GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
+            GenerateTrajectoryOnSurface(ref path, wpParent, 1, true, false);
+        } else {
+            configs[0].SetActive(false);
+            configs[1].SetActive(false);
+            configs[2].SetActive(true);
+            GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, false);
+            GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
+        }
+        flightTrajectory = new Vector3[path.Count];
+        flightTrajectory = path.ToArray();
+        pathVisualization.positionCount = flightTrajectory.Length;
+        pathVisualization.SetPositions(flightTrajectory);
+        pathPlanned = true;
+    }
+
+    void GenerateTrajectoryOnSurface(ref List<Vector3> path, Transform wpParent, int surfaceIndex, bool fromTop, bool reverse){
+        List<Vector3> surfacePath = new List<Vector3>();
         Vector3[] currentSurfaceVertices = new Vector3[4];
         for (int t = 0; t < 4; t++)
-            currentSurfaceVertices[t] = surfaceVerts[currentSelectedSurfaceIndex, t];
-        Vector3 horizontalOffset = currentSurfaceVertices[1] - currentSurfaceVertices[0];
-        List<Vector3> path = new List<Vector3>();
+            currentSurfaceVertices[t] = surfaceVerts[surfaceIndex, t];
+        Vector3 horizontalOffset = (reverse?-1f:1f) * (currentSurfaceVertices[1] - currentSurfaceVertices[0]);
         bool flipped = false;
-        Vector3 surfaceNormal = (surfaceVerts[currentSelectedSurfaceIndex, 0] - surfaceVerts[(currentSelectedSurfaceIndex + 3) % 4, 0]).normalized;
+        Vector3 surfaceNormal = (surfaceVerts[surfaceIndex, 0] - surfaceVerts[(surfaceIndex + 3) % 4, 0]).normalized;
         vertStepLength = (currentSurfaceVertices[3].y - currentSurfaceVertices[0].y - groundOffset)/verticalSteps;
-        
-        if(isFromTop){
-            Vector3 v = currentSurfaceVertices[3];
+
+        if(fromTop){
+            Vector3 v = reverse?currentSurfaceVertices[2]:currentSurfaceVertices[3];
             v -= Vector3.up * vertStepLength;
             for (int j = 0; j < verticalSteps; j++)
             {
                 if (!flipped)
                 {
-                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset.normalized * lrmargin);
-                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset - horizontalOffset.normalized * lrmargin);
+                    surfacePath.Add(v + surfaceNormal * distToSurface + horizontalOffset.normalized * lrmargin);
+                    surfacePath.Add(v + surfaceNormal * distToSurface + horizontalOffset - horizontalOffset.normalized * lrmargin);
                 }
                 else
                 {
-                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset - horizontalOffset.normalized * lrmargin);
-                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset.normalized * lrmargin);
+                    surfacePath.Add(v + surfaceNormal * distToSurface + horizontalOffset - horizontalOffset.normalized * lrmargin);
+                    surfacePath.Add(v + surfaceNormal * distToSurface + horizontalOffset.normalized * lrmargin);
                 }
                 v -= Vector3.up * vertStepLength;
                 flipped = !flipped;
             }
         } else{
-            Vector3 v = currentSurfaceVertices[0] + Vector3.up * groundOffset;
+            
+            Vector3 v = (reverse?currentSurfaceVertices[1]:currentSurfaceVertices[0]) + Vector3.up * groundOffset;
             for (int j = 0; j < verticalSteps; j++)
             {
                 if (!flipped)
                 {
-                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset.normalized * lrmargin);
-                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset - horizontalOffset.normalized * lrmargin);
+                    surfacePath.Add(v + surfaceNormal * distToSurface + horizontalOffset.normalized * lrmargin);
+                    surfacePath.Add(v + surfaceNormal * distToSurface + horizontalOffset - horizontalOffset.normalized * lrmargin);
                 }
                 else
                 {
-                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset - horizontalOffset.normalized * lrmargin);
-                    path.Add(v + surfaceNormal * distToSurface + horizontalOffset.normalized * lrmargin);
+                    surfacePath.Add(v + surfaceNormal * distToSurface + horizontalOffset - horizontalOffset.normalized * lrmargin);
+                    surfacePath.Add(v + surfaceNormal * distToSurface + horizontalOffset.normalized * lrmargin);
                 }
                 v += Vector3.up * vertStepLength;
                 flipped = !flipped;
             }
-            //if (flipped)
-            //{
-            //    path.Add(currentSurfaceVertices[2] + surfaceNormal * distToSurface);
-            //    path.Add(currentSurfaceVertices[3] + surfaceNormal * distToSurface);
-            //}
-            //else
-            //{
-            //    path.Add(currentSurfaceVertices[3] + surfaceNormal * distToSurface);
-            //    path.Add(currentSurfaceVertices[2] + surfaceNormal * distToSurface);
-            //}
         }
 
         int i = 0;
-        
-        wpList.Clear();
 
-        Transform wpParent = pathVisualization.transform.GetChild(0);
-
-        foreach(Transform waypoint in wpParent){
-            Destroy(waypoint.gameObject);
-        }
-        float horizontalStepLength = (path[0] - path[1]).magnitude/horizontalSteps;
-        while (i < path.Count)
+        int steps = surfaceIndex == 0?horizontalSteps-2:horizontalSteps;
+        float horizontalStepLength = (surfacePath[0] - surfacePath[1]).magnitude/steps;
+        while (i < surfacePath.Count)
         {
-            SpawnWaypoint(path[i], wpParent);
-            Vector3 currentTrajectoryPoint = path[i];
-            Vector3 nextTrajectoryPoint = path[i + 1];
+            SpawnWaypoint(surfacePath[i], wpParent, surfaceIndex);
+            Vector3 currentTrajectoryPoint = surfacePath[i];
+            Vector3 nextTrajectoryPoint = surfacePath[i + 1];
             Vector3 nextTrajectoryPointDirection = (nextTrajectoryPoint - currentTrajectoryPoint).normalized;
-            for(int j = 0; j < horizontalSteps - 1; j++){
+            for(int j = 0; j < steps - 1; j++){
                 currentTrajectoryPoint += nextTrajectoryPointDirection * horizontalStepLength;
-                path.Insert(++i, currentTrajectoryPoint);
-                SpawnWaypoint(currentTrajectoryPoint, wpParent);
+                surfacePath.Insert(++i, currentTrajectoryPoint);
+                SpawnWaypoint(currentTrajectoryPoint, wpParent, surfaceIndex);
             }
             i++;
-            SpawnWaypoint(path[i], wpParent);
+            SpawnWaypoint(surfacePath[i], wpParent, surfaceIndex);
             i++;
-        }
+        } 
 
-        flightTrajectory = new Vector3[path.Count];
-        flightTrajectory = path.ToArray();
-        pathVisualization.positionCount = flightTrajectory.Length;
-        pathVisualization.SetPositions(flightTrajectory);
-        //for (int t = 0; t < surfaceSelected.Length; t++)
-        //{
-        //    surfaceSelected[t].SetActive(false);
-        //}
-        pathPlanned = true;
+        path.AddRange(surfacePath);
     }
 
     //For button interaction
-    public void GenerateFlightTrajectory(){
-        if(currentIndex == -1)
-            return;
-        GenerateFlightTrajectory(currentIndex);
-    }
-
-    private void SpawnWaypoint(Vector3 position, Transform parent){
+    //public void GenerateFlightTrajectory(){
+    //    if(currentSurfIndex == -1)
+    //        return;
+    //    GenerateFlightTrajectory(currentSurfIndex);
+    //}
+//
+    private void SpawnWaypoint(Vector3 position, Transform parent, int surfIndex){
         GameObject wp = Instantiate(waypoint, parent);
         wp.transform.position = position;
-        wp.transform.rotation = currentIndex == 0? transform.rotation*Quaternion.FromToRotation(Vector3.forward, Vector3.right):transform.rotation;
+        wp.transform.rotation = surfIndex == 0? transform.rotation*Quaternion.FromToRotation(Vector3.forward, Vector3.right):transform.rotation;
         wpList.Add(wp.GetComponent<Waypoint>());
     }
 
@@ -213,73 +239,73 @@ public class FlightPlanning : MonoBehaviour
         }
     }
 
-    void GenerateEventZone(int num){
-        foreach(GameObject obj in gpsZoneObjs)
-            if(obj){
-                Destroy(obj);
-            }
-                
-        gpsZoneObjs.Clear();
+    //void GenerateEventZone(int num){
+    //    foreach(GameObject obj in gpsZoneObjs)
+    //        if(obj){
+    //            Destroy(obj);
+    //        }
+    //            
+    //    gpsZoneObjs.Clear();
+//
+    //    foreach(GameObject obj in windZoneObjs)
+    //        if(obj){
+    //            Destroy(obj);
+    //        }
+    //    
+    //    windZoneObjs.Clear();
+//
+    //    if(num == 1){
+    //        EventZonesInLevels(1, 6);
+    //    }else if(num == 2){
+    //        EventZonesInLevels(1, 6);
+    //        EventZonesInLevels(6, 10);
+    //    }
+    //        
+    //}
 
-        foreach(GameObject obj in windZoneObjs)
-            if(obj){
-                Destroy(obj);
-            }
-        
-        windZoneObjs.Clear();
+    //void EventZonesInLevels(int minInclusive, int maxExclusive){
+    //    int i = isTest?(minInclusive+1):Random.Range(minInclusive, maxExclusive);
+    //    float j = isTest?0.7f:Random.value;
+    //    
+    //    float spawnY;
+    //    if(isFromTop){
+    //        spawnY = groundOffset + (verticalSteps - 1 - i) * vertStepLength;
+    //    } else {
+    //        spawnY = groundOffset + i * vertStepLength;  
+    //    }
+    //    Vector3 dir = new Vector3(eventZoneXmin, 0f, eventZoneZmax) - new Vector3(eventZoneXmax, 0f, eventZoneZmin);
+    //    Vector3 startPos = new Vector3(eventZoneXmax, 0f, eventZoneZmin);
+    //    Vector3 spawnPos = startPos + dir * j + Vector3.up * spawnY;
+    //    gpsZoneObjs.Add(Instantiate(GPS_Weak_Zone));
+    //    gpsZoneObjs.Last().transform.position = spawnPos;
+//
+    //    int t = isTest?minInclusive:Random.Range(minInclusive, maxExclusive);
+    //    if(!isTest){
+    //        while(Mathf.Abs(t-i) < 1){
+    //            t = Random.Range(minInclusive, maxExclusive);
+    //        }
+    //    }
+    //    j = isTest?0.5f:Random.value;
+    //    if(isFromTop){
+    //        spawnY = groundOffset + (verticalSteps - 1 - t ) * vertStepLength;
+    //    } else {
+    //        spawnY = groundOffset + t * vertStepLength;  
+    //    }
+    //    dir = new Vector3(eventZoneXmin, 0f, eventZoneZmax) - new Vector3(eventZoneXmax, 0f, eventZoneZmin);
+    //    startPos = new Vector3(eventZoneXmax, 0f, eventZoneZmin);
+    //    spawnPos = startPos + dir * j + Vector3.up * spawnY;
+    //    windZoneObjs.Add(Instantiate(Wind_Zone));
+    //    windZoneObjs.Last().transform.position = spawnPos;
+    //}
 
-        if(num == 1){
-            EventZonesInLevels(1, 6);
-        }else if(num == 2){
-            EventZonesInLevels(1, 6);
-            EventZonesInLevels(6, 10);
-        }
-            
-    }
-
-    void EventZonesInLevels(int minInclusive, int maxExclusive){
-        int i = isTest?(minInclusive+1):Random.Range(minInclusive, maxExclusive);
-        float j = isTest?0.7f:Random.value;
-        
-        float spawnY;
-        if(isFromTop){
-            spawnY = groundOffset + (verticalSteps - 1 - i) * vertStepLength;
-        } else {
-            spawnY = groundOffset + i * vertStepLength;  
-        }
-        Vector3 dir = new Vector3(eventZoneXmin, 0f, eventZoneZmax) - new Vector3(eventZoneXmax, 0f, eventZoneZmin);
-        Vector3 startPos = new Vector3(eventZoneXmax, 0f, eventZoneZmin);
-        Vector3 spawnPos = startPos + dir * j + Vector3.up * spawnY;
-        gpsZoneObjs.Add(Instantiate(GPS_Weak_Zone));
-        gpsZoneObjs.Last().transform.position = spawnPos;
-
-        int t = isTest?minInclusive:Random.Range(minInclusive, maxExclusive);
-        if(!isTest){
-            while(Mathf.Abs(t-i) < 1){
-                t = Random.Range(minInclusive, maxExclusive);
-            }
-        }
-        j = isTest?0.5f:Random.value;
-        if(isFromTop){
-            spawnY = groundOffset + (verticalSteps - 1 - t ) * vertStepLength;
-        } else {
-            spawnY = groundOffset + t * vertStepLength;  
-        }
-        dir = new Vector3(eventZoneXmin, 0f, eventZoneZmax) - new Vector3(eventZoneXmax, 0f, eventZoneZmin);
-        startPos = new Vector3(eventZoneXmax, 0f, eventZoneZmin);
-        spawnPos = startPos + dir * j + Vector3.up * spawnY;
-        windZoneObjs.Add(Instantiate(Wind_Zone));
-        windZoneObjs.Last().transform.position = spawnPos;
-    }
-
-    void UpdateCurrentFacade(){
-        for(int i = 0; i < facade_surfaces.Length; i++){
-            if(i == configIndex)
-                facade_surfaces[i].SetActive(true);
-            else    
-                facade_surfaces[i].SetActive(false);
-        }
-    }
+    //void UpdateCurrentFacade(){
+    //    for(int i = 0; i < facade_surfaces.Length; i++){
+    //        if(i == configIndex)
+    //            facade_surfaces[i].SetActive(true);
+    //        else    
+    //            facade_surfaces[i].SetActive(false);
+    //    }
+    //}
 
     //void RandomizeStartFromTop(){
     //    int i = Random.Range(0, 2);
@@ -332,9 +358,9 @@ public class FlightPlanning : MonoBehaviour
         }
     }
 
-    public int GetCurrentStartingPointIndex(){
-        return currentStartingPoint;
-    }
+    //public int GetCurrentStartingPointIndex(){
+    //    return currentStartingPoint;
+    //}
 
     public int GetTotalWaypointCount()
     {
@@ -361,83 +387,64 @@ public class FlightPlanning : MonoBehaviour
         isFromTop = toggle.isOn; 
     }
 
-    public void SetIsFromTop(int isFromTop){
-        this.isFromTop = isFromTop == 1;
-    }
+    //public void SetIsFromTop(int isFromTop){
+    //    this.isFromTop = isFromTop == 1;
+    //}
 
-    public int GetIsFromTop(){
-        return isFromTop?1:0;
-    }
+    //public int GetIsFromTop(){
+    //    return isFromTop?1:0;
+    //}
 
-    public void SetIsTestRun(int isTestRun){
-        isTest = isTestRun == 1;
-    }
-
-    public int GetIsTestRun(){
-        return isTest?1:0;
-    }
-
-    public void SetCurrentFacadeConfig(int index){
-        configIndex = index;
-    }
-
-    public int GetCurrentFacadeConfig(){
-        return configIndex;
-    }
+    //public void SetIsTestRun(int isTestRun){
+    //    isTest = isTestRun == 1;
+    //}
+//
+    //public int GetIsTestRun(){
+    //    return isTest?1:0;
+    //}
 
 
-    void UpdatePlanning(){
-        if(isTest){
-            SetCurrentFacadeConfig(3);
-            isFromTop = false;
-        }
-        UpdateCurrentFacade();
-        GenerateFlightTrajectory();
-        GenerateEventZone(2);
-        FinishPlanning();
-    }
 
-
-    public void SetStartingPoint(int index){
-        switch(index){
-            case 0:
-                camRig.position = startingPoints[0].position;
-                camRig.rotation = startingPoints[0].rotation;
-                droneRig.position = startingPoints[0].GetChild(0).position;
-                droneRig.rotation = startingPoints[0].GetChild(0).rotation;
-                GenerateFlightTrajectory(0);
-                break;
-            case 1:
-                camRig.position = startingPoints[1].position;
-                camRig.rotation = startingPoints[1].rotation;
-                droneRig.position = startingPoints[1].GetChild(0).position;
-                droneRig.rotation = startingPoints[1].GetChild(0).rotation;
-                GenerateFlightTrajectory(0);
-                break;
-            case 2:
-                camRig.position = startingPoints[2].position;
-                camRig.rotation = startingPoints[2].rotation;
-                droneRig.position = startingPoints[2].GetChild(0).position;
-                droneRig.rotation = startingPoints[2].GetChild(0).rotation;
-                GenerateFlightTrajectory(0);
-                break;
-            case 3:
-                camRig.position = startingPoints[3].position;
-                camRig.rotation = startingPoints[3].rotation;
-                droneRig.position = startingPoints[3].GetChild(0).position;
-                droneRig.rotation = startingPoints[3].GetChild(0).rotation;
-                GenerateFlightTrajectory(1);
-                break;
-            case 4:
-                camRig.position = startingPoints[4].position;
-                camRig.rotation = startingPoints[4].rotation;
-                droneRig.position = startingPoints[4].GetChild(0).position;
-                droneRig.rotation = startingPoints[4].GetChild(0).rotation;
-                GenerateFlightTrajectory(1);
-                break;
-            default:
-                break;
-        }
-        currentStartingPoint = index;
-    }
-}
+    //public void SetStartingPoint(int index){
+    //    switch(index){
+    //        case 0:
+    //            camRig.position = startingPoints[0].position;
+    //            camRig.rotation = startingPoints[0].rotation;
+    //            droneRig.position = startingPoints[0].GetChild(0).position;
+    //            droneRig.rotation = startingPoints[0].GetChild(0).rotation;
+    //            GenerateFlightTrajectory(2);
+    //            break;
+    //        case 1:
+    //            camRig.position = startingPoints[1].position;
+    //            camRig.rotation = startingPoints[1].rotation;
+    //            droneRig.position = startingPoints[1].GetChild(0).position;
+    //            droneRig.rotation = startingPoints[1].GetChild(0).rotation;
+    //            GenerateFlightTrajectory(0);
+    //            break;
+    //        case 2:
+    //            camRig.position = startingPoints[2].position;
+    //            camRig.rotation = startingPoints[2].rotation;
+    //            droneRig.position = startingPoints[2].GetChild(0).position;
+    //            droneRig.rotation = startingPoints[2].GetChild(0).rotation;
+    //            GenerateFlightTrajectory(0);
+    //            break;
+    //        case 3:
+    //            camRig.position = startingPoints[3].position;
+    //            camRig.rotation = startingPoints[3].rotation;
+    //            droneRig.position = startingPoints[3].GetChild(0).position;
+    //            droneRig.rotation = startingPoints[3].GetChild(0).rotation;
+    //            GenerateFlightTrajectory(1);
+    //            break;
+    //        case 4:
+    //            camRig.position = startingPoints[4].position;
+    //            camRig.rotation = startingPoints[4].rotation;
+    //            droneRig.position = startingPoints[4].GetChild(0).position;
+    //            droneRig.rotation = startingPoints[4].GetChild(0).rotation;
+    //            GenerateFlightTrajectory(1);
+    //            break;
+    //        default:
+    //            break;
+    //    }
+    //    currentStartingPoint = index;
+    //}
+}//

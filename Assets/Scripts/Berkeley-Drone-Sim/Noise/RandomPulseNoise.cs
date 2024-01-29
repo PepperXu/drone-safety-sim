@@ -86,6 +86,8 @@ public class RandomPulseNoise : MonoBehaviour {
             if(wind_change_flag){
                 pulse_timer = pulse_duration_mean;
                 base_strength = SamplePositive(strength_mean, strength_variance);
+                targetDirection = Quaternion.Euler(new Vector3(0.0f, fixedDirection?Sample(yawCenter, directionVariance):Random.Range(-180.0f, 180.0f), 0.0f));
+                transform.rotation = targetDirection;
                 wind_change_flag = false;
             } else {
                 if(pulse_timer > 0f){

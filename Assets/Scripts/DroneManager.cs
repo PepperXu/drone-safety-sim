@@ -302,7 +302,7 @@ public class DroneManager : MonoBehaviour
         }
     }
 
-    void UpdateSafetyState(bool inBuffer, float distToBuffer, float distToSurface, float batteryLevel, float voltage, int positional_signal_level, float wind_strength){
+    void UpdateSafetyState(bool inBuffer, float distToBuffer, float distToSurface, int batteryLevel, float voltage, int positional_signal_level, float wind_strength){
         if(currentSafetyState == SafetyState.Emergency)
             return;
         
@@ -315,7 +315,8 @@ public class DroneManager : MonoBehaviour
         if(distToSurface < surfaceCautionThreshold){
             tempState = SafetyState.Caution;
         }
-        if(batteryLevel < 0.46667f){
+        if(batteryLevel == 2){
+            
             tempState = SafetyState.Caution;
         }
         if(voltage < 10f){
@@ -329,7 +330,7 @@ public class DroneManager : MonoBehaviour
         if(distToSurface < surfaceWarningThreshold){
             tempState = SafetyState.Warning;
         }
-        if(batteryLevel < 0.3f){
+        if(batteryLevel == 1){
             tempState = SafetyState.Warning;
         }
         if(voltage < 9f){
@@ -355,7 +356,7 @@ public class DroneManager : MonoBehaviour
         if(vc.collisionHitCount > 0 || vc.out_of_balance){
             tempState = SafetyState.Emergency;
         }
-        if(batteryLevel < 0.2f){
+        if(batteryLevel == 0){
             tempState = SafetyState.Emergency;
         } 
 

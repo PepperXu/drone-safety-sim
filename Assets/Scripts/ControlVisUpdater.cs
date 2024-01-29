@@ -318,12 +318,10 @@ public class ControlVisUpdater : MonoBehaviour
             batteryRing.SwitchHiddenVisTypeLocal(false);
         } else if(batteryPercentage > 0.3f){
             batteryRingImg.color = Color.yellow;
-            ExperimentServer.RecordData("Battery low", "", "");
             dis2groundVis.SwitchHiddenVisTypeLocal(false);
             batteryRing.SwitchHiddenVisTypeLocal(true);
         } else {
             batteryRingImg.color = Color.red;
-            ExperimentServer.RecordData("Battery critically low", "", "");
             dis2groundVis.SwitchHiddenVisTypeLocal(true);
             batteryRing.SwitchHiddenVisTypeLocal(true);
         }   

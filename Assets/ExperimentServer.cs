@@ -141,21 +141,21 @@ public class ExperimentServer : MonoBehaviour
 
 		if(DroneManager.currentMissionState == DroneManager.MissionState.Planning){
         	
-        	if(Input.GetKeyDown(KeyCode.Alpha1)){
-        	    flightPlanning.SetStartingPoint(1);
-        	}
-        	if(Input.GetKeyDown(KeyCode.Alpha2)){
-        	    flightPlanning.SetStartingPoint(2);
-        	}
-        	if(Input.GetKeyDown(KeyCode.Alpha3)){
-        	    flightPlanning.SetStartingPoint(3);
-        	}
-        	if(Input.GetKeyDown(KeyCode.Alpha4)){
-        	    flightPlanning.SetStartingPoint(4);
-        	}
-        	if(Input.GetKeyDown(KeyCode.Alpha0)){
-        	    flightPlanning.SetStartingPoint(0);
-        	}
+        	//if(Input.GetKeyDown(KeyCode.Alpha1)){
+        	//    flightPlanning.SetStartingPoint(1);
+        	//}
+        	//if(Input.GetKeyDown(KeyCode.Alpha2)){
+        	//    flightPlanning.SetStartingPoint(2);
+        	//}
+        	//if(Input.GetKeyDown(KeyCode.Alpha3)){
+        	//    flightPlanning.SetStartingPoint(3);
+        	//}
+        	//if(Input.GetKeyDown(KeyCode.Alpha4)){
+        	//    flightPlanning.SetStartingPoint(4);
+        	//}
+        	//if(Input.GetKeyDown(KeyCode.Alpha0)){
+        	//    flightPlanning.SetStartingPoint(0);
+        	//}
 		} else {
 			if(Input.GetKeyDown(KeyCode.Alpha1)){
         	    currentVisCondition = VisualizationCondition.All;
@@ -240,16 +240,16 @@ public class ExperimentServer : MonoBehaviour
 					break;
 				case 3:
 					if(Input.GetKeyDown(KeyCode.F1)){
-						flightPlanning.SetCurrentFacadeConfig(0);
+						flightPlanning.ConfigIndex = 0;
         			}
         			if(Input.GetKeyDown(KeyCode.F2)){
-        			    flightPlanning.SetCurrentFacadeConfig(1);
+        			    flightPlanning.ConfigIndex = 1;
         			}
         			if(Input.GetKeyDown(KeyCode.F3)){
-        			   flightPlanning.SetCurrentFacadeConfig(2);
+        			   flightPlanning.ConfigIndex = 2;
         			}
         			if(Input.GetKeyDown(KeyCode.F4)){
-        			    flightPlanning.SetCurrentFacadeConfig(3);
+        			    flightPlanning.ConfigIndex = 3;
         			}
 					break;
 				default:
@@ -258,15 +258,15 @@ public class ExperimentServer : MonoBehaviour
 			if(Input.GetKeyDown(KeyCode.X)){
 				droneManager.ResetAllStates();
 			}
-			if(Input.GetKeyDown(KeyCode.V)){
-				flightPlanning.SetIsFromTop(1);
-			}
-			if(Input.GetKeyDown(KeyCode.B)){
-				flightPlanning.SetIsFromTop(0);
-			}
-			if(Input.GetKeyDown(KeyCode.Z)){
-				flightPlanning.SetIsTestRun((flightPlanning.GetIsTestRun() + 1)%2);
-			}
+			//if(Input.GetKeyDown(KeyCode.V)){
+			//	flightPlanning.SetIsFromTop(1);
+			//}
+			//if(Input.GetKeyDown(KeyCode.B)){
+			//	flightPlanning.SetIsFromTop(0);
+			//}
+			//if(Input.GetKeyDown(KeyCode.Z)){
+			//	flightPlanning.SetIsTestRun((flightPlanning.GetIsTestRun() + 1)%2);
+			//}
 		}
 	}
 
@@ -305,9 +305,9 @@ public class ExperimentServer : MonoBehaviour
 			string[] splitMsg = clientMessage.Split(';');
 			switch(splitMsg[0]){
 				case "starting-point":
-					if(DroneManager.currentMissionState == DroneManager.MissionState.Planning){
-						flightPlanning.SetStartingPoint(int.Parse(splitMsg[1]));
-					}
+					//if(DroneManager.currentMissionState == DroneManager.MissionState.Planning){
+					//	flightPlanning.SetStartingPoint(int.Parse(splitMsg[1]));
+					//}
 					break;
 				case "vis-condition":
 					currentVisCondition = (VisualizationCondition) int.Parse(splitMsg[1]);
@@ -331,13 +331,13 @@ public class ExperimentServer : MonoBehaviour
 					SendServerMessage("state-reset-confirmed;");
 					break;
 				case "test-run":
-					flightPlanning.SetIsTestRun(int.Parse(splitMsg[1]));
+					//flightPlanning.SetIsTestRun(int.Parse(splitMsg[1]));
 					break;
 				case "is-from-top":
-					flightPlanning.SetIsFromTop(int.Parse(splitMsg[1]));
+					//flightPlanning.SetIsFromTop(int.Parse(splitMsg[1]));
 					break;
 				case "current-config":
-					flightPlanning.SetCurrentFacadeConfig(int.Parse(splitMsg[1]));
+					flightPlanning.ConfigIndex = int.Parse(splitMsg[1]);
 					break;
 				default:
 					Debug.Log("Undefined Command: " + clientMessage);
@@ -388,11 +388,11 @@ public class ExperimentServer : MonoBehaviour
 		msgString += currentState;
 	}
 
-	private void SendFlightPlanningInfo(){
-		string msg = "flight-planning;" + flightPlanning.GetCurrentStartingPointIndex() + "\n";
-		//msgQueue.Enqueue(msg);
-		msgString += msg;
-	}
+	//private void SendFlightPlanningInfo(){
+	//	string msg = "flight-planning;" + flightPlanning.GetCurrentStartingPointIndex() + "\n";
+	//	//msgQueue.Enqueue(msg);
+	//	msgString += msg;
+	//}
 	private void SendDroneFlightStatus(){
 		string msg = "drone-status;" + (int)DroneManager.currentFlightState + "\n";
 		//msgQueue.Enqueue(msg);
@@ -416,20 +416,20 @@ public class ExperimentServer : MonoBehaviour
 		msgString += msg;
 	}
 
-	private void SendIsTestRun(){
-		string msg = "test-run;" + flightPlanning.GetIsTestRun() + "\n";
-		//msgQueue.Enqueue(msg);
-		msgString += msg;
-	}
-
-	private void SendIsFromTop(){
-		string msg = "is-from-top;" + flightPlanning.GetIsFromTop() + "\n";
-		//msgQueue.Enqueue(msg);
-		msgString += msg;
-	}
+	//private void SendIsTestRun(){
+	//	string msg = "test-run;" + flightPlanning.GetIsTestRun() + "\n";
+	//	//msgQueue.Enqueue(msg);
+	//	msgString += msg;
+	//}
+//
+	//private void SendIsFromTop(){
+	//	string msg = "is-from-top;" + flightPlanning.GetIsFromTop() + "\n";
+	//	//msgQueue.Enqueue(msg);
+	//	msgString += msg;
+	//}
 
 	private void SendConfiguration(){
-		string msg = "current-config;" + flightPlanning.GetCurrentFacadeConfig() + "\n";
+		string msg = "current-config;" + flightPlanning.ConfigIndex + "\n";
 		//msgQueue.Enqueue(msg);
 		msgString += msg;
 	}
@@ -438,13 +438,13 @@ public class ExperimentServer : MonoBehaviour
 		while(true){
 
 			SendCurrentState();
-			SendFlightPlanningInfo();
+			//SendFlightPlanningInfo();
 			SendDroneFlightStatus();
 			SendCurrentDronePose();
 			SendBatteryPercentage();
 			SendWindStrength();
-			SendIsTestRun();
-			SendIsFromTop();
+			//SendIsTestRun();
+			//SendIsFromTop();
 			SendConfiguration();
 
 			SendServerMessage(msgString);
@@ -462,7 +462,7 @@ public class ExperimentServer : MonoBehaviour
 	}
 
 	void StartRecording(){
-		string folderName = baseFileName + "_" + (flightPlanning.GetIsTestRun() == 1?"training":"full") + "_config_" + (flightPlanning.GetCurrentFacadeConfig() + 1) + "_" +  (flightPlanning.GetIsFromTop() == 1? "top":"bottom") + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
+		string folderName = baseFileName + "_" + (flightPlanning.ConfigIndex == 0?"training":"full") + "_config_" + flightPlanning.ConfigIndex + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
         folderPath = Application.persistentDataPath + "/" + folderName;
 		Directory.CreateDirectory(folderPath);
 		filePath = Application.persistentDataPath + "/"  + folderName + "/log.csv";
