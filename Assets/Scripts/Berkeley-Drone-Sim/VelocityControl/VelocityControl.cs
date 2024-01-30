@@ -280,12 +280,21 @@ public class VelocityControl : MonoBehaviour {
     private void OnTriggerEnter(Collider other) {
         if(other.tag == "GPSWeakZone"){
             pss.SetSignalLevel(sigAbnormalLevel);
-            ExperimentServer.RecordData("Drone Enters GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
+            if(other.name.Contains("Weak")){
+                ExperimentServer.RecordData("Drone Enters GPS Denied Area (Weak) at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
+            } else {
+                rpn.fixedDuration = false;
+                rpn.strength_mean = windStrength;
+                rpn.wind_change_flag = true;
+                ExperimentServer.RecordData("Drone Enters GPS Denied Area (Strong) at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
+            }
         } else if(other.tag == "WindZone"){
             other.gameObject.SetActive(false);
             rpn.yawCenter = other.transform.eulerAngles.y;
+            rpn.fixedDuration = true;
             if(other.name.Contains("Weak")){
                 StartCoroutine(SetSignaForWindTurbulence(windDuration));
+                
                 rpn.strength_mean = windStrength;
                 rpn.pulse_duration_mean = windDuration;
                 ExperimentServer.RecordData("Wind Turbulence Starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength|duration:" + windStrength + "|" + windDuration);
@@ -300,7 +309,7 @@ public class VelocityControl : MonoBehaviour {
             other.gameObject.SetActive(false);
             battery.BatteryDropToCritical();
             if(other.name.Contains("Strong")){
-                pss.SetSignalLevel(sigLostLevel);
+                pss.SetSignalLevel(sigAbnormalLevel);
                 ExperimentServer.RecordData("Battery dropped and signal lost", "", "");
             } else {
                 ExperimentServer.RecordData("Battery dropped", "", "");
@@ -313,6 +322,9 @@ public class VelocityControl : MonoBehaviour {
             pss.SetSignalLevel(3);
             pss.switch_gps_normal = true;
             ExperimentServer.RecordData("Drone Exits GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
+            rpn.fixedDuration = true;
+            rpn.strength_mean = 0f;
+            rpn.wind_change_flag = true;
         } 
     }
 
@@ -322,7 +334,7 @@ public class VelocityControl : MonoBehaviour {
     }
 
     IEnumerator SetSignaForWindTurbulence(float duration){
-        pss.SetSignalLevel(sigLostLevel);
+        pss.SetSignalLevel(sigAbnormalLevel);
         yield return new WaitForSeconds(duration);
         pss.SetSignalLevel(3);
         pss.switch_gps_normal = true;

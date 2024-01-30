@@ -27,7 +27,7 @@ public class FlightPlanning : MonoBehaviour
     private int verticalSteps = 12;
 
     private float vertStepLength;
-    private float distToSurface = 6.5f;
+    private float distToSurface = 7f;
     private int horizontalSteps = 6;
 
     private float groundOffset = 12f;

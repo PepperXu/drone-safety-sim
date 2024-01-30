@@ -38,6 +38,7 @@ public class ControlVisUpdater : MonoBehaviour
 
 
     [Header("Drone Status")]
+    [SerializeField] private VisType flightStatusVis;
     [SerializeField] private GameObject flightStatusTakeOff;
     [SerializeField] private GameObject flightStatusInspecting, flightStatusLanding;
 
@@ -63,6 +64,7 @@ public class ControlVisUpdater : MonoBehaviour
     public Quaternion windRotation;
 
     public float batteryPercentage, remainingTimeInSeconds;
+
     public int pos_sig_lvl;
 
     //public float updateRate;
@@ -95,6 +97,7 @@ public class ControlVisUpdater : MonoBehaviour
         while(true){
             transform.position = PositionalSensorSimulator.dronePositionVirtual;
             transform.eulerAngles = new Vector3(0f, droneParent.eulerAngles.y, 0f);
+            UpdatePosCircle();
             UpdateDistance2Ground();
             UpdateDistance2Bound();
             UpdateDistance2Surface();
@@ -113,18 +116,23 @@ public class ControlVisUpdater : MonoBehaviour
         if(!dis2groundVis.gameObject.activeInHierarchy)
             return;
         dis2ground = vectorToGround.magnitude;
-        LineRenderer lr = dis2groundVis.transform.GetComponentInChildren<LineRenderer>();
-        if (lr)
-        {
-            Vector3 hitPoint = transform.position + vectorToGround;
-            lr.SetPosition(1, transform.InverseTransformPoint(hitPoint));
-            lr.transform.GetChild(0).position = hitPoint + (-vectorToGround).normalized * 0.01f;
-            lr.transform.GetChild(1).localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
-            lr.transform.GetChild(1).GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2ground * 10f) / 10f + " m";
-        }
-        
+        //LineRenderer lr = dis2groundVis.transform.GetComponentInChildren<LineRenderer>();
+
+        Vector3 hitPoint = transform.position + vectorToGround;
+        Transform projection = dis2groundVis.visRoot.GetChild(0);
+        Transform projectionDisc = dis2groundVis.visRoot.GetChild(1);
+        Transform textLabel = dis2groundVis.visRoot.GetChild(2);
+
+        projection.localScale = new Vector3(0.15f, dis2ground, 1f);
+        projection.localPosition = transform.InverseTransformPoint(hitPoint)/2f;
+
+        projectionDisc.position = hitPoint + (-vectorToGround).normalized * 0.01f;
+        textLabel.localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
+        textLabel.GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2ground * 10f) / 10f + " m";
+        dis2groundVis.SetTransparency(Mathf.Max(0, 2-pos_sig_lvl));
     }
 
+    //Deprecated. Fix it if re-using.
     void UpdateDistance2Bound()
     {
         if(!dis2boundVis.gameObject.activeInHierarchy)
@@ -136,24 +144,30 @@ public class ControlVisUpdater : MonoBehaviour
             return;
         }
         dis2boundVis.showVisualization = true;
-        LineRenderer lr = dis2boundVis.transform.GetComponentInChildren<LineRenderer>();
-        if (lr)
-        {
-            Vector3 hitPoint = transform.position + vectorToNearestBufferBound;
-            Vector3 localHitPos = transform.InverseTransformPoint(hitPoint);
-            localHitPos = new Vector3(localHitPos.x, 0f, localHitPos.z);
-            lr.SetPosition(1, localHitPos);
+        //LineRenderer lr = dis2boundVis.transform.GetComponentInChildren<LineRenderer>();
+
+        Vector3 hitPoint = transform.position + vectorToNearestBufferBound;
+        Vector3 localHitPos = transform.InverseTransformPoint(hitPoint);
+        localHitPos = new Vector3(localHitPos.x, 0f, localHitPos.z);
+
+        Transform projection = dis2boundVis.visRoot.GetChild(0);
+        Transform projectionDisc = dis2boundVis.visRoot.GetChild(1);
+        Transform textLabel = dis2boundVis.visRoot.GetChild(2);
+
+        projection.localScale = new Vector3(0.3f, dis2bound, 1f);
+        projection.localPosition = localHitPos/2f;
             
-            lr.transform.GetChild(0).position = hitPoint - vectorToNearestBufferBound.normalized * 0.01f;
-            lr.transform.GetChild(0).localRotation =  Quaternion.LookRotation(localHitPos, Vector3.up);
-            lr.transform.GetChild(1).localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
-            lr.transform.GetChild(1).GetComponentInChildren<TextMeshPro>().text = (inBuffer?"-":"") + Mathf.Round(dis2bound * 10f) / 10f + " m";
-        }
+        projectionDisc.position = hitPoint - vectorToNearestBufferBound.normalized * 0.01f;
+        projectionDisc.localRotation =  Quaternion.LookRotation(localHitPos, Vector3.up);
+        textLabel.localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
+        textLabel.GetComponentInChildren<TextMeshPro>().text = (inBuffer?"-":"") + Mathf.Round(dis2bound * 10f) / 10f + " m";
+
         if(dis2bound < DroneManager.bufferCautionThreahold){
             dis2boundVis.SwitchHiddenVisTypeLocal(true);
         } else {
             dis2boundVis.SwitchHiddenVisTypeLocal(false);
         }
+        dis2boundVis.SetTransparency(Mathf.Max(0, 2-pos_sig_lvl));
     }
 
     void UpdateDistance2Surface()
@@ -161,30 +175,41 @@ public class ControlVisUpdater : MonoBehaviour
         if(!dis2SurfaceVis.gameObject.activeInHierarchy)
             return;
         float dis2surf = vectorToNearestSurface.magnitude;
-        if (dis2surf > 10f)
+        if (dis2surf > 12f)
         {
             dis2SurfaceVis.showVisualization = false;
             return;
         }
         dis2SurfaceVis.showVisualization = true;
-        LineRenderer lr = dis2SurfaceVis.transform.GetComponentInChildren<LineRenderer>();
-        if (lr)
-        {
-            Vector3 hitPoint = transform.position + vectorToNearestSurface;
-            Vector3 localHitPos = transform.InverseTransformPoint(hitPoint);
-            localHitPos = new Vector3(localHitPos.x, 0f, localHitPos.z);
-            lr.SetPosition(1, localHitPos);
-            
-            lr.transform.GetChild(0).position = hitPoint - vectorToNearestSurface.normalized * 0.01f;
-            lr.transform.GetChild(0).localRotation =  Quaternion.LookRotation(localHitPos, Vector3.up);
-            lr.transform.GetChild(1).localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
-            lr.transform.GetChild(1).GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2surf * 10f) / 10f + " m";
-        }
+        Vector3 hitPoint = transform.position + vectorToNearestSurface;
+        Vector3 localHitPos = transform.InverseTransformPoint(hitPoint);
+        localHitPos = new Vector3(localHitPos.x, 0f, localHitPos.z);
+        float angle = Vector3.SignedAngle(localHitPos, Vector3.right, Vector3.up);
+        //dis2SurfaceVis.visRoot.localEulerAngles = Vector3.up * angle;
+
+
+        //LineRenderer lr = dis2SurfaceVis.transform.GetComponentInChildren<LineRenderer>();
+        Transform projectionAnchor = dis2SurfaceVis.visRoot.GetChild(0);
+        Transform projection = projectionAnchor.GetChild(0);
+        Transform projectionDisc = dis2SurfaceVis.visRoot.GetChild(1);
+        Transform textLabel = dis2SurfaceVis.visRoot.GetChild(2);
+
+        projectionAnchor.rotation = Quaternion.LookRotation(vectorToNearestSurface, Vector3.up);
+        projection.GetComponent<SpriteRenderer>().size = new Vector2(dis2surf/12f, 1f);
+        projection.localPosition = Vector3.forward * dis2surf /2f;
+        projectionDisc.position = hitPoint - vectorToNearestSurface.normalized * 0.01f;
+        projectionDisc.localRotation =  Quaternion.LookRotation(localHitPos, Vector3.up);
+        textLabel.localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
+        textLabel.GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2surf * 10f) / 10f + " m";
+
+        
         if(dis2surf < DroneManager.surfaceCautionThreshold){
             dis2SurfaceVis.SwitchHiddenVisTypeLocal(true);
         } else {
             dis2SurfaceVis.SwitchHiddenVisTypeLocal(false);
         }
+
+        dis2SurfaceVis.SetTransparency(Mathf.Max(0, 2-pos_sig_lvl));
     }
 
 
@@ -262,17 +287,23 @@ public class ControlVisUpdater : MonoBehaviour
 
     }
 
+    void UpdatePosCircle(){
+        posCircle.SetTransparency(Mathf.Max(0, 2-pos_sig_lvl));
+    }
+
     void UpdateCameraFrustum(){
         if(!camFrustum.gameObject.activeInHierarchy)
             return;
         float dis2surf = vectorToNearestSurface.magnitude;
         if(dis2surf > 8f){
-            camFrustum.showVisualization = false;
-            return;
-        } 
-        camFrustum.showVisualization = true;
-
-        camFrustum.transform.GetChild(0).GetChild(0).localScale = Vector3.one * dis2surf;
+            camFrustum.transform.GetChild(0).GetChild(0).localScale = Vector3.one * 3f;
+            //camFrustum.showVisualization = false;
+            //return;
+        } else {
+            //camFrustum.showVisualization = true;
+            camFrustum.transform.GetChild(0).GetChild(0).localScale = Vector3.one * dis2surf;
+        }
+        camFrustum.SetTransparency(Mathf.Max(0, 2-pos_sig_lvl));
     }
 
     void UpdateWindVis(){
@@ -324,7 +355,8 @@ public class ControlVisUpdater : MonoBehaviour
             batteryRingImg.color = Color.red;
             dis2groundVis.SwitchHiddenVisTypeLocal(true);
             batteryRing.SwitchHiddenVisTypeLocal(true);
-        }   
+        }
+        batteryRing.SetTransparency(Mathf.Max(0, 2-pos_sig_lvl));
     }
 
     void UpdatePositioningIndicator(){
@@ -366,5 +398,6 @@ public class ControlVisUpdater : MonoBehaviour
             flightStatusInspecting.SetActive(false);
             flightStatusLanding.SetActive(false);
         }
+        flightStatusVis.SetTransparency(Mathf.Max(0, 2-pos_sig_lvl));
     }
 }

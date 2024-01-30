@@ -77,7 +77,7 @@ public class DroneManager : MonoBehaviour
     [SerializeField] PositionalSensorSimulator posSensor;
     [SerializeField] RandomPulseNoise wind;
 
-    public static float bufferCautionThreahold = 2.5f, surfaceCautionThreshold = 3.0f, surfaceWarningThreshold = 2.0f;
+    public static float bufferCautionThreahold = 2.5f, surfaceCautionThreshold = 6.0f, surfaceWarningThreshold = 2.0f;
     private float windStrengthWarningCoolDownTimer, windStrengthWarningCoolDownTime = 3f;
 
 

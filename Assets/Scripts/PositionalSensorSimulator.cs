@@ -15,8 +15,8 @@ public class PositionalSensorSimulator : MonoBehaviour
     float offsetRefreshIntervalMean = 8f, offsetRefreshIntervalVar = 3f;
     float offsetRefreshTimer = 0f;
 
-    float signalUpdateRateMean = 3f, signalUpdateRateVar = 5f;
-    float maxPositionUncertainty = 3f;
+    float signalUpdateRateMean = 5f, signalUpdateRateVar = 5f;
+    float maxPositionUncertainty = 1f;
     System.Random r;
 
     Vector3 positionOffset = new Vector3(1.5f, 0f, 2.9f);
@@ -76,7 +76,7 @@ public class PositionalSensorSimulator : MonoBehaviour
                     updateRate = Time.deltaTime;
                     break;
                 case 1:
-                    dronePositionVirtual = vc.transform.position + Random.onUnitSphere * Random.Range (3f, maxPositionUncertainty);;
+                    dronePositionVirtual = vc.transform.position + Random.onUnitSphere * Random.Range (0f, maxPositionUncertainty);;
                     updateRate = SamplePositive(signalUpdateRateMean, signalUpdateRateVar);;
                     break;
                 case 0:

@@ -11,7 +11,7 @@ public class InputControl : MonoBehaviour {
 	private float abs_height = 1;
 
 	private float horizontal_sensitivity = 7f;
-	private float vertical_sensitivity = 0.08f;
+	private float vertical_sensitivity = 0.03f;
 	private float turning_sensitivity = 4f;
 
 	private bool switched = false;
