@@ -51,6 +51,10 @@ public class UIUpdater : MonoBehaviour
 
     [Header("Buttons")]
     [SerializeField] Toggle autoPilotToggle;
+
+    [Header("Distance Cursors")]
+    [SerializeField] RectTransform distance2surfaceCursor;
+    [SerializeField] RectTransform distance2groundCursor;
     
     private bool attachedToHead = false;
     private bool uiSelected = false;
@@ -70,6 +74,7 @@ public class UIUpdater : MonoBehaviour
     public float voltage;
 
     public Vector3 vector2surface;
+    //public Vector3 vector2ground;
 
     bool continuous = true;
     float currentMonitoringInterval = 1.2f;
@@ -215,6 +220,8 @@ public class UIUpdater : MonoBehaviour
         CheckingSystemState();
 
         UpdateCompassUI();
+
+        UpdateDistances();
     }
 
     IEnumerator PlayMonitoringSound()
@@ -402,6 +409,13 @@ public class UIUpdater : MonoBehaviour
             attitudeIconAnchor.localPosition = new Vector3(0f, -pitch, 0f);
             attitudeIconAnchor.localEulerAngles = new Vector3(0f, 0f, -roll);
         }
+    }
+
+    void UpdateDistances(){
+
+        distance2surfaceCursor.anchoredPosition = new Vector2(Mathf.Clamp(vector2surface.magnitude/12f * 60f - 30f, -30f, 30f), distance2surfaceCursor.anchoredPosition.y);
+        distance2groundCursor.anchoredPosition = new Vector2(distance2groundCursor.anchoredPosition.x, Mathf.Clamp(vpsHeight/70f * 105.56f - 52.78f, -52.78f, 52.78f) );
+
     }
 
     float NormalizeAngle(float originalAngularValue)

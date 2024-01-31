@@ -381,10 +381,41 @@ public class DroneManager : MonoBehaviour
         return -buildingCollision.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * buildingCollision.localScale.x; 
     }
 
+    Vector3 CheckTrueDistanceToBuildingSurface(){
+        Vector3 localDronePos = buildingCollision.InverseTransformPoint(vc.transform.position);
+        if(Mathf.Abs(localDronePos.y) >= 0.5f)
+            return Vector3.positiveInfinity;
+        
+        if(Mathf.Abs(localDronePos.x) < 0.5f && Mathf.Abs(localDronePos.z) < 0.5f)
+            return Vector3.positiveInfinity;
+
+        if(Mathf.Abs(localDronePos.x) >= 0.5f && Mathf.Abs(localDronePos.z) >= 0.5f)
+            return Vector3.positiveInfinity;
+
+        if(Mathf.Abs(localDronePos.x) < 0.5f)
+            return -buildingCollision.forward * (Mathf.Abs(localDronePos.z) - 0.5f) * Mathf.Sign(localDronePos.z) * buildingCollision.localScale.z;
+        
+        return -buildingCollision.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * buildingCollision.localScale.x; 
+    }
+
 
     Vector3 CheckDistToGround(out bool hitGround)
     {
         Ray rayDown = new Ray(PositionalSensorSimulator.dronePositionVirtual, Vector3.down);
+        RaycastHit hit;
+        if (Physics.Raycast(rayDown, out hit, float.MaxValue, realObstacleLayerMask))
+        {
+            hitGround = true;
+            return hit.point - PositionalSensorSimulator.dronePositionVirtual;
+        } else
+        {
+            hitGround = false;
+            return Vector3.down * float.PositiveInfinity;
+        }
+    }
+
+    Vector3 CheckTrueDistToGround(out bool hitGround){
+        Ray rayDown = new Ray(vc.transform.position, Vector3.down);
         RaycastHit hit;
         if (Physics.Raycast(rayDown, out hit, float.MaxValue, realObstacleLayerMask))
         {
