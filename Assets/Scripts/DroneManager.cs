@@ -139,10 +139,11 @@ public class DroneManager : MonoBehaviour
             controlVisUpdater.inBuffer = inBuffer;
             controlVisUpdater.vectorToNearestBufferBound = v2bound;
             Vector3 v2surf = CheckDistanceToBuildingSurface();
+            Vector3 v2surfTrue = CheckTrueDistanceToBuildingSurface();
             controlVisUpdater.vectorToNearestSurface = v2surf;
             autopilotManager.vectorToBuildingSurface = v2surf;
             worldVisUpdater.vectorToSurface = v2surf;
-            uiUpdater.vector2surface = v2surf;
+            uiUpdater.vector2surface = v2surfTrue;
             
             if(currentMissionState != MissionState.Inspecting && currentMissionState != MissionState.Returning)
                 currentMissionState = inBuffer?MissionState.InFlightZone:MissionState.MovingToFlightZone;
@@ -229,9 +230,12 @@ public class DroneManager : MonoBehaviour
         {
             bool hitGround = false;
             Vector3 vectorToGround = CheckDistToGround(out hitGround);
-            vc.vectorToGround = vectorToGround;
+            bool trueHitGround = false;
+            Vector3 trueVectorToGround = CheckTrueDistToGround(out trueHitGround);
+            vc.vectorToGround = trueVectorToGround;
             controlVisUpdater.vectorToGround = vectorToGround;
-            uiUpdater.vpsHeight = vectorToGround.magnitude;
+            uiUpdater.vpsHeight = trueVectorToGround.magnitude;
+
         } else {
             if(currentMissionState == MissionState.Returning){
                 currentMissionState = MissionState.MovingToFlightZone;

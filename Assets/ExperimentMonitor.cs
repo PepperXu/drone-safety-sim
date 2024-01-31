@@ -165,7 +165,7 @@ public class ExperimentMonitor : MonoBehaviour
 					break;
 				case "current-config":
 					currentConfig = int.Parse(splitMsg[1]);
-					configIDText.SetText(currentConfig + 1 + "");
+					configIDText.SetText(currentConfig == 0? "Training": (currentConfig + ""));
 					break;
 				case "state-reset-confirmed":
 					flightPlanUpdateWarning.SetActive(false);

@@ -43,7 +43,7 @@ public class VelocityControl : MonoBehaviour {
 
     private float landedHeight = 0f;
 
-    private float landingHeightThreshold = 1f;
+    private float landingHeightThreshold = 1.8f;
 
     private Rigidbody rb;
 
@@ -59,10 +59,12 @@ public class VelocityControl : MonoBehaviour {
     [SerializeField] RandomPulseNoise rpn;
     [SerializeField] Battery battery;
 
-    float windStrength = 50f, strongWindStrength = 70f;
+    float windStrength = 50f, strongWindStrength = 60f;
     float windDuration = 20f, strongWindDuration = 30f;
     int sigAbnormalLevel = 1;
     int sigLostLevel = 0;
+
+    bool batteryDropped = false;
 
     // Use this for initialization
     void Start () {
@@ -162,6 +164,7 @@ public class VelocityControl : MonoBehaviour {
                     rb.useGravity = false;
                     battery.ResetBattery();
                     pss.ResetSignalLevel();
+                    batteryDropped = false;
                 }
             }
         }
@@ -278,6 +281,8 @@ public class VelocityControl : MonoBehaviour {
     }
 
     private void OnTriggerEnter(Collider other) {
+        if(batteryDropped)
+            return;
         if(other.tag == "GPSWeakZone"){
             pss.SetSignalLevel(sigAbnormalLevel);
             if(other.name.Contains("Weak")){
@@ -299,13 +304,14 @@ public class VelocityControl : MonoBehaviour {
                 rpn.pulse_duration_mean = windDuration;
                 ExperimentServer.RecordData("Wind Turbulence Starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength|duration:" + windStrength + "|" + windDuration);
             } else {
-                StartCoroutine(SetSignaForWindTurbulence(strongWindDuration));
+                //StartCoroutine(SetSignaForWindTurbulence(strongWindDuration));
                 rpn.strength_mean = strongWindStrength;
                 rpn.pulse_duration_mean = strongWindDuration;
                 ExperimentServer.RecordData("Wind Turbulence Starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength|duration:" + strongWindStrength + "|" + strongWindDuration);
             }
             rpn.wind_change_flag = true;
         } else if(other.tag == "BatteryDrop"){
+            batteryDropped = true;
             other.gameObject.SetActive(false);
             battery.BatteryDropToCritical();
             if(other.name.Contains("Strong")){
@@ -318,6 +324,8 @@ public class VelocityControl : MonoBehaviour {
     }
 
     private void OnTriggerExit(Collider other) {
+        if(batteryDropped)
+            return;
         if(other.tag == "GPSWeakZone"){
             pss.SetSignalLevel(3);
             pss.switch_gps_normal = true;

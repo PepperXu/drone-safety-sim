@@ -248,9 +248,9 @@ public class ExperimentServer : MonoBehaviour
         			if(Input.GetKeyDown(KeyCode.F3)){
         			   flightPlanning.ConfigIndex = 2;
         			}
-        			if(Input.GetKeyDown(KeyCode.F4)){
-        			    flightPlanning.ConfigIndex = 3;
-        			}
+        			//if(Input.GetKeyDown(KeyCode.F4)){
+        			//    flightPlanning.ConfigIndex = 3;
+        			//}
 					break;
 				default:
 					break;

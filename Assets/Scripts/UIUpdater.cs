@@ -16,6 +16,8 @@ public class UIUpdater : MonoBehaviour
     [SerializeField] Sprite[] batterySprites;
     [SerializeField] TextMeshProUGUI batteryPercentage;
     [SerializeField] TextMeshProUGUI batteryRemainingTime, batteryVoltage;
+    [SerializeField] TextMeshProUGUI batteryPercentageCircular;
+    [SerializeField] Image batteryRing;
 
     [SerializeField] Image GNSSIcon;
     [SerializeField] Sprite[] GNSSSprites;
@@ -74,7 +76,6 @@ public class UIUpdater : MonoBehaviour
     public float voltage;
 
     public Vector3 vector2surface;
-    //public Vector3 vector2ground;
 
     bool continuous = true;
     float currentMonitoringInterval = 1.2f;
@@ -105,6 +106,8 @@ public class UIUpdater : MonoBehaviour
             autoPilotToggle.isOn = false;
 
         batteryPercentage.text = ((int) ((currentBatteryPercentage - 0.2f)/ 0.8f * 100f)) + "%";
+        batteryPercentageCircular.text = ((int) ((currentBatteryPercentage - 0.2f)/ 0.8f * 100f)) + "%";
+        batteryRing.fillAmount = (currentBatteryPercentage - 0.2f)/ 0.8f;
         batteryVoltage.text = ((int) (voltage * 10f)) / 10f + "V";
         
         int remainingTimeMinutes = Mathf.FloorToInt(remainingTime/60);
@@ -115,31 +118,37 @@ public class UIUpdater : MonoBehaviour
             batteryIcon.color = Color.green;
             batteryPercentage.color = Color.white;
             batteryRemainingTime.color = Color.white;
+            batteryPercentageCircular.color = Color.white;
         } else if (currentBatteryPercentage > 0.73333f){
             batteryIcon.sprite = batterySprites[0];
             batteryIcon.color = Color.white;
             batteryPercentage.color = Color.white;
             batteryRemainingTime.color = Color.green;
+            batteryPercentageCircular.color = Color.white;
         } else if(currentBatteryPercentage > 0.46667f) {
             batteryIcon.sprite = batterySprites[1];
             batteryIcon.color = Color.white;
             batteryPercentage.color = Color.white;
             batteryRemainingTime.color = Color.green;
+            batteryPercentageCircular.color = Color.white;
         } else if(currentBatteryPercentage > 0.3f){
             batteryIcon.sprite = batterySprites[2];
             batteryIcon.color = Color.yellow;
             batteryPercentage.color = Color.yellow;
             batteryRemainingTime.color = Color.yellow;
+            batteryPercentageCircular.color = Color.yellow;
         } else if(currentBatteryPercentage > 0.2f){
             batteryIcon.sprite = batterySprites[3];
             batteryIcon.color = Color.red;
             batteryPercentage.color = Color.red;
             batteryRemainingTime.color = Color.red;
+            batteryPercentageCircular.color = Color.red;
         } else {
             batteryIcon.sprite = batterySprites[3];
             batteryIcon.color = Color.red;
             batteryPercentage.color = Color.red;
             batteryRemainingTime.color = Color.red;
+            batteryPercentageCircular.color = Color.red;
         }
 
         if(voltage > 10f){
@@ -352,7 +361,7 @@ public class UIUpdater : MonoBehaviour
         
         if(vector2surface.magnitude > 8f)
             return;
-
+        
         defectCount++;
         ExperimentServer.RecordData("Defect Marked at", droneState.pose.WorldPosition.x + "|" + droneState.pose.WorldPosition.y + "|" + droneState.pose.WorldPosition.z, "id: " + defectCount);
         Color c = cameraBorderUI.color;
