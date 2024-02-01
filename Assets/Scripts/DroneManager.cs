@@ -424,7 +424,7 @@ public class DroneManager : MonoBehaviour
         if (Physics.Raycast(rayDown, out hit, float.MaxValue, realObstacleLayerMask))
         {
             hitGround = true;
-            return hit.point - PositionalSensorSimulator.dronePositionVirtual;
+            return hit.point - vc.transform.position;
         } else
         {
             hitGround = false;

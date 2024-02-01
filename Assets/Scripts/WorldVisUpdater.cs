@@ -147,7 +147,7 @@ public class WorldVisUpdater : MonoBehaviour
         while(true){
             UpdateFlightPlanVis();
             UpdateHomepointVis();
-            if(!inBuffer || distToBuffer < 3f){
+            if(!inBuffer || distToBuffer < 1f){
                 contingencyBuffer.showVisualization = true;
             } else {
                 contingencyBuffer.showVisualization = false;
