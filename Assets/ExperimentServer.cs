@@ -139,6 +139,9 @@ public class ExperimentServer : MonoBehaviour
 
 	void ProcessKeyboardInput(){
 
+		if(Input.GetKeyDown(KeyCode.Space)){
+			Debug.Log(msgString);
+		}
 		if(DroneManager.currentMissionState == DroneManager.MissionState.Planning){
         	
         	//if(Input.GetKeyDown(KeyCode.Alpha1)){
@@ -405,7 +408,7 @@ public class ExperimentServer : MonoBehaviour
 	}
 
 	private void SendBatteryPercentage(){
-		string msg = "battery-percentage;" + battery.GetBatteryLevel() + "\n";
+		string msg = "battery-percentage;" + battery.GetBatteryPercentage() + "\n";
 		//msgQueue.Enqueue(msg);
 		msgString += msg;
 	}
@@ -436,7 +439,7 @@ public class ExperimentServer : MonoBehaviour
 
 	IEnumerator UpdateCurrentState(){
 		while(true){
-
+			msgString = "";
 			SendCurrentState();
 			//SendFlightPlanningInfo();
 			SendDroneFlightStatus();

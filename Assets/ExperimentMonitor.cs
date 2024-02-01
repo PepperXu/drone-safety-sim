@@ -52,7 +52,7 @@ public class ExperimentMonitor : MonoBehaviour
 
 	private float expTimer = 0f;
 
- 	List<string> incomingMsgList = new List<string>();
+ 	string[] incomingMsgArray;
 
 	//Queue<string> sendMsgQueue = new Queue<string>();
 	// Use this for initialization 	
@@ -65,8 +65,9 @@ public class ExperimentMonitor : MonoBehaviour
 	}  	
 	// Update is called once per frame
 	void Update () {
-		if(incomingMsgList.Count > 0)
-			ProcessReceivedMessage();
+		if(incomingMsgArray != null)
+			if(incomingMsgArray.Length > 0)
+				ProcessReceivedMessage();
 		droneParent.position = currentDronePosition;
 		//if(sendMsgQueue.Count > 0)
 		//	SendMessageFromQueue();
@@ -101,9 +102,13 @@ public class ExperimentMonitor : MonoBehaviour
 				// Get a stream object for reading 				
 				using (NetworkStream stream = socketConnection.GetStream()) { 		
 					StreamReader sr = new StreamReader(stream);
+					List<string> incomingMsgList = new List<string>();
 					do{
-						incomingMsgList.Add(sr.ReadLine());
+						string line = sr.ReadLine();
+						Debug.Log(line);
+						incomingMsgList.Add(line);
 					} while(sr.ReadLine() != null);	
+					incomingMsgArray = incomingMsgList.ToArray();
 				} 			
 			}         
 		}         
@@ -114,7 +119,7 @@ public class ExperimentMonitor : MonoBehaviour
 
 
 	private void ProcessReceivedMessage(){
-		foreach(string incomingMsg in incomingMsgList){
+		foreach(string incomingMsg in incomingMsgArray){
 			string serverMessage = incomingMsg;
 			if(serverMessage == null)
 				break;
@@ -175,7 +180,7 @@ public class ExperimentMonitor : MonoBehaviour
 					break;
 			}
 		}
-		incomingMsgList.Clear();
+		Array.Clear(incomingMsgArray, 0, incomingMsgArray.Length);
 	}
 
 	private void UpdateStatusText(int[] currentStatus){

@@ -59,8 +59,8 @@ public class VelocityControl : MonoBehaviour {
     [SerializeField] RandomPulseNoise rpn;
     [SerializeField] Battery battery;
 
-    float windStrength = 50f, strongWindStrength = 60f;
-    float windDuration = 20f, strongWindDuration = 30f;
+    float windStrength = 50f, strongWindStrength = 65f;
+    float windDuration = 20f, windDurationLong = 30f;
     int sigAbnormalLevel = 1;
     int sigLostLevel = 0;
 
@@ -289,7 +289,7 @@ public class VelocityControl : MonoBehaviour {
                 ExperimentServer.RecordData("Enters GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
             } else {
                 rpn.fixedDuration = false;
-                rpn.strength_mean = strongWindStrength;
+                rpn.strength_mean = windStrength;
                 rpn.wind_change_flag = true;
                 ExperimentServer.RecordData("Enters GPS Denied Area with drifting at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength:" + windStrength);
             }
@@ -298,17 +298,17 @@ public class VelocityControl : MonoBehaviour {
             rpn.yawCenter = other.transform.eulerAngles.y;
             rpn.fixedDuration = true;
             if(other.name.Contains("Weak")){
-                rpn.strength_mean = windStrength;
-                rpn.pulse_duration_mean = windDuration;
+                StartCoroutine(WindTurbulenceFixedDuration(false));
+                //rpn.strength_mean = windStrength;
+                //rpn.pulse_duration_mean = windDuration;
                 ExperimentServer.RecordData("Drifting starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength|duration:" + windStrength + "|" + windDuration);
             } else {
                 //StartCoroutine(SetSignaForWindTurbulence(strongWindDuration));
-                StartCoroutine(SetSignaForWindTurbulence(windDuration));
-                rpn.strength_mean = windStrength;
-                rpn.pulse_duration_mean = windDuration;
-                ExperimentServer.RecordData("Drifting with signal lost starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength|duration:" + strongWindStrength + "|" + strongWindDuration);
+                StartCoroutine(WindTurbulenceFixedDuration(true));
+                
+                ExperimentServer.RecordData("Drifting with signal lost starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength|duration:" + windStrength + "|" + windDuration);
             }
-            rpn.wind_change_flag = true;
+            
         } else if(other.tag == "BatteryDrop"){
             batteryDropped = true;
             other.gameObject.SetActive(false);
@@ -340,10 +340,20 @@ public class VelocityControl : MonoBehaviour {
         max_roll = value;
     }
 
-    IEnumerator SetSignaForWindTurbulence(float duration){
-        pss.SetSignalLevel(sigAbnormalLevel);
-        yield return new WaitForSeconds(duration);
-        pss.SetSignalLevel(3);
-        pss.switch_gps_normal = true;
+    IEnumerator WindTurbulenceFixedDuration(bool signalLost){
+        if(signalLost)
+            pss.SetSignalLevel(sigAbnormalLevel);
+        rpn.strength_mean = windStrength;
+        rpn.pulse_duration_mean = windDuration/2;
+        rpn.wind_change_flag = true;
+        yield return new WaitForSeconds(windDuration/2);
+        rpn.strength_mean = strongWindStrength;
+        rpn.pulse_duration_mean = windDuration/2;
+        rpn.wind_change_flag = true;
+        yield return new WaitForSeconds(windDuration/2);
+        if(signalLost){
+            pss.SetSignalLevel(3);
+            pss.switch_gps_normal = true;
+        }
     }
 }
