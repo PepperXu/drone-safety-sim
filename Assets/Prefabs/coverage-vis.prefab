@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5799175605994979192}
   - component: {fileID: 8998024045775452776}
   - component: {fileID: 3952289283101223093}
-  m_Layer: 11
+  m_Layer: 17
   m_Name: coverage-vis
   m_TagString: Untagged
   m_Icon: {fileID: 0}

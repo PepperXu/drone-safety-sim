@@ -276,7 +276,7 @@ public class VelocityControl : MonoBehaviour {
             if(transform.up.y < 0.6f)
                 out_of_balance = true;
             DroneManager.autopilot_stop_flag = true;
-            ExperimentServer.RecordData("Drone Collides with Building at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
+            ExperimentServer.RecordData("Drone Collides with an obstacle at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
         }
     }
 
@@ -286,28 +286,27 @@ public class VelocityControl : MonoBehaviour {
         if(other.tag == "GPSWeakZone"){
             pss.SetSignalLevel(sigAbnormalLevel);
             if(other.name.Contains("Weak")){
-                ExperimentServer.RecordData("Drone Enters GPS Denied Area (Weak) at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
+                ExperimentServer.RecordData("Enters GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
             } else {
                 rpn.fixedDuration = false;
-                rpn.strength_mean = windStrength;
+                rpn.strength_mean = strongWindStrength;
                 rpn.wind_change_flag = true;
-                ExperimentServer.RecordData("Drone Enters GPS Denied Area (Strong) at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
+                ExperimentServer.RecordData("Enters GPS Denied Area with drifting at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength:" + windStrength);
             }
         } else if(other.tag == "WindZone"){
             other.gameObject.SetActive(false);
             rpn.yawCenter = other.transform.eulerAngles.y;
             rpn.fixedDuration = true;
             if(other.name.Contains("Weak")){
-                StartCoroutine(SetSignaForWindTurbulence(windDuration));
-                
                 rpn.strength_mean = windStrength;
                 rpn.pulse_duration_mean = windDuration;
-                ExperimentServer.RecordData("Wind Turbulence Starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength|duration:" + windStrength + "|" + windDuration);
+                ExperimentServer.RecordData("Drifting starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength|duration:" + windStrength + "|" + windDuration);
             } else {
                 //StartCoroutine(SetSignaForWindTurbulence(strongWindDuration));
-                rpn.strength_mean = strongWindStrength;
-                rpn.pulse_duration_mean = strongWindDuration;
-                ExperimentServer.RecordData("Wind Turbulence Starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength|duration:" + strongWindStrength + "|" + strongWindDuration);
+                StartCoroutine(SetSignaForWindTurbulence(windDuration));
+                rpn.strength_mean = windStrength;
+                rpn.pulse_duration_mean = windDuration;
+                ExperimentServer.RecordData("Drifting with signal lost starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength|duration:" + strongWindStrength + "|" + strongWindDuration);
             }
             rpn.wind_change_flag = true;
         } else if(other.tag == "BatteryDrop"){

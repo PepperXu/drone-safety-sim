@@ -51,13 +51,17 @@ public class CameraController : MonoBehaviour
         string fileName = (marked?"marked_" + uIUpdater.GetDefectCount() :"capture_" + photoTaken) + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
         System.IO.File.WriteAllBytes(ExperimentServer.folderPath + "/" + fileName + ".png", tex.EncodeToPNG());
 
-        if(marked)
-            StartCoroutine(FreezeFrame());
-        else{
-            if (Application.isPlaying)
-                Destroy(tex);
-            else
-                DestroyImmediate(tex);
-        }
+        if (Application.isPlaying)
+            Destroy(tex);
+        else
+            DestroyImmediate(tex);
+        //if(marked)
+        //    StartCoroutine(FreezeFrame());
+        //else{
+        //    if (Application.isPlaying)
+        //        Destroy(tex);
+        //    else
+        //        DestroyImmediate(tex);
+        //}
     }
 }

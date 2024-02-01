@@ -266,7 +266,8 @@ public class RandomPulseNoise : MonoBehaviour {
     public float NextGaussianDouble()
     {
         float u, v, S;
-
+        if(r == null)
+            r = new System.Random();
         do
         {
             u = 2.0f * (float) r.NextDouble() - 1.0f;

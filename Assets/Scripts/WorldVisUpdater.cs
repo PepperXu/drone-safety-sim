@@ -30,6 +30,8 @@ public class WorldVisUpdater : MonoBehaviour
     public bool inBuffer;
     public float distToBuffer;
 
+    public RaycastHit? currentHit;
+
     List<GameObject> spawnedCoverageObjects = new List<GameObject>();
 
     // Start is called before the first frame update
@@ -168,10 +170,16 @@ public class WorldVisUpdater : MonoBehaviour
         covObj.transform.parent = coverage.visRoot;
         spawnedCoverageObjects.Add(covObj);
         if(marked){
-            GameObject markObj = Instantiate(markedObject, covObj.transform);
-            markObj.transform.localPosition = Vector3.zero;
-            markObj.transform.localEulerAngles = Vector3.zero;
-            markObj.transform.localScale = Vector3.one;
+            if(currentHit != null){
+                RaycastHit hit = (RaycastHit)currentHit;
+                GameObject markObj = Instantiate(markedObject);
+                markObj.transform.position = hit.point + hit.normal.normalized * 0.01f;
+                markObj.transform.rotation = Quaternion.LookRotation(Vector3.up, hit.normal);
+            }
+            //GameObject markObj = Instantiate(markedObject, covObj.transform);
+            //markObj.transform.localPosition = Vector3.zero;
+            //markObj.transform.localEulerAngles = Vector3.zero;
+            //markObj.transform.localScale = Vector3.one;
         }
     }
 
