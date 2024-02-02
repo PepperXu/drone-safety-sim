@@ -131,9 +131,6 @@ public class ExperimentServer : MonoBehaviour
 				}
 			}
 		}
-
-		//if(msgQueue.Count > 0)
-		//	SendMessageFromQueue();
 		
     }
 
@@ -287,9 +284,9 @@ public class ExperimentServer : MonoBehaviour
 					// Get a stream object for reading 					
 					using (NetworkStream stream = connectedTcpClient.GetStream()) { 						
 						StreamReader sr = new StreamReader(stream);
-						do{
+						while(!sr.EndOfStream){
 							incomingMsgList.Add(sr.ReadLine());
-						} while(sr.ReadLine() != null);
+						}
 					} 				
 				} 			
 			} 		
@@ -441,13 +438,10 @@ public class ExperimentServer : MonoBehaviour
 		while(true){
 			msgString = "";
 			SendCurrentState();
-			//SendFlightPlanningInfo();
 			SendDroneFlightStatus();
 			SendCurrentDronePose();
 			SendBatteryPercentage();
 			SendWindStrength();
-			//SendIsTestRun();
-			//SendIsFromTop();
 			SendConfiguration();
 
 			SendServerMessage(msgString);

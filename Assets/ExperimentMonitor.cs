@@ -65,9 +65,8 @@ public class ExperimentMonitor : MonoBehaviour
 	}  	
 	// Update is called once per frame
 	void Update () {
-		if(incomingMsgArray != null)
-			if(incomingMsgArray.Length > 0)
-				ProcessReceivedMessage();
+		//if(incomingMsgArray != null)
+		//	ProcessReceivedMessage();
 		droneParent.position = currentDronePosition;
 		//if(sendMsgQueue.Count > 0)
 		//	SendMessageFromQueue();
@@ -103,12 +102,13 @@ public class ExperimentMonitor : MonoBehaviour
 				using (NetworkStream stream = socketConnection.GetStream()) { 		
 					StreamReader sr = new StreamReader(stream);
 					List<string> incomingMsgList = new List<string>();
-					do{
+					while(!sr.EndOfStream){
 						string line = sr.ReadLine();
 						Debug.Log(line);
 						incomingMsgList.Add(line);
-					} while(sr.ReadLine() != null);	
+					}
 					incomingMsgArray = incomingMsgList.ToArray();
+					ProcessReceivedMessage();
 				} 			
 			}         
 		}         
@@ -180,7 +180,6 @@ public class ExperimentMonitor : MonoBehaviour
 					break;
 			}
 		}
-		Array.Clear(incomingMsgArray, 0, incomingMsgArray.Length);
 	}
 
 	private void UpdateStatusText(int[] currentStatus){
