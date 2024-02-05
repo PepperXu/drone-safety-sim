@@ -35,6 +35,8 @@ public class ControlVisUpdater : MonoBehaviour
 
     [Header("GPS")]
     [SerializeField] private VisType positioning;
+    [SerializeField] private VisType posUncertainty;
+    [SerializeField] private SpriteRenderer posUncertaintySprite;
 
 
     [Header("Drone Status")]
@@ -360,17 +362,32 @@ public class ControlVisUpdater : MonoBehaviour
     }
 
     void UpdatePositioningIndicator(){
-        if(!positioning.gameObject.activeInHierarchy)
+        if(!posUncertainty.gameObject.activeInHierarchy)
             return;
         if(pos_sig_lvl == 3){
-            positioning.showVisualization = false;
-            positioning.SwitchHiddenVisTypeLocal(false);
-            posCircle.SwitchHiddenVisTypeLocal(false);
-            return;
+            posUncertainty.SwitchHiddenVisTypeLocal(false);
+            posUncertainty.visRoot.localScale = Vector3.one * 0.5f;
+            Color c = posUncertaintySprite.color;
+            c.a = 0.7f;
+            posUncertaintySprite.color = c;
+        } else {
+            posUncertainty.SwitchHiddenVisTypeLocal(true);
+            posUncertainty.visRoot.localScale = Vector3.one * 10f;
+            Color c = posUncertaintySprite.color;
+            c.a = 0.1f;
+            posUncertaintySprite.color = c;
         }
-        positioning.showVisualization = true;
-        positioning.SwitchHiddenVisTypeLocal(true);
-        posCircle.SwitchHiddenVisTypeLocal(true);
+        //if(!positioning.gameObject.activeInHierarchy)
+        //    return;
+        //if(pos_sig_lvl == 3){
+        //    positioning.showVisualization = false;
+        //    positioning.SwitchHiddenVisTypeLocal(false);
+        //    posCircle.SwitchHiddenVisTypeLocal(false);
+        //    return;
+        //}
+        //positioning.showVisualization = true;
+        //positioning.SwitchHiddenVisTypeLocal(true);
+        //posCircle.SwitchHiddenVisTypeLocal(true);
         //if(pos_sig_lvl == 0){
         //    positioning.visRoot.GetChild(0).gameObject.SetActive(false);
         //    positioning.visRoot.GetChild(0).gameObject.SetActive(true);
@@ -378,6 +395,7 @@ public class ControlVisUpdater : MonoBehaviour
         //    positioning.visRoot.GetChild(0).gameObject.SetActive(true);
         //    positioning.visRoot.GetChild(0).gameObject.SetActive(false);
         //}
+
     }
 
     void UpdateFlightStatus(){

@@ -65,6 +65,7 @@ public class VelocityControl : MonoBehaviour {
     int sigLostLevel = 0;
 
     bool batteryDropped = false;
+    bool isGPSDenied = false;
 
     // Use this for initialization
     void Start () {
@@ -145,6 +146,7 @@ public class VelocityControl : MonoBehaviour {
                 if (dis2ground < landingHeightThreshold)
                 {
                     DroneManager.currentFlightState = DroneManager.FlightState.Landing;
+                    ExperimentServer.RecordData("Landing at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
                     DroneManager.autopilot_stop_flag = true;
                     PlayLandingAudio();
                     desired_height = transform.position.y - dis2ground;
@@ -154,7 +156,7 @@ public class VelocityControl : MonoBehaviour {
                 }
             } else
             {   
-                Debug.Log("Landing");
+                //Debug.Log("Landing");
                 if(dis2ground <= groundOffset)
                 {
                     landedHeight = transform.position.y;
@@ -276,14 +278,14 @@ public class VelocityControl : MonoBehaviour {
             if(transform.up.y < 0.6f)
                 out_of_balance = true;
             DroneManager.autopilot_stop_flag = true;
-            ExperimentServer.RecordData("Drone Collides with an obstacle at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
+            ExperimentServer.RecordData("Collides with an obstacle at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
         }
     }
 
     private void OnTriggerEnter(Collider other) {
         if(batteryDropped)
             return;
-        if(other.tag == "GPSWeakZone"){
+        if(other.tag == "GPSWeakZone" && !isGPSDenied){
             pss.SetSignalLevel(sigAbnormalLevel);
             if(other.name.Contains("Weak")){
                 ExperimentServer.RecordData("Enters GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
@@ -294,6 +296,7 @@ public class VelocityControl : MonoBehaviour {
                 rpn.wind_change_flag = true;
                 ExperimentServer.RecordData("Enters GPS Denied Area with wind at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength:" + strongWindStrength);
             }
+            isGPSDenied = true;
         } else if(other.tag == "WindZone"){
             other.gameObject.SetActive(false);
             rpn.fixedDuration = true;
@@ -315,9 +318,9 @@ public class VelocityControl : MonoBehaviour {
             battery.BatteryDropToCritical();
             if(other.name.Contains("Strong")){
                 pss.SetSignalLevel(sigAbnormalLevel);
-                ExperimentServer.RecordData("Battery dropped and signal lost", "", "");
+                ExperimentServer.RecordData("Battery dropped and signal lost", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
             } else {
-                ExperimentServer.RecordData("Battery dropped", "", "");
+                ExperimentServer.RecordData("Battery dropped", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
             }
         }
     }
@@ -325,13 +328,14 @@ public class VelocityControl : MonoBehaviour {
     private void OnTriggerExit(Collider other) {
         if(batteryDropped)
             return;
-        if(other.tag == "GPSWeakZone"){
+        if(other.tag == "GPSWeakZone" && isGPSDenied){
             pss.SetSignalLevel(3);
             pss.switch_gps_normal = true;
-            ExperimentServer.RecordData("Drone Exits GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
+            ExperimentServer.RecordData("Exits GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
             rpn.strength_mean = 0f;
             rpn.pulse_duration_mean = 1f;
             rpn.wind_change_flag = true;
+            isGPSDenied = false;
         } 
     }
 

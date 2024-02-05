@@ -104,7 +104,7 @@ public class ExperimentMonitor : MonoBehaviour
 					StreamReader sr = new StreamReader(stream);
 					while(!sr.EndOfStream){
 						string line = sr.ReadLine();
-						Debug.Log(line);
+						//Debug.Log(line);
 						incomingMsgList.Add(line);
 					}
 				} 			
@@ -120,7 +120,7 @@ public class ExperimentMonitor : MonoBehaviour
 		//string[] incomingMsgArray = incomingMsgList.ToArray();
 		foreach(string incomingMsg in incomingMsgList.ToList()){
 			string serverMessage = incomingMsg;
-			Debug.LogWarning("Processing Server Message As:" + serverMessage);
+			//Debug.LogWarning("Processing Server Message As:" + serverMessage);
 			if(serverMessage == null)
 				break;
 			string[] splitMsg = serverMessage.Split(';');
@@ -186,7 +186,7 @@ public class ExperimentMonitor : MonoBehaviour
 		if(currentStatus == statusArray)
 			return;
 		statusArray = currentStatus;
-		Debug.LogWarning("Updating Status Text");
+//		Debug.LogWarning("Updating Status Text");
 		missionStateText.SetText(missionStateString[statusArray[0]]);
 		controlTypeText.SetText(controlStateString[statusArray[1]]);
 		systemStateText.SetText(systemStateString[statusArray[2]]);
@@ -333,4 +333,5 @@ public class ExperimentMonitor : MonoBehaviour
 			Debug.Log(e.Message);
 		}
 	}
+
 }

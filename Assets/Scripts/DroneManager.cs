@@ -312,12 +312,14 @@ public class DroneManager : MonoBehaviour
         
 
         SafetyState tempState = SafetyState.Healthy;
+        
 
         if(!inBuffer){
             tempState = SafetyState.Caution;
         }
         if(distToSurface < surfaceCautionThreshold){
             tempState = SafetyState.Caution;
+            
         }
         if(batteryLevel == 2){
             
@@ -329,7 +331,7 @@ public class DroneManager : MonoBehaviour
         //if(wind_strength > 20f){
         //    tempState = SafetyState.Caution;
         //}
-
+        
 
         if(distToSurface < surfaceWarningThreshold){
             tempState = SafetyState.Warning;
@@ -362,10 +364,13 @@ public class DroneManager : MonoBehaviour
         }
         if(batteryLevel == 0){
             tempState = SafetyState.Emergency;
-        } 
+        }
 
+        string tempText = "inbuffer:" + (inBuffer?"true":"false") +"|dist2suf:" + distToSurface + "|windStrength:" + wind_strength + "|gpsLevel:" + positional_signal_level + "|batteryLevel:" + batteryLevel;
+        if(currentSafetyState != tempState){
+            ExperimentServer.RecordData("System state change to", uiUpdater.GetSystemStateText()[(int)tempState], "reason(s):"+tempText);
+        }
         currentSafetyState = tempState;
-
     }
 
     Vector3 CheckDistanceToBuildingSurface(){

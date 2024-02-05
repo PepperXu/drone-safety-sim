@@ -12,14 +12,21 @@ public class PositionalSensorSimulator : MonoBehaviour
     [SerializeField] VelocityControl vc;
 
     int positional_signal_level = 3;
-    float offsetRefreshIntervalMean = 8f, offsetRefreshIntervalVar = 3f;
+    float offsetRefreshIntervalMean = 3f, offsetRefreshIntervalVar = 1.5f;
     float offsetRefreshTimer = 0f;
 
-    float signalUpdateRateMean = 5f, signalUpdateRateVar = 5f;
-    float maxPositionUncertainty = 1f;
-    System.Random r;
+    //float signalUpdateRateMean = 5f, signalUpdateRateVar = 5f;
+    float maxPositionUncertaintyAbnormal = 10f;
+    float maxPositionUncertaintyNormal = 0.5f;
 
-    Vector3 positionOffset = new Vector3(1.5f, 0f, 2.9f);
+    float currentMaxPosUncertainty;
+
+    float gpsDriftSpeedNormal = 0.002f;
+    float gpsDriftSpeedAbnormal = 0.01f;
+    System.Random r;
+    Vector3 lastDronePos;
+
+    Vector3 positionOffset = new Vector3(0f, 0f, 0f);
     float updateRate = 0f;
 
     public static Vector3 dronePositionVirtual;
@@ -53,35 +60,48 @@ public class PositionalSensorSimulator : MonoBehaviour
 
         
 
-        //if(offsetRefreshTimer <= 0f){
-        //    Vector3 newOffset = Random.onUnitSphere * Random.Range (0f, maxPositionUncertainty);
-        //    positionOffset = (positionOffset + newOffset)/2f;
-        //    offsetRefreshTimer = SamplePositive(offsetRefreshIntervalMean, offsetRefreshIntervalVar);
-        //    updateRate = SamplePositive(signalUpdateRateMean, signalUpdateRateVar);
-        //} 
-        //offsetRefreshTimer -= Time.deltaTime;
+        if(offsetRefreshTimer <= 0f){
+            Vector3 newOffset = Random.onUnitSphere * Random.Range (0f, currentMaxPosUncertainty);
+            positionOffset = (positionOffset + newOffset)/2f;
+            offsetRefreshTimer = SamplePositive(offsetRefreshIntervalMean, offsetRefreshIntervalVar);
+            //updateRate = SamplePositive(signalUpdateRateMean, signalUpdateRateVar);
+        } 
+        offsetRefreshTimer -= Time.deltaTime;
 
         
     }
 
     IEnumerator UpdatePosition(){
         while(true){
+            Vector3 currentOffset;
+            Vector3 targetOffset;
             switch(positional_signal_level){
                 case 3:
-                    dronePositionVirtual = vc.transform.position;
+                    //dronePositionVirtual = vc.transform.position;
+                    currentMaxPosUncertainty = maxPositionUncertaintyNormal;
+                    currentOffset = dronePositionVirtual - lastDronePos;
+                    targetOffset = Vector3.MoveTowards(currentOffset, new Vector3(positionOffset.x, 0f , positionOffset.z), gpsDriftSpeedNormal);
+                    dronePositionVirtual = vc.transform.position + targetOffset;
                     updateRate = Time.deltaTime;
                     break;
                 case 2:
-                    dronePositionVirtual = vc.transform.position + positionOffset;
+                    
+                    //Vector3 targetPosition = Vector3.MoveTowards(dronePositionVirtual, vc.transform.position + new Vector3(positionOffset.x, 0f , positionOffset.z), 0.01f);
+                    //dronePositionVirtual = targetPosition;
                     updateRate = Time.deltaTime;
                     break;
                 case 1:
-                    dronePositionVirtual = vc.transform.position + Random.onUnitSphere * Random.Range (0f, maxPositionUncertainty);;
-                    updateRate = SamplePositive(signalUpdateRateMean, signalUpdateRateVar);;
+                    currentMaxPosUncertainty = maxPositionUncertaintyAbnormal;
+                    currentOffset = dronePositionVirtual - lastDronePos;
+                    targetOffset = Vector3.MoveTowards(currentOffset, new Vector3(positionOffset.x, 0f , positionOffset.z), gpsDriftSpeedAbnormal);
+                    dronePositionVirtual = vc.transform.position + targetOffset;
+                    updateRate = Time.deltaTime;
+                    //updateRate = SamplePositive(signalUpdateRateMean, signalUpdateRateVar);
                     break;
                 case 0:
                     break;
             }
+            lastDronePos = vc.transform.position;
             yield return new WaitForSeconds(updateRate);
         }
     }

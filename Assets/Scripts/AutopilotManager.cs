@@ -167,16 +167,16 @@ public class AutopilotManager : MonoBehaviour
         {
             if(enable){
                 int idx = GetCurrentHomepoint();
-                ExperimentServer.RecordData("Start Returning To Homepoint", idx + "", "");
+                ExperimentServer.RecordData("Returning To Homepoint", idx + "", "");
             } else {
-                ExperimentServer.RecordData("Stop Returning To Homepoint", "", "");
+                ExperimentServer.RecordData("Manual Piloting", "", "");
             }
 
         } else {
             if(enable){
                 if(!autopilot_initialized){
                     autopilot_initialized = true;
-                    ExperimentServer.RecordData("Start Inspection From Waypoint", "0", "");
+                    
                 } else {
                     int i = this.currentWaypointIndex;
                     bool out_of_bound;
@@ -194,11 +194,10 @@ public class AutopilotManager : MonoBehaviour
                         }
                     }
                 }
-
                 wordVis.currentWaypointIndex = this.currentWaypointIndex;
-                ExperimentServer.RecordData("Start Inspection From Waypoint", this.currentWaypointIndex +"", "");
+                ExperimentServer.RecordData("Autopilot From Waypoint", this.currentWaypointIndex +"", "");
             } else {
-                ExperimentServer.RecordData("Stop Inspection", "", "");
+                ExperimentServer.RecordData("Manual Piloting", "", "");
             }
         }
     }

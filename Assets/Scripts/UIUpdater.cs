@@ -443,4 +443,8 @@ public class UIUpdater : MonoBehaviour
         return defectCount;
     }
 
+    public string[] GetSystemStateText(){
+        return systemStateString;
+    }
+
 }

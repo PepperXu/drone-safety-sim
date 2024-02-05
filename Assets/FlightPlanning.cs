@@ -130,22 +130,22 @@ public class FlightPlanning : MonoBehaviour
             configs[1].SetActive(true);
             configs[2].SetActive(false);
             configs[3].SetActive(false);
-            GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
-            GenerateTrajectoryOnSurface(ref path, wpParent, 1, true, false);
+            GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, false);
+            GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
         } else if (configIndex == 2) {
             configs[0].SetActive(false);
             configs[1].SetActive(false);
             configs[2].SetActive(true);
             configs[3].SetActive(false);
-            GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, false);
-            GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
+            GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
+            GenerateTrajectoryOnSurface(ref path, wpParent, 1, true, false);
         } else if (configIndex == 3){
             configs[0].SetActive(false);
             configs[1].SetActive(false);
             configs[2].SetActive(false);
             configs[3].SetActive(true);
-            GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, false);
-            GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, true);
+            GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, false);
+            GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
         }
         flightTrajectory = new Vector3[path.Count];
         flightTrajectory = path.ToArray();
