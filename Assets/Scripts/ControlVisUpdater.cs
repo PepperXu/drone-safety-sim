@@ -366,9 +366,9 @@ public class ControlVisUpdater : MonoBehaviour
             return;
         if(pos_sig_lvl == 3){
             posUncertainty.SwitchHiddenVisTypeLocal(false);
-            posUncertainty.visRoot.localScale = Vector3.one * 0.5f;
+            posUncertainty.visRoot.localScale = Vector3.one * 1.5f;
             Color c = posUncertaintySprite.color;
-            c.a = 0.7f;
+            c.a = 0.3f;
             posUncertaintySprite.color = c;
         } else {
             posUncertainty.SwitchHiddenVisTypeLocal(true);
