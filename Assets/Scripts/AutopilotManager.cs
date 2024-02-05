@@ -168,9 +168,7 @@ public class AutopilotManager : MonoBehaviour
             if(enable){
                 int idx = GetCurrentHomepoint();
                 ExperimentServer.RecordData("Returning To Homepoint", idx + "", "");
-            } else {
-                ExperimentServer.RecordData("Manual Piloting", "", "");
-            }
+            } 
 
         } else {
             if(enable){
@@ -196,8 +194,6 @@ public class AutopilotManager : MonoBehaviour
                 }
                 wordVis.currentWaypointIndex = this.currentWaypointIndex;
                 ExperimentServer.RecordData("Autopilot From Waypoint", this.currentWaypointIndex +"", "");
-            } else {
-                ExperimentServer.RecordData("Manual Piloting", "", "");
             }
         }
     }

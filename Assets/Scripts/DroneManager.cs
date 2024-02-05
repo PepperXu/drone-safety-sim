@@ -210,7 +210,7 @@ public class DroneManager : MonoBehaviour
             }
 
             if(autopilot_stop_flag){
-                DisengageAutoPilot();
+                DisengageAutoPilot(v2surf.magnitude, battery.GetBatteryLevel(), posSensor.GetSignalLevel(), wind.GetCurrentWindStrength());
                 currentControlType = ControlType.Manual;
                 currentMissionState = MissionState.AutopilotInterupted;
                 autopilot_stop_flag = false;
@@ -366,9 +366,10 @@ public class DroneManager : MonoBehaviour
             tempState = SafetyState.Emergency;
         }
 
-        string tempText = "inbuffer:" + (inBuffer?"true":"false") +"|dist2suf:" + distToSurface + "|windStrength:" + wind_strength + "|gpsLevel:" + positional_signal_level + "|batteryLevel:" + batteryLevel;
+        
         if(currentSafetyState != tempState){
-            ExperimentServer.RecordData("System state change to", uiUpdater.GetSystemStateText()[(int)tempState], "reason(s):"+tempText);
+            string tempText = "inbuffer:" + (inBuffer?"true":"false") +"|dist2suf:" + distToSurface + "|windStrength:" + wind_strength + "|gpsLevel:" + positional_signal_level + "|batteryLevel:" + batteryLevel;
+            ExperimentServer.RecordData("System state change to", uiUpdater.GetSystemStateText()[(int)tempState], tempText);
         }
         currentSafetyState = tempState;
     }
@@ -441,8 +442,10 @@ public class DroneManager : MonoBehaviour
         autopilotManager.EnableAutopilot(true, rth);
     }
 
-    void DisengageAutoPilot(){
+    void DisengageAutoPilot(float distToSurface, int batteryLevel, int positional_signal_level, float wind_strength){
         autopilotManager.EnableAutopilot(false, false);
+        string tempText = "dist2suf:" + distToSurface + "|windStrength:" + wind_strength + "|gpsLevel:" + positional_signal_level + "|batteryLevel:" + batteryLevel;
+        ExperimentServer.RecordData("Manual Piloting",vc.transform.position.x + "|" + vc.transform.position.y + "|" + vc.transform.position.z, tempText);
     }
 
     

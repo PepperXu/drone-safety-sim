@@ -117,7 +117,13 @@ public class ControlVisUpdater : MonoBehaviour
     void UpdateDistance2Ground(){
         if(!dis2groundVis.gameObject.activeInHierarchy)
             return;
+    
         dis2ground = vectorToGround.magnitude;
+
+        if(dis2ground > 1000f){
+            dis2groundVis.showVisualization =false;
+            return;
+        }
         //LineRenderer lr = dis2groundVis.transform.GetComponentInChildren<LineRenderer>();
 
         Vector3 hitPoint = transform.position + vectorToGround;
@@ -368,13 +374,13 @@ public class ControlVisUpdater : MonoBehaviour
             posUncertainty.SwitchHiddenVisTypeLocal(false);
             posUncertainty.visRoot.localScale = Vector3.one * 1.5f;
             Color c = posUncertaintySprite.color;
-            c.a = 0.3f;
+            c.a = 0.5f;
             posUncertaintySprite.color = c;
         } else {
             posUncertainty.SwitchHiddenVisTypeLocal(true);
             posUncertainty.visRoot.localScale = Vector3.one * 10f;
             Color c = posUncertaintySprite.color;
-            c.a = 0.1f;
+            c.a = 0.2f;
             posUncertaintySprite.color = c;
         }
         //if(!positioning.gameObject.activeInHierarchy)
