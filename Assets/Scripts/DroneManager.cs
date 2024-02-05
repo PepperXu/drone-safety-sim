@@ -77,7 +77,7 @@ public class DroneManager : MonoBehaviour
     [SerializeField] PositionalSensorSimulator posSensor;
     [SerializeField] RandomPulseNoise wind;
 
-    public static float bufferCautionThreahold = 2.5f, surfaceCautionThreshold = 6.0f, surfaceWarningThreshold = 2.0f;
+    public static float bufferCautionThreahold = 1f, surfaceCautionThreshold = 6.0f, surfaceWarningThreshold = 4.0f;
     private float windStrengthWarningCoolDownTimer, windStrengthWarningCoolDownTime = 3f;
 
 
@@ -93,7 +93,7 @@ public class DroneManager : MonoBehaviour
         currentMissionState = MissionState.Planning;
         currentControlType = ControlType.Manual;
         currentSafetyState = SafetyState.Healthy;
-        VisType.globalVisType = VisType.VisualizationType.MissionOnly;
+        VisType.globalVisType = VisType.VisualizationType.None;
         controlVisUpdater.SetControlVisActive(false);
         autopilotManager.ResetAutopilot();
         flightPlanning.ResetPathPlanning();
@@ -326,9 +326,9 @@ public class DroneManager : MonoBehaviour
         if(voltage < 10f){
             tempState = SafetyState.Caution;
         }
-        if(wind_strength > 20f){
-            tempState = SafetyState.Caution;
-        }
+        //if(wind_strength > 20f){
+        //    tempState = SafetyState.Caution;
+        //}
 
 
         if(distToSurface < surfaceWarningThreshold){
@@ -352,9 +352,9 @@ public class DroneManager : MonoBehaviour
         if(positional_signal_level == 0){
             tempState = SafetyState.Warning;
         }
-        if(wind_strength > 40f){
-            tempState = SafetyState.Warning;
-        }
+        //if(wind_strength > 40f){
+        //    tempState = SafetyState.Warning;
+        //}
         
 
         if(vc.collisionHitCount > 0 || vc.out_of_balance){

@@ -175,6 +175,7 @@ public class WorldVisUpdater : MonoBehaviour
                 GameObject markObj = Instantiate(markedObject);
                 markObj.transform.position = hit.point + hit.normal.normalized * 0.01f;
                 markObj.transform.rotation = Quaternion.LookRotation(Vector3.up, hit.normal);
+                //markObj.transform.parent = coverage.visRoot;
             }
             //GameObject markObj = Instantiate(markedObject, covObj.transform);
             //markObj.transform.localPosition = Vector3.zero;

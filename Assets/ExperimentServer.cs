@@ -32,13 +32,14 @@ public class ExperimentServer : MonoBehaviour
         All,
 		ControlFirst,
         Mixed,
-		SafetyFirst
+		SafetyFirst,
+		TwoDimensionOnly,
     }
 
-	public VisualizationCondition currentVisCondition = VisualizationCondition.All;
+	public VisualizationCondition currentVisCondition = VisualizationCondition.TwoDimensionOnly;
 	private VisualizationCondition currentBufferedVisCondition;
 
-	string[] visConditionString = {"All", "Control First", "Mixed", "Safety First"};
+	string[] visConditionString = {"All", "Control First", "Mixed", "Safety First", "2D Only"};
 
 	public static bool switching_flag = false;
 
@@ -63,6 +64,9 @@ public class ExperimentServer : MonoBehaviour
 	public static string folderPath {get; private set;}
 
 	static float expTimer;
+
+	[SerializeField] private Camera vrCamera;
+	[SerializeField] private LayerMask excludeMark, includeMark;
 
 	int currentDebugMode = 0; //0: wind control (strength only), 1: battery control, 2: position control
     // Start is called before the first frame update
@@ -107,27 +111,32 @@ public class ExperimentServer : MonoBehaviour
         
 		//For Debugging
 		ProcessKeyboardInput();
-
-		if(currentVisCondition == VisualizationCondition.All || switching_flag){
-			VisType.RevealHiddenVisType(false);
-			VisType.globalVisType = VisType.VisualizationType.Both;
-		}else {
-			if(currentVisCondition == VisualizationCondition.Mixed){
-				VisType.RevealHiddenVisType(true);
-			} else {
+		if(currentVisCondition == VisualizationCondition.TwoDimensionOnly){
+			VisType.globalVisType = VisType.VisualizationType.None;
+			vrCamera.cullingMask = excludeMark;
+		} else {
+			vrCamera.cullingMask = includeMark;
+			if(currentVisCondition == VisualizationCondition.All || switching_flag){
 				VisType.RevealHiddenVisType(false);
-			}
-			if(DroneManager.currentControlType == DroneManager.ControlType.Manual || DroneManager.currentMissionState == DroneManager.MissionState.Returning){
-				VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
-			} else {
-				if(currentVisCondition == VisualizationCondition.SafetyFirst){
-					if(DroneManager.currentSafetyState != DroneManager.SafetyState.Healthy){
-						VisType.globalVisType = VisType.VisualizationType.Both;
-					}else {
+				VisType.globalVisType = VisType.VisualizationType.Both;
+			}else {
+				if(currentVisCondition == VisualizationCondition.Mixed){
+					VisType.RevealHiddenVisType(true);
+				} else {
+					VisType.RevealHiddenVisType(false);
+				}
+				if(DroneManager.currentControlType == DroneManager.ControlType.Manual || DroneManager.currentMissionState == DroneManager.MissionState.Returning){
+					VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
+				} else {
+					if(currentVisCondition == VisualizationCondition.SafetyFirst){
+						if(DroneManager.currentSafetyState != DroneManager.SafetyState.Healthy){
+							VisType.globalVisType = VisType.VisualizationType.Both;
+						}else {
+							VisType.globalVisType = VisType.VisualizationType.MissionOnly;
+						}
+					} else {
 						VisType.globalVisType = VisType.VisualizationType.MissionOnly;
 					}
-				} else {
-					VisType.globalVisType = VisType.VisualizationType.MissionOnly;
 				}
 			}
 		}
@@ -158,16 +167,13 @@ public class ExperimentServer : MonoBehaviour
         	//}
 		} else {
 			if(Input.GetKeyDown(KeyCode.Alpha1)){
-        	    currentVisCondition = VisualizationCondition.All;
+        	    currentVisCondition = VisualizationCondition.TwoDimensionOnly;
         	}
         	if(Input.GetKeyDown(KeyCode.Alpha2)){
-        	    currentVisCondition = VisualizationCondition.ControlFirst;
+        	    currentVisCondition = VisualizationCondition.All;
         	}
         	if(Input.GetKeyDown(KeyCode.Alpha3)){
         	    currentVisCondition = VisualizationCondition.Mixed;
-        	}
-        	if(Input.GetKeyDown(KeyCode.Alpha4)){
-        	    currentVisCondition = VisualizationCondition.SafetyFirst;
         	}
 			if(Input.GetKeyDown(KeyCode.Tab)){
 				currentDebugMode = (currentDebugMode + 1) % 4;
@@ -248,9 +254,9 @@ public class ExperimentServer : MonoBehaviour
         			if(Input.GetKeyDown(KeyCode.F3)){
         			   flightPlanning.ConfigIndex = 2;
         			}
-        			//if(Input.GetKeyDown(KeyCode.F4)){
-        			//    flightPlanning.ConfigIndex = 3;
-        			//}
+        			if(Input.GetKeyDown(KeyCode.F4)){
+        			    flightPlanning.ConfigIndex = 3;
+        			}
 					break;
 				default:
 					break;

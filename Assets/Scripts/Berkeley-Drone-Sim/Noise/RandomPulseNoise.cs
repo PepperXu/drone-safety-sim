@@ -70,7 +70,6 @@ public class RandomPulseNoise : MonoBehaviour {
     public bool wind_change_flag = false;
 
     public bool fixedDuration = true;
-    public bool pulsing = false;
     public float idleStrength = 0f;
     public float idleHoldVariance = 10f;
     [SerializeField] ControlVisUpdater controlVisUpdater;
@@ -133,7 +132,7 @@ public class RandomPulseNoise : MonoBehaviour {
                     }
                 }
             }
-        } else if(pulsing) {
+        } else {
             if (pulse_mode == 0)
             {
                 pulse_timer = 0.0f; //reset
@@ -157,7 +156,7 @@ public class RandomPulseNoise : MonoBehaviour {
                     pulse_mode = 2;
                 }
             } 
-            else if (pulse_mode == 2)
+            else 
             {
                 pulse_timer += Time.deltaTime;
                 if (pulse_timer >= pulse_duration) {
@@ -186,34 +185,7 @@ public class RandomPulseNoise : MonoBehaviour {
 
 
                 }
-            } else {
-                if(wind_change_flag){
-                    pulse_timer = pulse_duration_mean;
-                    base_strength = SamplePositive(strength_mean, strength_variance);
-                    targetDirection = Quaternion.Euler(new Vector3(0.0f, fixedDirection?Sample(yawCenter, directionVariance):Random.Range(-180.0f, 180.0f), 0.0f));
-                    transform.rotation = targetDirection;
-                    wind_change_flag = false;
-                } else {
-                    target_strength = Sample(base_strength, strength_hold_variance);
-
-                    //within 10%
-                    if (Mathf.Abs(strength - target_strength) / (target_strength + 1e-8) < 0.4)
-                    {
-                        strength = target_strength;
-                    }
-                    else
-                    {
-                        // slerp to ramp on and in between values
-                        int dir = target_strength > strength ? 1 : -1;
-                        strength = strength + dir * Time.deltaTime * strength_on_speed;
-
-                        if (dir * strength > dir * target_strength)
-                        {
-                            strength = target_strength;
-                        }
-                    }
-                }
-            }
+            } 
 
 
 

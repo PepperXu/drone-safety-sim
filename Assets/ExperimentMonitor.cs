@@ -9,6 +9,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
+using System.Linq;
 public class ExperimentMonitor : MonoBehaviour
 {
     #region private members 	
@@ -33,7 +34,7 @@ public class ExperimentMonitor : MonoBehaviour
 	[SerializeField] private Transform droneParent;
 	//string serverMessage = "";
 
-	string[] visConditionString = {"All", "Control First", "Mixed", "Safety First"};
+	string[] visConditionString = {"All", "Control First", "Mixed", "Safety First", "2D Only"};
 	string[] posStatusString = {"Lost", "Unstable", "Offset", "Normal"};
 
 	string[] flightStateString = {"Landed", "Taking Off", "Hovering", "Navigating", "Landing"};
@@ -52,7 +53,7 @@ public class ExperimentMonitor : MonoBehaviour
 
 	private float expTimer = 0f;
 
- 	string[] incomingMsgArray;
+  	List<string> incomingMsgList = new List<string>();
 
 	//Queue<string> sendMsgQueue = new Queue<string>();
 	// Use this for initialization 	
@@ -65,8 +66,8 @@ public class ExperimentMonitor : MonoBehaviour
 	}  	
 	// Update is called once per frame
 	void Update () {
-		//if(incomingMsgArray != null)
-		//	ProcessReceivedMessage();
+		if(incomingMsgList != null)
+			ProcessReceivedMessage();
 		droneParent.position = currentDronePosition;
 		//if(sendMsgQueue.Count > 0)
 		//	SendMessageFromQueue();
@@ -101,14 +102,11 @@ public class ExperimentMonitor : MonoBehaviour
 				// Get a stream object for reading 				
 				using (NetworkStream stream = socketConnection.GetStream()) { 		
 					StreamReader sr = new StreamReader(stream);
-					List<string> incomingMsgList = new List<string>();
 					while(!sr.EndOfStream){
 						string line = sr.ReadLine();
 						Debug.Log(line);
 						incomingMsgList.Add(line);
 					}
-					incomingMsgArray = incomingMsgList.ToArray();
-					ProcessReceivedMessage();
 				} 			
 			}         
 		}         
@@ -119,8 +117,10 @@ public class ExperimentMonitor : MonoBehaviour
 
 
 	private void ProcessReceivedMessage(){
-		foreach(string incomingMsg in incomingMsgArray){
+		//string[] incomingMsgArray = incomingMsgList.ToArray();
+		foreach(string incomingMsg in incomingMsgList.ToList()){
 			string serverMessage = incomingMsg;
+			Debug.LogWarning("Processing Server Message As:" + serverMessage);
 			if(serverMessage == null)
 				break;
 			string[] splitMsg = serverMessage.Split(';');
@@ -186,6 +186,7 @@ public class ExperimentMonitor : MonoBehaviour
 		if(currentStatus == statusArray)
 			return;
 		statusArray = currentStatus;
+		Debug.LogWarning("Updating Status Text");
 		missionStateText.SetText(missionStateString[statusArray[0]]);
 		controlTypeText.SetText(controlStateString[statusArray[1]]);
 		systemStateText.SetText(systemStateString[statusArray[2]]);

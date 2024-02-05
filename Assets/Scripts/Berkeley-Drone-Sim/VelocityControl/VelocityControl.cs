@@ -288,25 +288,25 @@ public class VelocityControl : MonoBehaviour {
             if(other.name.Contains("Weak")){
                 ExperimentServer.RecordData("Enters GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
             } else {
-                rpn.fixedDuration = false;
-                rpn.strength_mean = windStrength;
+                rpn.yawCenter = other.transform.eulerAngles.y;
+                rpn.strength_mean = strongWindStrength;
+                rpn.pulse_duration_mean = 1000f;
                 rpn.wind_change_flag = true;
-                ExperimentServer.RecordData("Enters GPS Denied Area with drifting at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength:" + windStrength);
+                ExperimentServer.RecordData("Enters GPS Denied Area with wind at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength:" + strongWindStrength);
             }
         } else if(other.tag == "WindZone"){
             other.gameObject.SetActive(false);
-            rpn.yawCenter = other.transform.eulerAngles.y;
             rpn.fixedDuration = true;
             if(other.name.Contains("Weak")){
-                StartCoroutine(WindTurbulenceFixedDuration(false));
+                StartCoroutine(WindTurbulenceFixedDuration(other.transform.eulerAngles.y + 180));
                 //rpn.strength_mean = windStrength;
                 //rpn.pulse_duration_mean = windDuration;
-                ExperimentServer.RecordData("Drifting starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength|duration:" + windStrength + "|" + windDuration);
+                ExperimentServer.RecordData("Wind Drifting starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "variation:away-from-surf");
             } else {
                 //StartCoroutine(SetSignaForWindTurbulence(strongWindDuration));
-                StartCoroutine(WindTurbulenceFixedDuration(true));
+                StartCoroutine(WindTurbulenceFixedDuration(other.transform.eulerAngles.y));
                 
-                ExperimentServer.RecordData("Drifting with signal lost starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength|duration:" + windStrength + "|" + windDuration);
+                ExperimentServer.RecordData("Wind Drifting starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "variation:towards-surf");
             }
             
         } else if(other.tag == "BatteryDrop"){
@@ -329,8 +329,8 @@ public class VelocityControl : MonoBehaviour {
             pss.SetSignalLevel(3);
             pss.switch_gps_normal = true;
             ExperimentServer.RecordData("Drone Exits GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
-            rpn.fixedDuration = true;
             rpn.strength_mean = 0f;
+            rpn.pulse_duration_mean = 1f;
             rpn.wind_change_flag = true;
         } 
     }
@@ -340,9 +340,14 @@ public class VelocityControl : MonoBehaviour {
         max_roll = value;
     }
 
-    IEnumerator WindTurbulenceFixedDuration(bool signalLost){
-        if(signalLost)
-            pss.SetSignalLevel(sigAbnormalLevel);
+    IEnumerator WindTurbulenceFixedDuration(float yawCenter){
+        //if(signalLost)
+        //    pss.SetSignalLevel(sigAbnormalLevel);
+        rpn.yawCenter = yawCenter;
+        rpn.strength_mean = strongWindStrength;
+        rpn.pulse_duration_mean = windDuration/4;
+        rpn.wind_change_flag = true;
+        yield return new WaitForSeconds(windDuration/4);
         rpn.strength_mean = windStrength;
         rpn.pulse_duration_mean = windDuration/2;
         rpn.wind_change_flag = true;
@@ -350,10 +355,11 @@ public class VelocityControl : MonoBehaviour {
         rpn.strength_mean = strongWindStrength;
         rpn.pulse_duration_mean = windDuration/2;
         rpn.wind_change_flag = true;
-        yield return new WaitForSeconds(windDuration/2);
-        if(signalLost){
-            pss.SetSignalLevel(3);
-            pss.switch_gps_normal = true;
-        }
+        yield return new WaitForSeconds(windDuration/4);
+
+        //if(signalLost){
+        //    pss.SetSignalLevel(3);
+        //    pss.switch_gps_normal = true;
+        //}
     }
 }

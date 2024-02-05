@@ -11,7 +11,8 @@ public class VisType : MonoBehaviour
     {
         MissionOnly,
         SafetyOnly,
-        Both
+        Both,
+        None
     }
 
     [SerializeField] private VisualizationType visType;
@@ -42,13 +43,15 @@ public class VisType : MonoBehaviour
     float sigLostAlpha = 0.25f;
     float sigAbnormalAlpha = 0.25f;
     float normalAlpha = 1f;
-
+    bool initialized = false;
 
     //[SerializeField] private bool allowSwitchToBoth = false;
 
     // Start is called before the first frame update
-    void Start()
+    void OnEnable()
     {
+        if(initialized)
+            return;
         if (!visRoot)
             visRoot = transform.GetChild(0);
         originalVisType = visType;
@@ -68,11 +71,16 @@ public class VisType : MonoBehaviour
         foreach(Renderer renderer in renderers){
             initialColors.Add(renderer.material.color);
         }
+        initialized = true;
     }
 
     // Update is called once per frame
     void Update()
     {
+        if(globalVisType == VisualizationType.None){
+            visRoot.gameObject.SetActive(false);
+            return;
+        }
         if(isRevealing) visType = hiddenVisType; else visType = originalVisType;
         visRoot.gameObject.SetActive((globalVisType == visType || visType == VisualizationType.Both || globalVisType == VisualizationType.Both) && showVisualization);
     }

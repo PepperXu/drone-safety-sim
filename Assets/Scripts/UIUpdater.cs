@@ -12,6 +12,7 @@ public class UIUpdater : MonoBehaviour
     [SerializeField] TextMeshProUGUI flightState;
     [SerializeField] TextMeshProUGUI controlState;
     [SerializeField] Image systemState;
+    [SerializeField] Color normalColor, cautiousColor, warningColor, emergencyColor;
     [SerializeField] Image batteryIcon;
     [SerializeField] Sprite[] batterySprites;
     [SerializeField] TextMeshProUGUI batteryPercentage;
@@ -48,6 +49,7 @@ public class UIUpdater : MonoBehaviour
     [SerializeField] Image movement_enabled, movement_locked;
 
     [Header("Current Interface")]
+    [SerializeField] GameObject currentVisStatus;
     [SerializeField] GameObject pilotView; 
     [SerializeField] GameObject taskView, allView;
 
@@ -188,19 +190,24 @@ public class UIUpdater : MonoBehaviour
         defectCountUI.text = defectCount.ToString();
         progressPercentageUI.text = (int)(missionProgress*100f) + "%";
 
-        if(VisType.globalVisType == VisType.VisualizationType.MissionOnly){
-            taskView.SetActive(true);
-            pilotView.SetActive(false);
-            allView.SetActive(false);
-
-        } else if(VisType.globalVisType == VisType.VisualizationType.SafetyOnly){
-            taskView.SetActive(false);
-            pilotView.SetActive(true);
-            allView.SetActive(false);
+        if(VisType.globalVisType == VisType.VisualizationType.None){
+            currentVisStatus.SetActive(false);
         } else {
-            taskView.SetActive(false);
-            pilotView.SetActive(false);
-            allView.SetActive(true);
+            currentVisStatus.SetActive(true);
+            if(VisType.globalVisType == VisType.VisualizationType.MissionOnly){
+                taskView.SetActive(true);
+                pilotView.SetActive(false);
+                allView.SetActive(false);
+
+            } else if(VisType.globalVisType == VisType.VisualizationType.SafetyOnly){
+                taskView.SetActive(false);
+                pilotView.SetActive(true);
+                allView.SetActive(false);
+            } else{
+                taskView.SetActive(false);
+                pilotView.SetActive(false);
+                allView.SetActive(true);
+            } 
         }
 
 
@@ -253,7 +260,7 @@ public class UIUpdater : MonoBehaviour
         switch (DroneManager.currentSafetyState)
         {
             case DroneManager.SafetyState.Healthy:
-                systemState.color = Color.green;
+                systemState.color = normalColor;
                 if(enableSound){
                     if (continuous)
                     {
@@ -269,7 +276,7 @@ public class UIUpdater : MonoBehaviour
                 }
                 break;
             case DroneManager.SafetyState.Caution:
-                systemState.color = Color.yellow;
+                systemState.color = cautiousColor;
                 if(enableSound){
                     if (continuous)
                     {
@@ -284,7 +291,7 @@ public class UIUpdater : MonoBehaviour
                 }
                 break;
             case DroneManager.SafetyState.Warning:
-                systemState.color = new Color(1f, 0.5f, 0f);
+                systemState.color = warningColor;
                 if(enableSound){
                     if (continuous)
                     {
@@ -299,7 +306,7 @@ public class UIUpdater : MonoBehaviour
                 }
                 break;
             case DroneManager.SafetyState.Emergency:
-                systemState.color = Color.red;
+                systemState.color = emergencyColor;
                 if(enableSound){
                     if (continuous)
                     {
