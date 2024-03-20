@@ -58,7 +58,7 @@ public class ControlVisUpdater : MonoBehaviour
     public Vector3[] predictedPoints;
 
     public bool inBuffer;
-    public Vector3 vectorToNearestBufferBound, vectorToGround, vectorToNearestSurface;
+    public Vector3 vectorToNearestBufferBound, vectorToNearestSurface;
 
     //public Vector3 positionOffset = Vector3.zero;
 
@@ -68,6 +68,8 @@ public class ControlVisUpdater : MonoBehaviour
     public float batteryPercentage, remainingTimeInSeconds;
 
     public int pos_sig_lvl;
+
+    [SerializeField] StateFinder droneState;
 
     //public float updateRate;
     
@@ -118,7 +120,7 @@ public class ControlVisUpdater : MonoBehaviour
         if(!dis2groundVis.gameObject.activeInHierarchy)
             return;
     
-        dis2ground = vectorToGround.magnitude;
+        dis2ground = droneState.Altitude;
 
         if(dis2ground > 1000f){
             dis2groundVis.showVisualization =false;
@@ -126,7 +128,7 @@ public class ControlVisUpdater : MonoBehaviour
         }
         //LineRenderer lr = dis2groundVis.transform.GetComponentInChildren<LineRenderer>();
 
-        Vector3 hitPoint = transform.position + vectorToGround;
+        Vector3 hitPoint = transform.position + Vector3.down * dis2ground;
         Transform projection = dis2groundVis.visRoot.GetChild(0);
         Transform projectionDisc = dis2groundVis.visRoot.GetChild(1);
         Transform textLabel = dis2groundVis.visRoot.GetChild(2);
@@ -134,7 +136,7 @@ public class ControlVisUpdater : MonoBehaviour
         projection.localScale = new Vector3(0.15f, dis2ground, 1f);
         projection.localPosition = transform.InverseTransformPoint(hitPoint)/2f;
 
-        projectionDisc.position = hitPoint + (-vectorToGround).normalized * 0.01f;
+        projectionDisc.position = hitPoint + (-Vector3.down * dis2ground).normalized * 0.01f;
         textLabel.localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
         textLabel.GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2ground * 10f) / 10f + " m";
         dis2groundVis.SetTransparency(Mathf.Max(0, 2-pos_sig_lvl));

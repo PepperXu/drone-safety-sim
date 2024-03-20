@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-
+//A central script for decision making based on flight data.
+//Should not be used for accepting input directly from the user.
 public class DroneManager : MonoBehaviour
 {
     public enum FlightState{
@@ -25,12 +26,12 @@ public class DroneManager : MonoBehaviour
 
     }
 
-    public enum SafetyState{
-        Healthy,
-        Caution,
-        Warning,
-        Emergency
-    }
+    //public enum SafetyState{
+    //    Healthy,
+    //    Caution,
+    //    Warning,
+    //    Emergency
+    //}
 
     public enum ControlType
     {
@@ -49,7 +50,7 @@ public class DroneManager : MonoBehaviour
     //private VisType[] misVis;
 
     public static FlightState currentFlightState = FlightState.Landed;
-    public static SafetyState currentSafetyState {get; private set;}
+    //public static SafetyState currentSafetyState {get; private set;}
     public static ControlType currentControlType {get; private set;}
     public static MissionState currentMissionState {get; private set;}
 
@@ -77,6 +78,9 @@ public class DroneManager : MonoBehaviour
     [SerializeField] PositionalSensorSimulator posSensor;
     [SerializeField] RandomPulseNoise wind;
 
+    [SerializeField] EventTriggerDetection eventTriggerDetection;
+    [SerializeField] CollisionSensing collisionSensing;
+
     public static float bufferCautionThreahold = 1f, surfaceCautionThreshold = 6.0f, surfaceWarningThreshold = 4.0f;
     private float windStrengthWarningCoolDownTimer, windStrengthWarningCoolDownTime = 3f;
 
@@ -92,7 +96,7 @@ public class DroneManager : MonoBehaviour
         currentFlightState = FlightState.Landed;
         currentMissionState = MissionState.Planning;
         currentControlType = ControlType.Manual;
-        currentSafetyState = SafetyState.Healthy;
+        //currentSafetyState = SafetyState.Healthy;
         VisType.globalVisType = VisType.VisualizationType.None;
         controlVisUpdater.SetControlVisActive(false);
         autopilotManager.ResetAutopilot();
@@ -113,13 +117,16 @@ public class DroneManager : MonoBehaviour
     }
 
     // Update is called once per frame
+    //Mainly for controlling model activation and state update. Not for passing data [TODO]
     void Update()
     {
-
+        
+        //Obsolete: the planning phase is automated. 
         if(currentMissionState == MissionState.Planning && finish_planning_flag){
             finish_planning_flag = false;
             currentMissionState = MissionState.MovingToFlightZone;
         }
+
 
         if(currentFlightState == FlightState.TakingOff){
             if(Mathf.Abs(state.Altitude - vc.desired_height)< 0.1f){
@@ -128,9 +135,11 @@ public class DroneManager : MonoBehaviour
             }
         }
 
+        //During normal flight
         if (currentFlightState == FlightState.Navigating || currentFlightState == FlightState.Hovering) {
             controlVisUpdater.SetControlVisActive(true);
-            uiUpdater.enableSound = true;
+            //uiUpdater.enableSound = true;
+            collisionSensing.collisionSensingEnabled = true;
 
             bool inBuffer = false;
             Vector3 v2bound = CheckPositionInContingencyBuffer(out inBuffer);
@@ -216,34 +225,37 @@ public class DroneManager : MonoBehaviour
                 autopilot_stop_flag = false;
             }
 
-            UpdateSafetyState(inBuffer, v2bound.magnitude, v2surf.magnitude, battery.GetBatteryLevel(), battery.GetBatteryVoltage(), posSensor.GetSignalLevel(), wind.GetCurrentWindStrength());
-
+            //UpdateSafetyState(inBuffer, v2bound.magnitude, v2surf.magnitude, battery.GetBatteryLevel(), battery.GetBatteryVoltage(), posSensor.GetSignalLevel(), wind.GetCurrentWindStrength());
         } else
         {
-            uiUpdater.enableSound = false;
+            //uiUpdater.enableSound = false;
+            
             ic.EnableControl(false);
-            if(currentFlightState == FlightState.Landing)
+            if(currentFlightState == FlightState.Landing){
+                collisionSensing.collisionSensingEnabled = false;
                 controlVisUpdater.SetControlVisActive(false);
+            }
         }
 
         if (currentFlightState != FlightState.Landed)
         {
-            bool hitGround = false;
-            Vector3 vectorToGround = CheckDistToGround(out hitGround);
-            bool trueHitGround = false;
-            Vector3 trueVectorToGround = CheckTrueDistToGround(out trueHitGround);
-            vc.vectorToGround = trueVectorToGround;
-            controlVisUpdater.vectorToGround = vectorToGround;
-            uiUpdater.vpsHeight = trueVectorToGround.magnitude;
-
+            //bool hitGround = false;
+            //Vector3 vectorToGround = Vector3.down * state.Altitude;
+            //bool trueHitGround = false;
+            //Vector3 trueVectorToGround = CheckTrueDistToGround(out trueHitGround);
+            //vc.vectorToGround = vectorToGround;
+            //controlVisUpdater.vectorToGround = vectorToGround;
+            //uiUpdater.vpsHeight = vectorToGround.magnitude;
         } else {
             if(currentMissionState == MissionState.Returning){
                 currentMissionState = MissionState.MovingToFlightZone;
             }
+            eventTriggerDetection.ResetEventSimulation();
         }
     }
 
-
+    //Predict the future trajectory based on number of prediction steps and the predict step length (in seconds), 
+    //and the current state.pose.WorldVelocity and state.pose.WorldAcceleration.
     void PredictFutureTrajectory(){
         List<Vector3> trajectory = new List<Vector3>();
         if(controlActive){
@@ -273,6 +285,7 @@ public class DroneManager : MonoBehaviour
         controlVisUpdater.predictedPoints = trajectory.ToArray();
     }
 
+    //Check drone position related to the contingency buffer. 
     Vector3 CheckPositionInContingencyBuffer(out bool inBuffer){
         Vector3 localDronePos = contingencyBuffer.InverseTransformPoint(PositionalSensorSimulator.dronePositionVirtual);
         inBuffer = Mathf.Abs(localDronePos.x) < 0.5f && Mathf.Abs(localDronePos.y) < 0.5f && Mathf.Abs(localDronePos.z) < 0.5f;
@@ -306,74 +319,78 @@ public class DroneManager : MonoBehaviour
         }
     }
 
-    void UpdateSafetyState(bool inBuffer, float distToBuffer, float distToSurface, int batteryLevel, float voltage, int positional_signal_level, float wind_strength){
-        if(currentSafetyState == SafetyState.Emergency)
-            return;
-        
 
-        SafetyState tempState = SafetyState.Healthy;
-        
+    //void UpdateSafetyState(bool inBuffer, float distToBuffer, float distToSurface, int batteryLevel, float voltage, int positional_signal_level, float wind_strength){
+    //    if(currentSafetyState == SafetyState.Emergency)
+    //        return;
+    //    
+//
+    //    SafetyState tempState = SafetyState.Healthy;
+    //    
+//
+    //    if(!inBuffer){
+    //        tempState = SafetyState.Caution;
+    //    }
+    //    if(distToSurface < surfaceCautionThreshold){
+    //        tempState = SafetyState.Caution;
+    //        
+    //    }
+    //    if(batteryLevel == 2){
+    //        
+    //        tempState = SafetyState.Caution;
+    //    }
+    //    if(voltage < 10f){
+    //        tempState = SafetyState.Caution;
+    //    }
+    //    //if(wind_strength > 20f){
+    //    //    tempState = SafetyState.Caution;
+    //    //}
+    //    
+//
+    //    if(distToSurface < surfaceWarningThreshold){
+    //        tempState = SafetyState.Warning;
+    //    }
+    //    if(batteryLevel == 1){
+    //        tempState = SafetyState.Warning;
+    //    }
+    //    if(voltage < 9f){
+    //        tempState = SafetyState.Warning;
+    //    }
+    //    if(vc.collisionHitCount > 0){
+    //        tempState = SafetyState.Warning;
+    //    }
+    //    if(positional_signal_level == 2){
+    //        tempState = SafetyState.Caution;
+    //    }
+    //    if(positional_signal_level == 1){
+    //        tempState = SafetyState.Warning;
+    //    }
+    //    if(positional_signal_level == 0){
+    //        tempState = SafetyState.Warning;
+    //    }
+    //    //if(wind_strength > 40f){
+    //    //    tempState = SafetyState.Warning;
+    //    //}
+    //    
+//
+    //    if(vc.collisionHitCount > 0 || vc.out_of_balance){
+    //        tempState = SafetyState.Emergency;
+    //    }
+    //    if(batteryLevel == 0){
+    //        tempState = SafetyState.Emergency;
+    //    }
+//
+    //    
+    //    if(currentSafetyState != tempState){
+    //        string tempText = "inbuffer:" + (inBuffer?"true":"false") +"|dist2suf:" + distToSurface + "|windStrength:" + wind_strength + "|gpsLevel:" + positional_signal_level + "|batteryLevel:" + batteryLevel;
+    //        ExperimentServer.RecordData("System state change to", uiUpdater.GetSystemStateText()[(int)tempState], tempText);
+    //    }
+    //    currentSafetyState = tempState;
+    //}
 
-        if(!inBuffer){
-            tempState = SafetyState.Caution;
-        }
-        if(distToSurface < surfaceCautionThreshold){
-            tempState = SafetyState.Caution;
-            
-        }
-        if(batteryLevel == 2){
-            
-            tempState = SafetyState.Caution;
-        }
-        if(voltage < 10f){
-            tempState = SafetyState.Caution;
-        }
-        //if(wind_strength > 20f){
-        //    tempState = SafetyState.Caution;
-        //}
-        
 
-        if(distToSurface < surfaceWarningThreshold){
-            tempState = SafetyState.Warning;
-        }
-        if(batteryLevel == 1){
-            tempState = SafetyState.Warning;
-        }
-        if(voltage < 9f){
-            tempState = SafetyState.Warning;
-        }
-        if(vc.collisionHitCount > 0){
-            tempState = SafetyState.Warning;
-        }
-        if(positional_signal_level == 2){
-            tempState = SafetyState.Caution;
-        }
-        if(positional_signal_level == 1){
-            tempState = SafetyState.Warning;
-        }
-        if(positional_signal_level == 0){
-            tempState = SafetyState.Warning;
-        }
-        //if(wind_strength > 40f){
-        //    tempState = SafetyState.Warning;
-        //}
-        
-
-        if(vc.collisionHitCount > 0 || vc.out_of_balance){
-            tempState = SafetyState.Emergency;
-        }
-        if(batteryLevel == 0){
-            tempState = SafetyState.Emergency;
-        }
-
-        
-        if(currentSafetyState != tempState){
-            string tempText = "inbuffer:" + (inBuffer?"true":"false") +"|dist2suf:" + distToSurface + "|windStrength:" + wind_strength + "|gpsLevel:" + positional_signal_level + "|batteryLevel:" + batteryLevel;
-            ExperimentServer.RecordData("System state change to", uiUpdater.GetSystemStateText()[(int)tempState], tempText);
-        }
-        currentSafetyState = tempState;
-    }
-
+    //Distance check to building surface as specified by pilot (the pre-defined bounding box of the building)
+    //Not equal to the actual collision detection
     Vector3 CheckDistanceToBuildingSurface(){
         Vector3 localDronePos = buildingCollision.InverseTransformPoint(PositionalSensorSimulator.dronePositionVirtual);
         if(Mathf.Abs(localDronePos.y) >= 0.5f)
@@ -391,52 +408,53 @@ public class DroneManager : MonoBehaviour
         return -buildingCollision.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * buildingCollision.localScale.x; 
     }
 
-    Vector3 CheckTrueDistanceToBuildingSurface(){
-        Vector3 localDronePos = buildingCollision.InverseTransformPoint(vc.transform.position);
-        if(Mathf.Abs(localDronePos.y) >= 0.5f)
-            return Vector3.positiveInfinity;
-        
-        if(Mathf.Abs(localDronePos.x) < 0.5f && Mathf.Abs(localDronePos.z) < 0.5f)
-            return Vector3.positiveInfinity;
+    //To be replaced by the actually collision detection
+    //Vector3 CheckTrueDistanceToBuildingSurface(){
+    //    Vector3 localDronePos = buildingCollision.InverseTransformPoint(vc.transform.position);
+    //    if(Mathf.Abs(localDronePos.y) >= 0.5f)
+    //        return Vector3.positiveInfinity;
+    //    
+    //    if(Mathf.Abs(localDronePos.x) < 0.5f && Mathf.Abs(localDronePos.z) < 0.5f)
+    //        return Vector3.positiveInfinity;
+//
+    //    if(Mathf.Abs(localDronePos.x) >= 0.5f && Mathf.Abs(localDronePos.z) >= 0.5f)
+    //        return Vector3.positiveInfinity;
+//
+    //    if(Mathf.Abs(localDronePos.x) < 0.5f)
+    //        return -buildingCollision.forward * (Mathf.Abs(localDronePos.z) - 0.5f) * Mathf.Sign(localDronePos.z) * buildingCollision.localScale.z;
+    //    
+    //    return -buildingCollision.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * buildingCollision.localScale.x; 
+    //}
 
-        if(Mathf.Abs(localDronePos.x) >= 0.5f && Mathf.Abs(localDronePos.z) >= 0.5f)
-            return Vector3.positiveInfinity;
-
-        if(Mathf.Abs(localDronePos.x) < 0.5f)
-            return -buildingCollision.forward * (Mathf.Abs(localDronePos.z) - 0.5f) * Mathf.Sign(localDronePos.z) * buildingCollision.localScale.z;
-        
-        return -buildingCollision.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * buildingCollision.localScale.x; 
-    }
-
-
-    Vector3 CheckDistToGround(out bool hitGround)
-    {
-        Ray rayDown = new Ray(PositionalSensorSimulator.dronePositionVirtual, Vector3.down);
-        RaycastHit hit;
-        if (Physics.Raycast(rayDown, out hit, float.MaxValue, realObstacleLayerMask))
-        {
-            hitGround = true;
-            return hit.point - PositionalSensorSimulator.dronePositionVirtual;
-        } else
-        {
-            hitGround = false;
-            return Vector3.down * float.PositiveInfinity;
-        }
-    }
-
-    Vector3 CheckTrueDistToGround(out bool hitGround){
-        Ray rayDown = new Ray(vc.transform.position, Vector3.down);
-        RaycastHit hit;
-        if (Physics.Raycast(rayDown, out hit, float.MaxValue, realObstacleLayerMask))
-        {
-            hitGround = true;
-            return hit.point - vc.transform.position;
-        } else
-        {
-            hitGround = false;
-            return Vector3.down * float.PositiveInfinity;
-        }
-    }
+    //To be replaced by visual positioning system
+    //Vector3 CheckDistToGround(out bool hitGround)
+    //{
+    //    Ray rayDown = new Ray(PositionalSensorSimulator.dronePositionVirtual, Vector3.down);
+    //    RaycastHit hit;
+    //    if (Physics.Raycast(rayDown, out hit, float.MaxValue, realObstacleLayerMask))
+    //    {
+    //        hitGround = true;
+    //        return hit.point - PositionalSensorSimulator.dronePositionVirtual;
+    //    } else
+    //    {
+    //        hitGround = false;
+    //        return Vector3.down * float.PositiveInfinity;
+    //    }
+    //}
+    //To be replaced by visual positioning syste
+    //Vector3 CheckTrueDistToGround(out bool hitGround){
+    //    Ray rayDown = new Ray(vc.transform.position, Vector3.down);
+    //    RaycastHit hit;
+    //    if (Physics.Raycast(rayDown, out hit, float.MaxValue, realObstacleLayerMask))
+    //    {
+    //        hitGround = true;
+    //        return hit.point - vc.transform.position;
+    //    } else
+    //    {
+    //        hitGround = false;
+    //        return Vector3.down * float.PositiveInfinity;
+    //    }
+    //}
 
     void EngageAutoPilot(bool rth){
         autopilotManager.EnableAutopilot(true, rth);

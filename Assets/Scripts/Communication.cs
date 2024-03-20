@@ -20,6 +20,33 @@ public class Communication : MonoBehaviour
         }
     }
 
+    public struct CollisionData{
+        public float[] distances;
+
+        public int collisionCount;
+
+        public bool collided;
+        public int GetShortestDistanceIndex(){
+            float minDist = float.MaxValue;
+            int indx = 0;
+            for(int i = 0; i < distances.Length; i++){
+                if(distances[i] < minDist){
+                    minDist = distances[i];
+                    indx = i;
+                }
+            }
+            return indx;
+        }
+
+    }
+
+
+
+
+
+    public static CollisionData collisionData;
+
+
     [SerializeField] float inputLatency;
     [SerializeField] float signalReceivingLatency;
     [SerializeField] float cameraLatency;

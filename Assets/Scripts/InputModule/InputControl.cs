@@ -31,33 +31,7 @@ public class InputControl : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		//if(ExperimentServer.currentVisCondition == ExperimentServer.VisualizationCondition.Manual){
-		//	if (Input.GetButtonDown("Switch"))
-		//	{
-		//		VisType.SwitchVisType();
-		//	}
-		//} else if(ExperimentServer.currentVisCondition == ExperimentServer.VisualizationCondition.ManualProcedual){
-		//	if(Input.GetButton("Switch")){
-		//		VisType.RevealHiddenVisType(true);
-		//		if(Input.GetAxisRaw("SwitchConfirm") > 0.5f){
-		//			if(!switched){
-		//				VisType.SwitchVisType();
-		//				switched = true;
-		//			}
-		//		} else {
-		//			switched = false;
-		//		}
-		//	} else {
-		//		VisType.RevealHiddenVisType(false);
-		//		switched = false;
-		//	}
-		//} else if(ExperimentServer.currentVisCondition == ExperimentServer.VisualizationCondition.SystemProcedual){
-		//	if (Input.GetButtonDown("Switch"))
-		//	{
-		//		VisType.SwitchVisType();
-		//	}
-		//}
-//
+
 		if(DroneManager.currentMissionState == DroneManager.MissionState.Planning)
 			return;
 
@@ -112,17 +86,6 @@ public class InputControl : MonoBehaviour {
 				rth_button_pressed = false;
 				DroneManager.rth_flag = true;
             }
-
-			//if(Input.GetButtonDown("Switch")){
-			//	ExperimentServer.switching_flag = true;
-			//	ExperimentServer.RecordData("Force Show All Visualization", "", "");
-			//}
-//
-			//if(Input.GetButtonUp("Switch")){
-			//	ExperimentServer.switching_flag = false;
-			//	ExperimentServer.RecordData("Stop Forcing Show All Visualization", "", "");
-			//}
-
 			if(Input.GetButtonDown("MarkDefect")){
 				uiUpdater.MarkDefect();
 			}

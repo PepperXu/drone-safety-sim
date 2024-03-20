@@ -47,7 +47,7 @@ public class VelocityControl : MonoBehaviour {
 
     private Rigidbody rb;
 
-    public Vector3 vectorToGround;
+    //public Vector3 vectorToGround;
 
     public int collisionHitCount = 0;
     public bool out_of_balance = false;
@@ -55,25 +55,15 @@ public class VelocityControl : MonoBehaviour {
     [SerializeField] AudioClip take_off, flying, landing;
     AudioSource audioSource;
 
-    [SerializeField] PositionalSensorSimulator pss;
-    [SerializeField] RandomPulseNoise rpn;
-    [SerializeField] Battery battery;
-
-    float windStrength = 50f, strongWindStrength = 65f;
-    float windDuration = 20f, windDurationLong = 30f;
-    int sigAbnormalLevel = 1;
-    int sigLostLevel = 0;
-
-    bool batteryDropped = false;
-    bool isGPSDenied = false;
 
     // Use this for initialization
     void Start () {
           
     }
 
+    //For both initialization and reset.
     public void ResetVelocityControl(){
-        state.Reset();
+        
         desired_vx = 0.0f;
         desired_vy = 0.0f;
         desired_yaw = 0.0f;
@@ -85,6 +75,7 @@ public class VelocityControl : MonoBehaviour {
         desired_height = landedHeight;
         collisionHitCount = 0;
         out_of_balance = false;
+        state.Reset(landedHeight);
         state.GetState();
         audioSource.Stop();
     }
@@ -140,7 +131,7 @@ public class VelocityControl : MonoBehaviour {
 
         if (DroneManager.currentFlightState == DroneManager.FlightState.Navigating || DroneManager.currentFlightState == DroneManager.FlightState.Hovering || DroneManager.currentFlightState == DroneManager.FlightState.Landing)
         {
-            float dis2ground = vectorToGround.magnitude;
+            float dis2ground = state.Altitude;
             if (DroneManager.currentFlightState != DroneManager.FlightState.Landing)
             {
                 if (dis2ground < landingHeightThreshold)
@@ -164,9 +155,6 @@ public class VelocityControl : MonoBehaviour {
                     DroneManager.currentFlightState = DroneManager.FlightState.Landed;
                     rb.isKinematic = true;
                     rb.useGravity = false;
-                    battery.ResetBattery();
-                    pss.ResetSignalLevel();
-                    batteryDropped = false;
                 }
             }
         }
@@ -188,7 +176,7 @@ public class VelocityControl : MonoBehaviour {
         //Debug.Log(heightError);
 
         Vector3 desiredVelocity = new Vector3 (desired_vy, -1.0f * heightError / time_constant_z_velocity, desired_vx);
-        Vector3 velocityError = state.VelocityVector - desiredVelocity;
+        Vector3 velocityError = state.LocalVelocityVector - desiredVelocity;
 
         Vector3 desiredAcceleration = velocityError * -1.0f / time_constant_acceleration;
 
@@ -235,39 +223,9 @@ public class VelocityControl : MonoBehaviour {
             propRL.transform.Rotate(Vector3.forward * Time.deltaTime * desiredThrust * speedScale);
         }
 
-        //Debug.Log ("Velocity" + state.VelocityVector);
-        //Debug.Log ("Desired Velocity" + desiredVelocity);
-        //Debug.Log ("Desired Acceleration" + desiredAcceleration);
-        //Debug.Log ("Angles" + state.Angles);
-        //Debug.Log ("Desired Angles" + desiredTheta);
-        //Debug.Log ("Angular Velocity" + state.AngularVelocityVector);
-        //Debug.Log ("Desired Angular Velocity" + desiredOmega);
-        //Debug.Log ("Desired Angular Acceleration" + desiredAlpha);
-        //Debug.Log ("Desired Torque" + desiredTorque);
-
         previous_desired_height = desired_height;
     }
 
-    public void Reset() {
-
-        state.VelocityVector = Vector3.zero;
-        state.AngularVelocityVector = Vector3.zero;
-
-        desired_vx = 0.0f;
-        desired_vy = 0.0f;
-        desired_yaw = 0.0f;
-        desired_height = landedHeight;
-
-        state.Reset ();
-    
-        enabled = true;
-    }
-
-    IEnumerator Waiting(float time) {
-        wait = true;
-        yield return new WaitForSeconds(time);
-        wait = false;
-    }
 
     private void OnCollisionEnter(Collision collision)
     {
@@ -282,88 +240,4 @@ public class VelocityControl : MonoBehaviour {
         }
     }
 
-    private void OnTriggerEnter(Collider other) {
-        if(batteryDropped)
-            return;
-        if(other.tag == "GPSWeakZone" && !isGPSDenied){
-            pss.SetSignalLevel(sigAbnormalLevel);
-            if(other.name.Contains("Weak")){
-                ExperimentServer.RecordData("Enters GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
-            } else {
-                rpn.yawCenter = other.transform.eulerAngles.y;
-                rpn.strength_mean = strongWindStrength;
-                rpn.pulse_duration_mean = 1000f;
-                rpn.wind_change_flag = true;
-                ExperimentServer.RecordData("Enters GPS Denied Area with wind at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength:" + strongWindStrength);
-            }
-            isGPSDenied = true;
-        } else if(other.tag == "WindZone"){
-            other.gameObject.SetActive(false);
-            rpn.fixedDuration = true;
-            if(other.name.Contains("Weak")){
-                StartCoroutine(WindTurbulenceFixedDuration(other.transform.eulerAngles.y + 180));
-                //rpn.strength_mean = windStrength;
-                //rpn.pulse_duration_mean = windDuration;
-                ExperimentServer.RecordData("Wind Drifting starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "variation:away-from-surf");
-            } else {
-                //StartCoroutine(SetSignaForWindTurbulence(strongWindDuration));
-                StartCoroutine(WindTurbulenceFixedDuration(other.transform.eulerAngles.y));
-                
-                ExperimentServer.RecordData("Wind Drifting starts at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "variation:towards-surf");
-            }
-            
-        } else if(other.tag == "BatteryDrop"){
-            batteryDropped = true;
-            other.gameObject.SetActive(false);
-            battery.BatteryDropToCritical();
-            if(other.name.Contains("Strong")){
-                pss.SetSignalLevel(sigAbnormalLevel);
-                ExperimentServer.RecordData("Battery dropped and signal lost", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
-            } else {
-                ExperimentServer.RecordData("Battery dropped", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
-            }
-        }
-    }
-
-    private void OnTriggerExit(Collider other) {
-        if(batteryDropped)
-            return;
-        if(other.tag == "GPSWeakZone" && isGPSDenied){
-            pss.SetSignalLevel(3);
-            pss.switch_gps_normal = true;
-            ExperimentServer.RecordData("Exits GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
-            rpn.strength_mean = 0f;
-            rpn.pulse_duration_mean = 1f;
-            rpn.wind_change_flag = true;
-            isGPSDenied = false;
-        } 
-    }
-
-    public void SetMaxPitchRoll(float value){
-        max_pitch = value;
-        max_roll = value;
-    }
-
-    IEnumerator WindTurbulenceFixedDuration(float yawCenter){
-        //if(signalLost)
-        //    pss.SetSignalLevel(sigAbnormalLevel);
-        rpn.yawCenter = yawCenter;
-        rpn.strength_mean = strongWindStrength;
-        rpn.pulse_duration_mean = windDuration/4;
-        rpn.wind_change_flag = true;
-        yield return new WaitForSeconds(windDuration/4);
-        rpn.strength_mean = windStrength;
-        rpn.pulse_duration_mean = windDuration/2;
-        rpn.wind_change_flag = true;
-        yield return new WaitForSeconds(windDuration/2);
-        rpn.strength_mean = strongWindStrength;
-        rpn.pulse_duration_mean = windDuration/2;
-        rpn.wind_change_flag = true;
-        yield return new WaitForSeconds(windDuration/4);
-
-        //if(signalLost){
-        //    pss.SetSignalLevel(3);
-        //    pss.switch_gps_normal = true;
-        //}
-    }
 }

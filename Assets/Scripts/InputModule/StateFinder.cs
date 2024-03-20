@@ -15,9 +15,11 @@ public class StateFinder : MonoBehaviour {
 		public Vector3 WorldAcceleration;
 	}
 	public Pose pose;
+
+	float landedHeight;
 	public float Altitude; // The current altitude from the zero position
 
-	public Vector3 VelocityVector; // Velocity vector
+	public Vector3 LocalVelocityVector; // Velocity vector
 
 	private Vector3 previousWorldVelocity;
 	public Vector3 AngularVelocityVector; // Angular Velocity
@@ -52,10 +54,10 @@ public class StateFinder : MonoBehaviour {
 //
 		pose.Angles = new Vector3 (Pitch, Yaw, Roll);
 
-		Altitude = vc.transform.position.y;
+		Altitude = vc.transform.position.y - landedHeight;
 
 		pose.WorldVelocity = vc.transform.GetComponent<Rigidbody> ().velocity;
-		VelocityVector = vc.transform.InverseTransformDirection (pose.WorldVelocity);
+		LocalVelocityVector = vc.transform.InverseTransformDirection (pose.WorldVelocity);
 
 		pose.WorldAcceleration = (pose.WorldVelocity-previousWorldVelocity)/Time.fixedDeltaTime;
 
@@ -75,11 +77,12 @@ public class StateFinder : MonoBehaviour {
 
 	}
 
-	public void Reset() {
+	public void Reset(float landedHeight) {
 		flag = true;
-		VelocityVector = Vector3.zero;
+		LocalVelocityVector = Vector3.zero;
 		AngularVelocityVector = Vector3.zero;
 		pose.Angles = Vector3.zero;
+		this.landedHeight = landedHeight;
 		Altitude = 0.0f;
 
 		enabled = true;
