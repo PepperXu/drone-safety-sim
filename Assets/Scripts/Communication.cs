@@ -40,6 +40,9 @@ public class Communication : MonoBehaviour
 
     }
 
+    public struct BatteryData{
+        public float batteryPercentage;
+    }
 
 
 
@@ -47,8 +50,7 @@ public class Communication : MonoBehaviour
     public static CollisionData collisionData;
 
 
-    [SerializeField] float inputLatency;
-    [SerializeField] float signalReceivingLatency;
+
     [SerializeField] float cameraLatency;
     [SerializeField] Camera FPVCamera;
     RenderTexture renderTexture;
@@ -80,16 +82,9 @@ public class Communication : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
-        //Debug.Log(RenderTexture.active);
+
     }
 
-    IEnumerator LaggedTransferInputCommand(){
-        yield return new WaitForEndOfFrame();
-    }
-    IEnumerator LaggedTransferCameraCommand(){
-        yield return new WaitForEndOfFrame();
-    }
     IEnumerator LaggedTransferCameraImages(){   
         while(true){
             yield return new WaitForEndOfFrame();

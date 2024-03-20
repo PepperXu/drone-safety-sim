@@ -16,9 +16,7 @@ public class UIUpdater : MonoBehaviour
     [SerializeField] Image batteryIcon;
     [SerializeField] Sprite[] batterySprites;
     [SerializeField] TextMeshProUGUI batteryPercentage;
-    [SerializeField] TextMeshProUGUI batteryRemainingTime, batteryVoltage;
-    [SerializeField] TextMeshProUGUI batteryPercentageCircular;
-    [SerializeField] Image batteryRing;
+    [SerializeField] TextMeshProUGUI batteryRemainingTime;
 
     [SerializeField] Image GNSSIcon;
     [SerializeField] Sprite[] GNSSSprites;
@@ -32,68 +30,28 @@ public class UIUpdater : MonoBehaviour
 
     [Header("Mission States")]
     [SerializeField] TextMeshProUGUI missionState;
-    //[SerializeField] TextMeshProUGUI cameraCountUI, defectCountUI, progressPercentageUI, defectCountPlusUI;
     [SerializeField] Image cameraBorderUI;
 
     [Header("Audio")]
     [SerializeField] AudioSource audioSource;
     [SerializeField] AudioClip camCapture;
-    //[SerializeField] AudioSource secondaryAudioSource;
-    //[SerializeField] AudioClip beep, monitoring_ok, monitoring_warn, monitoring_alert, camCapture;
+
     
     [Header("External Anchors")]
     [SerializeField] Transform headAnchor, bodyAnchor;
 
-    //[Header("General References")]
-    //[SerializeField] GameObject monitoringUI;
-    //[SerializeField] Image movement_enabled, movement_locked;
-
-    [Header("Current Interface")]
-    //[SerializeField] GameObject currentVisStatus;
-    //[SerializeField] GameObject pilotView; 
-    //[SerializeField] GameObject taskView, allView;
-
     [Header("Buttons")]
     [SerializeField] Toggle autoPilotToggle;
 
-    //[Header("Distance Cursors")]
-    //[SerializeField] RectTransform distance2surfaceCursor;
-    //[SerializeField] RectTransform distance2groundCursor;
-    
-    //private bool attachedToHead = false;
-    //private bool uiSelected = false;
-    //private XRRayInteractor currentRayInteractor = null;
-
     [Header("Public Parameters")]
-    //public float healthyInterval = 1.2f; 
-    //public float warningInterval = 0.8f, emergencyInterval = 0.4f;
-    //public bool enableSound = false;
-    //public float vpsHeight = 0f;
-    //public float missionProgress = 0f;
-    //public float currentBatteryPercentage = 1f;
-    //public float remainingTime;
-    //public float positional_signal_level;
-    //public int satelliteCount = 35;
-
-    //public float voltage;
-
-    //public Vector3 vector2surface;
-
     [SerializeField] StateFinder droneState;
-//
-//bool continuous = true;
-//float currentMonitoringInterval = 1.2f;
-//float monitoringTimer = 0f;
     int defectCount = 0;
-    //float progressPercentage = 0f;
     string[] flightStateString = {"Landed", "Taking Off", "Hovering", "Navigating", "Landing"};
     string[] missionStateString = {"Planning", "Moving to Flight Zone", "In Flight Zone", "Inspecting", "Interrupted", "Returning"};
-    //string[] systemStateString = {"Healthy", "Caution", "Warning", "Emergency"};
     string[] controlStateString = {"Auto", "Manual"};
 
     public void ResetUI(){
         defectCount = 0;
-        //vector2surface = Vector3.positiveInfinity;
     }
 
 
@@ -110,9 +68,6 @@ public class UIUpdater : MonoBehaviour
             autoPilotToggle.isOn = false;
 
         batteryPercentage.text = ((int) ((currentBatteryPercentage - 0.2f)/ 0.8f * 100f)) + "%";
-        //batteryPercentageCircular.text = ((int) ((currentBatteryPercentage - 0.2f)/ 0.8f * 100f)) + "%";
-        //batteryRing.fillAmount = (currentBatteryPercentage - 0.2f)/ 0.8f;
-        batteryVoltage.text = ((int) (voltage * 10f)) / 10f + "V";
         
         int remainingTimeMinutes = Mathf.FloorToInt(remainingTime/60);
         batteryRemainingTime.text = remainingTimeMinutes + ":" + Mathf.FloorToInt(remainingTime - remainingTimeMinutes * 60);
@@ -155,13 +110,6 @@ public class UIUpdater : MonoBehaviour
             batteryPercentageCircular.color = Color.red;
         }
 
-        //if(voltage > 10f){
-        //    batteryVoltage.color = Color.white;
-        //} else if(voltage > 9f){
-        //    batteryVoltage.color = Color.yellow;
-        //} else {
-        //    batteryVoltage.color = Color.red;
-        //}
 
         switch(positional_signal_level){
             case 3:
@@ -187,181 +135,10 @@ public class UIUpdater : MonoBehaviour
         altitude.text = ((int)droneState.Altitude).ToString();
         horiSpeed.text = ((int)new Vector3(droneState.pose.WorldVelocity.x, 0f, droneState.pose.WorldVelocity.z).magnitude).ToString();
         vertSpeed.text = ((int)Mathf.Abs(droneState.pose.WorldVelocity.y)).ToString();
-        //vps.text = ((int)vpsHeight).ToString();
-        //cameraCountUI.text = CameraController.photoTaken.ToString();
-        //defectCountUI.text = defectCount.ToString();
-        //progressPercentageUI.text = (int)(missionProgress*100f) + "%";
-
-        if(VisType.globalVisType == VisType.VisualizationType.None){
-            currentVisStatus.SetActive(false);
-        } else {
-            currentVisStatus.SetActive(true);
-            if(VisType.globalVisType == VisType.VisualizationType.MissionOnly){
-                taskView.SetActive(true);
-                pilotView.SetActive(false);
-                allView.SetActive(false);
-
-            } else if(VisType.globalVisType == VisType.VisualizationType.SafetyOnly){
-                taskView.SetActive(false);
-                pilotView.SetActive(true);
-                allView.SetActive(false);
-            } else{
-                taskView.SetActive(false);
-                pilotView.SetActive(false);
-                allView.SetActive(true);
-            } 
-        }
-
-
-        //if (enableSound)
-        //{
-        //    if (continuous)
-        //    {
-        //        audioSource.loop = true;
-        //        if(!audioSource.isPlaying)
-        //            audioSource.Play();
-        //    } else
-        //    {
-        //        audioSource.loop = false;
-        //        if (audioSource.clip != beep)
-        //        {
-        //            audioSource.clip = beep;
-        //            StartCoroutine(PlayMonitoringSound());
-        //        }
-        //    }
-        //} else
-        //{
-        //    if (audioSource.isPlaying)
-        //        audioSource.Stop();
-        //}
-
-        //CheckingSystemState();
 
         UpdateCompassUI();
-
-        //UpdateDistances();
     }
 
-    //IEnumerator PlayMonitoringSound()
-    //{
-    //    while (enableSound)
-    //    {
-    //        if(monitoringTimer >= currentMonitoringInterval)
-    //        {
-    //            monitoringTimer = 0f;
-    //            audioSource.Play();
-    //        } else
-    //        {
-    //            monitoringTimer += Time.deltaTime;
-    //        }
-    //        yield return new WaitForEndOfFrame();
-    //    }
-    //}
-
-    //void CheckingSystemState(){
-    //    switch (DroneManager.currentSafetyState)
-    //    {
-    //        case DroneManager.SafetyState.Healthy:
-    //            systemState.color = normalColor;
-    //            if(enableSound){
-    //                if (continuous)
-    //                {
-    //                    if (audioSource.clip != monitoring_ok)
-    //                    {
-    //                        audioSource.clip = monitoring_ok;
-    //                        audioSource.Play();
-    //                    }
-//
-    //                }
-    //                else
-    //                    currentMonitoringInterval = healthyInterval;
-    //            }
-    //            break;
-    //        case DroneManager.SafetyState.Caution:
-    //            systemState.color = cautiousColor;
-    //            if(enableSound){
-    //                if (continuous)
-    //                {
-    //                    if (audioSource.clip != monitoring_ok)
-    //                    {
-    //                        audioSource.clip = monitoring_ok;
-    //                        audioSource.Play();
-    //                    }
-    //                }
-    //                else
-    //                    currentMonitoringInterval = warningInterval;
-    //            }
-    //            break;
-    //        case DroneManager.SafetyState.Warning:
-    //            systemState.color = warningColor;
-    //            if(enableSound){
-    //                if (continuous)
-    //                {
-    //                    if (audioSource.clip != monitoring_warn)
-    //                    {
-    //                        audioSource.clip = monitoring_warn;
-    //                        audioSource.Play();
-    //                    }
-    //                }
-    //                else
-    //                    currentMonitoringInterval = warningInterval;
-    //            }
-    //            break;
-    //        case DroneManager.SafetyState.Emergency:
-    //            systemState.color = emergencyColor;
-    //            if(enableSound){
-    //                if (continuous)
-    //                {
-    //                    if (audioSource.clip != monitoring_alert)
-    //                    {
-    //                        audioSource.clip = monitoring_alert;
-    //                        audioSource.Play();
-    //                    }
-    //                }
-    //                else
-    //                    currentMonitoringInterval = emergencyInterval;
-    //            }
-    //            break;
-    //        default:
-    //            Debug.LogError("System State Undefined");
-    //            break;
-    //    }
-    //}
-
-
-    //public void SelectUI(SelectEnterEventArgs args){
-    //    if(!uiSelected){
-    //        uiSelected = true;
-    //        currentRayInteractor = (XRRayInteractor)args.interactorObject;
-    //    }
-    //}
-//
-    //public void UnSelectUI(SelectExitEventArgs args){
-    //    if(currentRayInteractor == (XRRayInteractor)args.interactorObject){
-    //        uiSelected = false;
-    //        currentRayInteractor = null;
-    //        if(attachedToHead){
-    //            monitoringUI.transform.parent = headAnchor;
-    //        } else {
-    //            monitoringUI.transform.parent = bodyAnchor;
-    //        }
-    //    }
-    //}
-//
-//
-    //public void ToggleAttachToHead(ActivateEventArgs args){
-    //    if(uiSelected && currentRayInteractor == (XRRayInteractor)args.interactorObject){
-    //        if(!attachedToHead){
-    //            attachedToHead = true;
-    //            movement_enabled.gameObject.SetActive(false);
-    //            movement_locked.gameObject.SetActive(true);
-    //        } else {
-    //            attachedToHead = false;
-    //            movement_enabled.gameObject.SetActive(true);
-    //            movement_locked.gameObject.SetActive(false);
-    //        }
-    //    }
-    //}
 
 
     public void MarkDefect(ActivateEventArgs args)
