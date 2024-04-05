@@ -13,8 +13,9 @@ public class StateFinder : MonoBehaviour {
 		public Vector3 Angles;
 		public Vector3 WorldVelocity;
 		public Vector3 WorldAcceleration;
+		public float Altitude;
 	}
-	public Pose pose;
+	public static Pose pose;
 
 	float landedHeight;
 	public float Altitude; // The current altitude from the zero position
@@ -29,14 +30,17 @@ public class StateFinder : MonoBehaviour {
 
 	private bool flag = true; // Only get mass and inertia once 
 
-	public VelocityControl vc; // linked externally
+	public Transform droneTransform; // linked externally
 
-	public void GetState() {
+	void FixedUpdate(){
+		UpdateState();
+	}
+	void UpdateState() {
 
-		Vector3 worldDown = vc.transform.InverseTransformDirection (Vector3.down);
+		Vector3 worldDown = droneTransform.transform.InverseTransformDirection (Vector3.down);
 		float Pitch = worldDown.z; // Small angle approximation
 		float Roll = -worldDown.x; // Small angle approximation
-		float Yaw = vc.transform.eulerAngles.y;
+		float Yaw = droneTransform.transform.eulerAngles.y;
 
 //		float Pitch = cc.transform.eulerAngles.x;
 //		Pitch = (Pitch > 180) ? Pitch - 360 : Pitch;
@@ -54,22 +58,22 @@ public class StateFinder : MonoBehaviour {
 //
 		pose.Angles = new Vector3 (Pitch, Yaw, Roll);
 
-		Altitude = vc.transform.position.y - landedHeight;
+		Altitude = droneTransform.transform.position.y - landedHeight;
 
-		pose.WorldVelocity = vc.transform.GetComponent<Rigidbody> ().velocity;
-		LocalVelocityVector = vc.transform.InverseTransformDirection (pose.WorldVelocity);
+		pose.WorldVelocity = droneTransform.transform.GetComponent<Rigidbody> ().velocity;
+		LocalVelocityVector = droneTransform.transform.InverseTransformDirection (pose.WorldVelocity);
 
 		pose.WorldAcceleration = (pose.WorldVelocity-previousWorldVelocity)/Time.fixedDeltaTime;
 
-		AngularVelocityVector = vc.transform.GetComponent<Rigidbody> ().angularVelocity;
-		AngularVelocityVector = vc.transform.InverseTransformDirection (AngularVelocityVector);
+		AngularVelocityVector = droneTransform.transform.GetComponent<Rigidbody> ().angularVelocity;
+		AngularVelocityVector = droneTransform.transform.InverseTransformDirection (AngularVelocityVector);
 
-		pose.WorldPosition = vc.transform.position;
+		pose.WorldPosition = droneTransform.transform.position;
 
 		if (flag) {
-			Inertia = vc.transform.GetComponent<Rigidbody> ().inertiaTensor;
+			Inertia = droneTransform.transform.GetComponent<Rigidbody> ().inertiaTensor;
 			//Debug.Log(Inertia.ToString());
-			Mass = vc.transform.GetComponent<Rigidbody> ().mass;
+			Mass = droneTransform.transform.GetComponent<Rigidbody> ().mass;
 			flag = false;
 		}
 

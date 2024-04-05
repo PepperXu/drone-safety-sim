@@ -55,6 +55,8 @@ public class VelocityControl : MonoBehaviour {
     [SerializeField] AudioClip take_off, flying, landing;
     AudioSource audioSource;
 
+    
+
 
     // Use this for initialization
     void Start () {
@@ -76,7 +78,7 @@ public class VelocityControl : MonoBehaviour {
         collisionHitCount = 0;
         out_of_balance = false;
         state.Reset(landedHeight);
-        state.GetState();
+        //state.GetState();
         audioSource.Stop();
     }
 
@@ -163,7 +165,7 @@ public class VelocityControl : MonoBehaviour {
     }
 
     void FixedUpdate () {
-        state.GetState ();
+        //state.GetState ();
         
         // NOTE: I'm using stupid vector order (sideways, up, forward) at the end
 

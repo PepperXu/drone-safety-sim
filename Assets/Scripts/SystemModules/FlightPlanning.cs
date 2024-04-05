@@ -49,7 +49,7 @@ public class FlightPlanning : MonoBehaviour
 
     //private int currentSurfIndex = -1;
 
-    [SerializeField] WorldVisUpdater worldVis;
+    //[SerializeField] WorldVisUpdater worldVis;
 
     public bool autoPlan;
 

@@ -72,7 +72,7 @@ public class DroneManager : MonoBehaviour
     [SerializeField] AutopilotManager autopilotManager;
     [SerializeField] CameraController camController;
 
-    [SerializeField] Transform buildingCollision;
+    
 
     [SerializeField] Battery battery;
     [SerializeField] PositionalSensorSimulator posSensor;
@@ -263,7 +263,7 @@ public class DroneManager : MonoBehaviour
             float futureTimer = 0;
             for(int i = 0; i < predictSteps; i++){
                 futureTimer += predictStepLength;
-                travelOffset = state.pose.WorldVelocity * futureTimer + 0.5f * state.pose.WorldAcceleration * futureTimer * futureTimer;
+                travelOffset = StateFinder.pose.WorldVelocity * futureTimer + 0.5f * StateFinder.pose.WorldAcceleration * futureTimer * futureTimer;
                 trajectory.Add(travelOffset);
             }
         } else {
@@ -271,13 +271,13 @@ public class DroneManager : MonoBehaviour
             float futureTimer = 0;
             for (int i = 0; i < predictSteps; i++){
                 futureTimer += predictStepLength;
-                if ((state.pose.WorldVelocity.magnitude - state.pose.WorldAcceleration.magnitude * futureTimer) <= 0f){
-                    float timeUntilStop = state.pose.WorldVelocity.magnitude/state.pose.WorldAcceleration.magnitude;
-                    travelOffset += state.pose.WorldVelocity * timeUntilStop + 0.5f * state.pose.WorldAcceleration * timeUntilStop * timeUntilStop;
+                if ((StateFinder.pose.WorldVelocity.magnitude - StateFinder.pose.WorldAcceleration.magnitude * futureTimer) <= 0f){
+                    float timeUntilStop = StateFinder.pose.WorldVelocity.magnitude/StateFinder.pose.WorldAcceleration.magnitude;
+                    travelOffset += StateFinder.pose.WorldVelocity * timeUntilStop + 0.5f * StateFinder.pose.WorldAcceleration * timeUntilStop * timeUntilStop;
                     trajectory.Add(travelOffset);
                     break;
                 } else {
-                    travelOffset += state.pose.WorldVelocity * futureTimer + 0.5f * state.pose.WorldAcceleration * futureTimer * futureTimer;
+                    travelOffset += StateFinder.pose.WorldVelocity * futureTimer + 0.5f * StateFinder.pose.WorldAcceleration * futureTimer * futureTimer;
                     trajectory.Add(travelOffset);
                 }
             }
@@ -286,39 +286,7 @@ public class DroneManager : MonoBehaviour
     }
 
     //Check drone position related to the contingency buffer. 
-    Vector3 CheckPositionInContingencyBuffer(out bool inBuffer){
-        Vector3 localDronePos = contingencyBuffer.InverseTransformPoint(PositionalSensorSimulator.dronePositionVirtual);
-        inBuffer = Mathf.Abs(localDronePos.x) < 0.5f && Mathf.Abs(localDronePos.y) < 0.5f && Mathf.Abs(localDronePos.z) < 0.5f;
-        if (Mathf.Abs(localDronePos.y) < 0.5f && (Mathf.Abs(localDronePos.x) < 0.5f || Mathf.Abs(localDronePos.z) < 0.5f))
-        {
-            if (inBuffer)
-            {
-                Vector3 vectorToBufferWall;
-                if (Mathf.Abs(Mathf.Abs(localDronePos.x) - 0.5f) < Mathf.Abs(Mathf.Abs(localDronePos.z) - 0.5f))
-                {
-                    vectorToBufferWall = -contingencyBuffer.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * contingencyBuffer.localScale.x;
-                }
-                else
-                {
-                    vectorToBufferWall = -contingencyBuffer.forward * (Mathf.Abs(localDronePos.z) - 0.5f) * Mathf.Sign(localDronePos.z) * contingencyBuffer.localScale.z;
-                }
-                return vectorToBufferWall;
-            } else
-            {
-                if(Mathf.Abs(localDronePos.z) < 0.5f)
-                {
-                    return -contingencyBuffer.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * contingencyBuffer.localScale.x;
-                } else
-                {
-                    return -contingencyBuffer.forward * (Mathf.Abs(localDronePos.z) - 0.5f) * Mathf.Sign(localDronePos.z) * contingencyBuffer.localScale.z;
-                }
-            }
-        } else
-        {
-            return Vector3.positiveInfinity;
-        }
-    }
-
+    
 
     //void UpdateSafetyState(bool inBuffer, float distToBuffer, float distToSurface, int batteryLevel, float voltage, int positional_signal_level, float wind_strength){
     //    if(currentSafetyState == SafetyState.Emergency)
@@ -391,22 +359,7 @@ public class DroneManager : MonoBehaviour
 
     //Distance check to building surface as specified by pilot (the pre-defined bounding box of the building)
     //Not equal to the actual collision detection
-    Vector3 CheckDistanceToBuildingSurface(){
-        Vector3 localDronePos = buildingCollision.InverseTransformPoint(PositionalSensorSimulator.dronePositionVirtual);
-        if(Mathf.Abs(localDronePos.y) >= 0.5f)
-            return Vector3.positiveInfinity;
-        
-        if(Mathf.Abs(localDronePos.x) < 0.5f && Mathf.Abs(localDronePos.z) < 0.5f)
-            return Vector3.positiveInfinity;
-
-        if(Mathf.Abs(localDronePos.x) >= 0.5f && Mathf.Abs(localDronePos.z) >= 0.5f)
-            return Vector3.positiveInfinity;
-
-        if(Mathf.Abs(localDronePos.x) < 0.5f)
-            return -buildingCollision.forward * (Mathf.Abs(localDronePos.z) - 0.5f) * Mathf.Sign(localDronePos.z) * buildingCollision.localScale.z;
-        
-        return -buildingCollision.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * buildingCollision.localScale.x; 
-    }
+    
 
     //To be replaced by the actually collision detection
     //Vector3 CheckTrueDistanceToBuildingSurface(){

@@ -5,11 +5,14 @@ using UnityEngine;
 public class PositionalSensorSimulator : MonoBehaviour
 {
     //int currentSatelliteCount = 35;
-    [SerializeField] UIUpdater uiUpdater;
-    [SerializeField] ControlVisUpdater controlVisUpdater;
-    [SerializeField] WorldVisUpdater worldVisUpdater;
-    [SerializeField] AutopilotManager autopilotManager;
-    [SerializeField] VelocityControl vc;
+    //[SerializeField] UIUpdater uiUpdater;
+    //[SerializeField] ControlVisUpdater controlVisUpdater;
+    //[SerializeField] WorldVisUpdater worldVisUpdater;
+    //[SerializeField] AutopilotManager autopilotManager;
+    //[SerializeField] VelocityControl vc;
+
+    [SerializeField] Transform buildingCollision;
+    [SerializeField] Transform contingencyBuffer;
 
     int positional_signal_level = 3;
     float offsetRefreshIntervalMean = 3f, offsetRefreshIntervalVar = 1.5f;
@@ -29,7 +32,8 @@ public class PositionalSensorSimulator : MonoBehaviour
     Vector3 positionOffset = new Vector3(0f, 0f, 0f);
     float updateRate = 0f;
 
-    public static Vector3 dronePositionVirtual;
+    //private Vector3 virtualDronePosition;
+    //public static Vector3 dronePositionVirtual;
 
     public bool switch_gps_normal, switch_gps_faulty;
     // Start is called before the first frame update
@@ -48,16 +52,15 @@ public class PositionalSensorSimulator : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        uiUpdater.positional_signal_level = positional_signal_level;
-        controlVisUpdater.pos_sig_lvl = positional_signal_level;
-        worldVisUpdater.pos_sig_lvl = positional_signal_level;
+        Communication.positionData.signalLevel = positional_signal_level;
 
         if(switch_gps_normal){
             switch_gps_normal = false;
-            dronePositionVirtual = vc.transform.position;
+            Communication.positionData.virtualPosition = StateFinder.pose.WorldPosition;
             updateRate = Time.deltaTime;
         }
 
+        
         
 
         if(offsetRefreshTimer <= 0f){
@@ -79,9 +82,13 @@ public class PositionalSensorSimulator : MonoBehaviour
                 case 3:
                     //dronePositionVirtual = vc.transform.position;
                     currentMaxPosUncertainty = maxPositionUncertaintyNormal;
-                    currentOffset = dronePositionVirtual - lastDronePos;
+                    currentOffset = Communication.positionData.virtualPosition - lastDronePos;
                     targetOffset = Vector3.MoveTowards(currentOffset, new Vector3(positionOffset.x, 0f , positionOffset.z), gpsDriftSpeedNormal);
-                    dronePositionVirtual = vc.transform.position + targetOffset;
+                    
+                    Vector3 virtualDronePosCurrent = StateFinder.pose.WorldPosition + targetOffset;
+                    
+                    Communication.positionData.virtualPosition = virtualDronePosCurrent;
+                    Communication.positionData.v2Surf = CheckDistanceToBuildingSurface(virtualDronePosCurrent);
                     updateRate = Time.deltaTime;
                     break;
                 case 2:
@@ -92,19 +99,71 @@ public class PositionalSensorSimulator : MonoBehaviour
                     break;
                 case 1:
                     currentMaxPosUncertainty = maxPositionUncertaintyAbnormal;
-                    currentOffset = dronePositionVirtual - lastDronePos;
+                    currentOffset = Communication.positionData.virtualPosition - lastDronePos;
                     targetOffset = Vector3.MoveTowards(currentOffset, new Vector3(positionOffset.x, 0f , positionOffset.z), gpsDriftSpeedAbnormal);
-                    dronePositionVirtual = vc.transform.position + targetOffset;
+                    Communication.positionData.virtualPosition = StateFinder.pose.WorldPosition + targetOffset;
                     updateRate = Time.deltaTime;
                     //updateRate = SamplePositive(signalUpdateRateMean, signalUpdateRateVar);
                     break;
                 case 0:
                     break;
             }
-            lastDronePos = vc.transform.position;
+            lastDronePos = StateFinder.pose.WorldPosition;
             yield return new WaitForSeconds(updateRate);
         }
     }
+
+
+    Vector3 CheckDistanceToBuildingSurface(Vector3 virtualDronePos){
+        Vector3 localDronePos = buildingCollision.InverseTransformPoint(virtualDronePos);
+        if(Mathf.Abs(localDronePos.y) >= 0.5f)
+            return Vector3.positiveInfinity;
+        
+        if(Mathf.Abs(localDronePos.x) < 0.5f && Mathf.Abs(localDronePos.z) < 0.5f)
+            return Vector3.positiveInfinity;
+
+        if(Mathf.Abs(localDronePos.x) >= 0.5f && Mathf.Abs(localDronePos.z) >= 0.5f)
+            return Vector3.positiveInfinity;
+
+        if(Mathf.Abs(localDronePos.x) < 0.5f)
+            return -buildingCollision.forward * (Mathf.Abs(localDronePos.z) - 0.5f) * Mathf.Sign(localDronePos.z) * buildingCollision.localScale.z;
+        
+        return -buildingCollision.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * buildingCollision.localScale.x; 
+    }
+
+    Vector3 CheckPositionInContingencyBuffer(out bool inBuffer, Vector3 virtualDronePos){
+        Vector3 localDronePos = contingencyBuffer.InverseTransformPoint(virtualDronePos);
+        inBuffer = Mathf.Abs(localDronePos.x) < 0.5f && Mathf.Abs(localDronePos.y) < 0.5f && Mathf.Abs(localDronePos.z) < 0.5f;
+        if (Mathf.Abs(localDronePos.y) < 0.5f && (Mathf.Abs(localDronePos.x) < 0.5f || Mathf.Abs(localDronePos.z) < 0.5f))
+        {
+            if (inBuffer)
+            {
+                Vector3 vectorToBufferWall;
+                if (Mathf.Abs(Mathf.Abs(localDronePos.x) - 0.5f) < Mathf.Abs(Mathf.Abs(localDronePos.z) - 0.5f))
+                {
+                    vectorToBufferWall = -contingencyBuffer.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * contingencyBuffer.localScale.x;
+                }
+                else
+                {
+                    vectorToBufferWall = -contingencyBuffer.forward * (Mathf.Abs(localDronePos.z) - 0.5f) * Mathf.Sign(localDronePos.z) * contingencyBuffer.localScale.z;
+                }
+                return vectorToBufferWall;
+            } else
+            {
+                if(Mathf.Abs(localDronePos.z) < 0.5f)
+                {
+                    return -contingencyBuffer.right * (Mathf.Abs(localDronePos.x) - 0.5f) * Mathf.Sign(localDronePos.x) * contingencyBuffer.localScale.x;
+                } else
+                {
+                    return -contingencyBuffer.forward * (Mathf.Abs(localDronePos.z) - 0.5f) * Mathf.Sign(localDronePos.z) * contingencyBuffer.localScale.z;
+                }
+            }
+        } else
+        {
+            return Vector3.positiveInfinity;
+        }
+    }
+
 
 
     public float Sample(float mean, float var)
