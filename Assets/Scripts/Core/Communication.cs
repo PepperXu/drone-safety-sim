@@ -52,8 +52,15 @@ public class Communication : MonoBehaviour
 
 
 
+
+
     public static CollisionData collisionData;
     public static PositionData positionData;
+
+    public static Vector3[] flightTrajectory;
+    public static bool pathPlanned = false;
+    public static int currentWaypointIndex = -1;
+
 
     [SerializeField] float inputLatency;
     [SerializeField] float signalReceivingLatency;

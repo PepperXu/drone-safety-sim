@@ -141,14 +141,14 @@ public class UIUpdater : MonoBehaviour
 
 
 
-    public void MarkDefect(ActivateEventArgs args)
-    {
-        //if (uiSelected)
-        //    return;
-        
-        MarkDefect();
-    }
-
+    //public void MarkDefect(ActivateEventArgs args)
+    //{
+    //    //if (uiSelected)
+    //    //    return;
+    //    
+    //    MarkDefect();
+    //}
+//
     public void MarkDefect()
     {
         if(vector2surface.magnitude > 8f)
@@ -159,7 +159,7 @@ public class UIUpdater : MonoBehaviour
         ExperimentServer.RecordData("Defect Marked at", droneState.pose.WorldPosition.x + "|" + droneState.pose.WorldPosition.y + "|" + droneState.pose.WorldPosition.z, "id: " + defectCount);
         Color c = cameraBorderUI.color;
         cameraBorderUI.color = new Color(c.r, c.g, c.b, 1f);
-        DroneManager.mark_defect_flag = true;
+        //DroneManager.mark_defect_flag = true;
         //defectCountPlusUI.color = Color.red;
         audioSource.PlayOneShot(camCapture);
     }

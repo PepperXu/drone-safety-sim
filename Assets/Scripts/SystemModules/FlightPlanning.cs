@@ -45,13 +45,13 @@ public class FlightPlanning : MonoBehaviour
     [SerializeField] private Transform[] startingPoints;
 
     //private int currentStartingPoint = 0;
-    [SerializeField] private Transform camRig, droneRig;
+    //[SerializeField] private Transform camRig, droneRig;
 
     //private int currentSurfIndex = -1;
 
     //[SerializeField] WorldVisUpdater worldVis;
 
-    public bool autoPlan;
+    private bool autoPlan = true;
 
     private float eventZoneXmin = 830.5f, eventZoneXmax = 853.52f, eventZoneZmin = 1070.69f, eventZoneZmax = 1084.61f;
 
@@ -152,6 +152,7 @@ public class FlightPlanning : MonoBehaviour
         pathVisualization.positionCount = flightTrajectory.Length;
         pathVisualization.SetPositions(flightTrajectory);
         pathPlanned = true;
+        Communication.flightTrajectory = flightTrajectory;
     }
 
     void GenerateTrajectoryOnSurface(ref List<Vector3> path, Transform wpParent, int surfaceIndex, bool fromTop, bool reverse){
@@ -241,10 +242,11 @@ public class FlightPlanning : MonoBehaviour
 
     public void FinishPlanning(){
         if(pathPlanned){
-            DroneManager.finish_planning_flag = true;
+            //DroneManager.finish_planning_flag = true;
             planningUI.SetActive(false);
             monitoringUI.SetActive(true);
-            worldVis.UpdateWaypontList(wpList.ToArray());
+            Communication.pathPlanned = true;
+            //worldVis.UpdateWaypontList(wpList.ToArray());
             VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
         }
     }
@@ -357,25 +359,25 @@ public class FlightPlanning : MonoBehaviour
         return pathPlanned;
     }
 
-    public Vector3 GetCurrentWaypoint(int index, out bool out_of_bound){
-        if(index >= flightTrajectory.Length)
-        {
-            out_of_bound = true;
-            return Vector3.zero;
-        } else {
-            out_of_bound = false;
-            return flightTrajectory[index];
-        }
-    }
-
-    //public int GetCurrentStartingPointIndex(){
-    //    return currentStartingPoint;
+    //public Vector3 GetCurrentWaypoint(int index, out bool out_of_bound){
+    //    if(index >= flightTrajectory.Length)
+    //    {
+    //        out_of_bound = true;
+    //        return Vector3.zero;
+    //    } else {
+    //        out_of_bound = false;
+    //        return flightTrajectory[index];
+    //    }
     //}
-
-    public int GetTotalWaypointCount()
-    {
-        return flightTrajectory.Length;
-    }
+//
+    ////public int GetCurrentStartingPointIndex(){
+    ////    return currentStartingPoint;
+    ////}
+//
+    //public int GetTotalWaypointCount()
+    //{
+    //    return flightTrajectory.Length;
+    //}
 
     public void SetVerticalGap(Slider slider){
         verticalSteps = (int)slider.value;

@@ -45,31 +45,31 @@ public class ControlVisUpdater : MonoBehaviour
     [SerializeField] private GameObject flightStatusInspecting, flightStatusLanding;
 
 
-    [Header("Other References")]
-    [SerializeField] private LayerMask realObstacleLayerMask;
+    //[Header("Other References")]
+    //[SerializeField] private LayerMask realObstacleLayerMask;
 
-    [SerializeField] private Transform droneParent;
-
-
-    private float dis2ground;
+    //[SerializeField] private Transform droneParent;
 
 
-    [Header("Public Fields (Do not modify)")]
-    public Vector3[] predictedPoints;
+    //private float dis2ground;
 
-    public bool inBuffer;
-    public Vector3 vectorToNearestBufferBound, vectorToNearestSurface;
+
+    //[Header("Public Fields (Do not modify)")]
+    //public Vector3[] predictedPoints;
+
+    //public bool inBuffer;
+    //public Vector3 vectorToNearestBufferBound, vectorToNearestSurface;
 
     //public Vector3 positionOffset = Vector3.zero;
 
-    public float windStrength;
-    public Quaternion windRotation;
+    //public float windStrength;
+    //public Quaternion windRotation;
 
-    public float batteryPercentage, remainingTimeInSeconds;
+    //public float batteryPercentage, remainingTimeInSeconds;
 
-    public int pos_sig_lvl;
+    //public int pos_sig_lvl;
 
-    [SerializeField] StateFinder droneState;
+    //[SerializeField] StateFinder droneState;
 
     //public float updateRate;
     

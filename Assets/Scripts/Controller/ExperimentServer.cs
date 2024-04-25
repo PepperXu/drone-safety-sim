@@ -92,6 +92,9 @@ public class ExperimentServer : MonoBehaviour
 		if(isRecording)
 			expTimer += Time.deltaTime;
 
+
+		
+
 		if(DroneManager.currentFlightState == DroneManager.FlightState.TakingOff && !isRecording){
 			StartRecording();
 			RecordData("Visualization Condition", visConditionString[(int)currentVisCondition] , "");

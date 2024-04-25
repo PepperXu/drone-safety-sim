@@ -3,18 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR.Interaction.Toolkit.Utilities.Tweenables.Primitives;
 
 //A central script for decision making based on flight data.
 //Should not be used for accepting input directly from the user.
 public class DroneManager : MonoBehaviour
 {
-    public enum FlightState{
-        Landed,
-        TakingOff,
-        Hovering,
-        Navigating,
-        Landing
-    }
 
     public enum MissionState{
         Planning,
@@ -49,25 +43,24 @@ public class DroneManager : MonoBehaviour
     //private VisType[] safeVis;
     //private VisType[] misVis;
 
-    public static FlightState currentFlightState = FlightState.Landed;
     //public static SafetyState currentSafetyState {get; private set;}
     public static ControlType currentControlType {get; private set;}
     public static MissionState currentMissionState {get; private set;}
 
     //private StateFinder.Pose originalPose;
 
-    private bool controlActive = false;
+    //private bool controlActive = false;
 
     public static bool autopilot_flag = false, autopilot_stop_flag = false, rth_flag = false, take_photo_flag = false, mark_defect_flag = false, finish_planning_flag = false;
 
-    [SerializeField] float predictStepLength = 1f;
-    [SerializeField] int predictSteps = 3;
+    //[SerializeField] float predictStepLength = 1f;
+    //[SerializeField] int predictSteps = 3;
 
     [SerializeField] FlightPlanning flightPlanning;
 
-    [SerializeField] Transform contingencyBuffer;
+    //[SerializeField] Transform contingencyBuffer;
 
-    [SerializeField] LayerMask realObstacleLayerMask;
+    //[SerializeField] LayerMask realObstacleLayerMask;
 
     [SerializeField] AutopilotManager autopilotManager;
     [SerializeField] CameraController camController;
@@ -81,8 +74,8 @@ public class DroneManager : MonoBehaviour
     [SerializeField] EventTriggerDetection eventTriggerDetection;
     [SerializeField] CollisionSensing collisionSensing;
 
-    public static float bufferCautionThreahold = 1f, surfaceCautionThreshold = 6.0f, surfaceWarningThreshold = 4.0f;
-    private float windStrengthWarningCoolDownTimer, windStrengthWarningCoolDownTime = 3f;
+    //public static float bufferCautionThreahold = 1f, surfaceCautionThreshold = 6.0f, surfaceWarningThreshold = 4.0f;
+    //private float windStrengthWarningCoolDownTimer, windStrengthWarningCoolDownTime = 3f;
 
 
     // Start is called before the first frame update
@@ -93,7 +86,7 @@ public class DroneManager : MonoBehaviour
 
     public void ResetAllStates(){
         finish_planning_flag = false;
-        currentFlightState = FlightState.Landed;
+        //currentFlightState = FlightState.Landed;
         currentMissionState = MissionState.Planning;
         currentControlType = ControlType.Manual;
         //currentSafetyState = SafetyState.Healthy;
@@ -110,7 +103,7 @@ public class DroneManager : MonoBehaviour
         battery.ResetBattery();
         posSensor.ResetSignalLevel();
         autopilot_flag = false;
-        autopilot_stop_flag = false;  
+        autopilot_stop_flag = false;
         rth_flag = false; 
         take_photo_flag = false;
         mark_defect_flag = false;
@@ -122,26 +115,20 @@ public class DroneManager : MonoBehaviour
     {
         
         //Obsolete: the planning phase is automated. 
-        if(currentMissionState == MissionState.Planning && finish_planning_flag){
-            finish_planning_flag = false;
-            currentMissionState = MissionState.MovingToFlightZone;
-        }
+        //if(currentMissionState == MissionState.Planning && finish_planning_flag){
+        //    finish_planning_flag = false;
+        //    currentMissionState = MissionState.MovingToFlightZone;
+        //}
 
-
-        if(currentFlightState == FlightState.TakingOff){
-            if(Mathf.Abs(state.Altitude - vc.desired_height)< 0.1f){
-                currentFlightState = FlightState.Hovering;
-                ic.EnableControl(true);
-            }
-        }
 
         //During normal flight
-        if (currentFlightState == FlightState.Navigating || currentFlightState == FlightState.Hovering) {
+        if (vc.currentFlightState == VelocityControl.FlightState.Navigating || vc.currentFlightState == VelocityControl.FlightState.Hovering) {
+            ic.EnableControl(true);
             controlVisUpdater.SetControlVisActive(true);
-            //uiUpdater.enableSound = true;
             collisionSensing.collisionSensingEnabled = true;
 
-            bool inBuffer = false;
+
+            //bool inBuffer = false;
             Vector3 v2bound = CheckPositionInContingencyBuffer(out inBuffer);
             worldVisUpdater.inBuffer = inBuffer;
             worldVisUpdater.distToBuffer = v2bound.magnitude;
@@ -154,13 +141,13 @@ public class DroneManager : MonoBehaviour
             worldVisUpdater.vectorToSurface = v2surf;
             uiUpdater.vector2surface = v2surfTrue;
             
-            if(currentMissionState != MissionState.Inspecting && currentMissionState != MissionState.Returning)
-                currentMissionState = inBuffer?MissionState.InFlightZone:MissionState.MovingToFlightZone;
+            //if(currentMissionState != MissionState.Inspecting && currentMissionState != MissionState.Returning)
+            //    currentMissionState = inBuffer?MissionState.InFlightZone:MissionState.MovingToFlightZone;
 
 
             if (rth_flag)
             {
-                EngageAutoPilot(true);
+                autopilotManager.EnableRTH();
                 currentControlType = ControlType.Autonomous;
                 currentMissionState = MissionState.Returning;
                 rth_flag = false;
@@ -169,7 +156,7 @@ public class DroneManager : MonoBehaviour
             if(mark_defect_flag){
                 mark_defect_flag = false;
                 camController.TakePhoto(true);
-                worldVisUpdater.SpawnCoverageObject(true); 
+                //worldVisUpdater.SpawnCoverageObject(true); 
             }
 
             if (currentMissionState == MissionState.InFlightZone)
@@ -178,7 +165,7 @@ public class DroneManager : MonoBehaviour
                 {
                     if (flightPlanning.isPathPlanned())
                     {
-                        EngageAutoPilot(false);
+                        autopilotManager.EnableAutopilot();
                         currentControlType = ControlType.Autonomous;
                         currentMissionState = MissionState.Inspecting;
                     }
@@ -192,61 +179,64 @@ public class DroneManager : MonoBehaviour
                 {
                     take_photo_flag = false;
                     camController.TakePhoto(false);
-                    worldVisUpdater.SpawnCoverageObject(false);
+                    //worldVisUpdater.SpawnCoverageObject(false);
                 }
             }
 
-            if (currentFlightState == FlightState.Navigating){
-                if(Vector3.Magnitude(state.pose.WorldAcceleration) < 0.1f && Vector3.Magnitude(state.pose.WorldVelocity) < 0.1f){
-                    currentFlightState = FlightState.Hovering;
-                } else {
-                    if(vc.desired_vx == 0 && vc.desired_vy == 0 && vc.desired_yaw == 0 && vc.height_diff == 0){ 
-                        controlActive = false;
-                    } else {
-                        controlActive = true;
-                    }
-                    PredictFutureTrajectory();
-                }
-            } 
-
-            if(currentFlightState == FlightState.Hovering){
-                if(vc.desired_vx != 0 || vc.desired_vy != 0 || vc.desired_yaw != 0 || vc.height_diff != 0){
-                    currentFlightState = FlightState.Navigating;
-                    controlActive = true;
-                }else{
-                    controlVisUpdater.predictedPoints = new Vector3[0];
-                }
-            }
+            //if (currentFlightState == FlightState.Navigating){
+            //    if(Vector3.Magnitude(state.pose.WorldAcceleration) < 0.1f && Vector3.Magnitude(state.pose.WorldVelocity) < 0.1f){
+            //        currentFlightState = FlightState.Hovering;
+            //    } else {
+            //        if(vc.desired_vx == 0 && vc.desired_vy == 0 && vc.desired_yaw == 0 && vc.height_diff == 0){ 
+            //            controlActive = false;
+            //        } else {
+            //            controlActive = true;
+            //        }
+            //        PredictFutureTrajectory();
+            //    }
+            //} 
+//
+            //if(currentFlightState == FlightState.Hovering){
+            //    if(vc.desired_vx != 0 || vc.desired_vy != 0 || vc.desired_yaw != 0 || vc.height_diff != 0){
+            //        currentFlightState = FlightState.Navigating;
+            //        controlActive = true;
+            //    }else{
+            //        controlVisUpdater.predictedPoints = new Vector3[0];
+            //    }
+            //}
 
             if(autopilot_stop_flag){
-                DisengageAutoPilot(v2surf.magnitude, battery.GetBatteryLevel(), posSensor.GetSignalLevel(), wind.GetCurrentWindStrength());
+                autopilotManager.StopAutopilot();
+                //(v2surf.magnitude, battery.GetBatteryLevel(), posSensor.GetSignalLevel(), wind.GetCurrentWindStrength());
                 currentControlType = ControlType.Manual;
                 currentMissionState = MissionState.AutopilotInterupted;
                 autopilot_stop_flag = false;
             }
 
             //UpdateSafetyState(inBuffer, v2bound.magnitude, v2surf.magnitude, battery.GetBatteryLevel(), battery.GetBatteryVoltage(), posSensor.GetSignalLevel(), wind.GetCurrentWindStrength());
-        } else
+        } 
+        else
         {
             //uiUpdater.enableSound = false;
             
             ic.EnableControl(false);
-            if(currentFlightState == FlightState.Landing){
+            if(vc.currentFlightState == VelocityControl.FlightState.Landing){
                 collisionSensing.collisionSensingEnabled = false;
                 controlVisUpdater.SetControlVisActive(false);
             }
         }
 
-        if (currentFlightState != FlightState.Landed)
-        {
-            //bool hitGround = false;
-            //Vector3 vectorToGround = Vector3.down * state.Altitude;
-            //bool trueHitGround = false;
-            //Vector3 trueVectorToGround = CheckTrueDistToGround(out trueHitGround);
-            //vc.vectorToGround = vectorToGround;
-            //controlVisUpdater.vectorToGround = vectorToGround;
-            //uiUpdater.vpsHeight = vectorToGround.magnitude;
-        } else {
+        //if (currentFlightState != FlightState.Landed)
+        //{
+        //    //bool hitGround = false;
+        //    //Vector3 vectorToGround = Vector3.down * state.Altitude;
+        //    //bool trueHitGround = false;
+        //    //Vector3 trueVectorToGround = CheckTrueDistToGround(out trueHitGround);
+        //    //vc.vectorToGround = vectorToGround;
+        //    //controlVisUpdater.vectorToGround = vectorToGround;
+        //    //uiUpdater.vpsHeight = vectorToGround.magnitude;
+        //} else {
+        if (vc.currentFlightState == VelocityControl.FlightState.Landed){
             if(currentMissionState == MissionState.Returning){
                 currentMissionState = MissionState.MovingToFlightZone;
             }
@@ -254,36 +244,47 @@ public class DroneManager : MonoBehaviour
         }
     }
 
+    public void SetCurrentDesiredVelocityFromManualInput(float vx, float vy, float yaw, float heightDiff){
+        vc.desired_vx = vx;
+        vc.desired_vy = vy;
+        vc.desired_yaw = yaw;
+        vc.desired_height += heightDiff;
+    }
+
+    public void MarkDefect(){
+        camController.TakePhoto(true);
+    }
+
     //Predict the future trajectory based on number of prediction steps and the predict step length (in seconds), 
     //and the current state.pose.WorldVelocity and state.pose.WorldAcceleration.
-    void PredictFutureTrajectory(){
-        List<Vector3> trajectory = new List<Vector3>();
-        if(controlActive){
-            Vector3 travelOffset = Vector3.zero;
-            float futureTimer = 0;
-            for(int i = 0; i < predictSteps; i++){
-                futureTimer += predictStepLength;
-                travelOffset = StateFinder.pose.WorldVelocity * futureTimer + 0.5f * StateFinder.pose.WorldAcceleration * futureTimer * futureTimer;
-                trajectory.Add(travelOffset);
-            }
-        } else {
-            Vector3 travelOffset = Vector3.zero;
-            float futureTimer = 0;
-            for (int i = 0; i < predictSteps; i++){
-                futureTimer += predictStepLength;
-                if ((StateFinder.pose.WorldVelocity.magnitude - StateFinder.pose.WorldAcceleration.magnitude * futureTimer) <= 0f){
-                    float timeUntilStop = StateFinder.pose.WorldVelocity.magnitude/StateFinder.pose.WorldAcceleration.magnitude;
-                    travelOffset += StateFinder.pose.WorldVelocity * timeUntilStop + 0.5f * StateFinder.pose.WorldAcceleration * timeUntilStop * timeUntilStop;
-                    trajectory.Add(travelOffset);
-                    break;
-                } else {
-                    travelOffset += StateFinder.pose.WorldVelocity * futureTimer + 0.5f * StateFinder.pose.WorldAcceleration * futureTimer * futureTimer;
-                    trajectory.Add(travelOffset);
-                }
-            }
-        }
-        controlVisUpdater.predictedPoints = trajectory.ToArray();
-    }
+    //void PredictFutureTrajectory(){
+    //    List<Vector3> trajectory = new List<Vector3>();
+    //    if(controlActive){
+    //        Vector3 travelOffset = Vector3.zero;
+    //        float futureTimer = 0;
+    //        for(int i = 0; i < predictSteps; i++){
+    //            futureTimer += predictStepLength;
+    //            travelOffset = StateFinder.pose.WorldVelocity * futureTimer + 0.5f * StateFinder.pose.WorldAcceleration * futureTimer * futureTimer;
+    //            trajectory.Add(travelOffset);
+    //        }
+    //    } else {
+    //        Vector3 travelOffset = Vector3.zero;
+    //        float futureTimer = 0;
+    //        for (int i = 0; i < predictSteps; i++){
+    //            futureTimer += predictStepLength;
+    //            if ((StateFinder.pose.WorldVelocity.magnitude - StateFinder.pose.WorldAcceleration.magnitude * futureTimer) <= 0f){
+    //                float timeUntilStop = StateFinder.pose.WorldVelocity.magnitude/StateFinder.pose.WorldAcceleration.magnitude;
+    //                travelOffset += StateFinder.pose.WorldVelocity * timeUntilStop + 0.5f * StateFinder.pose.WorldAcceleration * timeUntilStop * timeUntilStop;
+    //                trajectory.Add(travelOffset);
+    //                break;
+    //            } else {
+    //                travelOffset += StateFinder.pose.WorldVelocity * futureTimer + 0.5f * StateFinder.pose.WorldAcceleration * futureTimer * futureTimer;
+    //                trajectory.Add(travelOffset);
+    //            }
+    //        }
+    //    }
+    //    controlVisUpdater.predictedPoints = trajectory.ToArray();
+    //}
 
     //Check drone position related to the contingency buffer. 
     
@@ -409,15 +410,15 @@ public class DroneManager : MonoBehaviour
     //    }
     //}
 
-    void EngageAutoPilot(bool rth){
-        autopilotManager.EnableAutopilot(true, rth);
-    }
-
-    void DisengageAutoPilot(float distToSurface, int batteryLevel, int positional_signal_level, float wind_strength){
-        autopilotManager.EnableAutopilot(false, false);
-        string tempText = "dist2suf:" + distToSurface + "|windStrength:" + wind_strength + "|gpsLevel:" + positional_signal_level + "|batteryLevel:" + batteryLevel;
-        ExperimentServer.RecordData("Manual Piloting",vc.transform.position.x + "|" + vc.transform.position.y + "|" + vc.transform.position.z, tempText);
-    }
+    //void EngageAutoPilot(bool rth){
+    //    autopilotManager.EnableAutopilot(true, rth);
+    //}
+//
+    //void DisengageAutoPilot(float distToSurface, int batteryLevel, int positional_signal_level, float wind_strength){
+    //    autopilotManager.EnableAutopilot(false, false);
+    //    string tempText = "dist2suf:" + distToSurface + "|windStrength:" + wind_strength + "|gpsLevel:" + positional_signal_level + "|batteryLevel:" + batteryLevel;
+    //    ExperimentServer.RecordData("Manual Piloting",vc.transform.position.x + "|" + vc.transform.position.y + "|" + vc.transform.position.z, tempText);
+    //}
 
     
 }

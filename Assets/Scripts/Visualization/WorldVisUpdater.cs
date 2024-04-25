@@ -10,8 +10,10 @@ public class WorldVisUpdater : MonoBehaviour
     [SerializeField] VisType flightPlan;
     [SerializeField] VisType coverage;
     [SerializeField] VisType landing_zones;
-    Waypoint[] waypoints;
-    public int currentWaypointIndex = -1;
+
+    //[SerializeField] LineRenderer pathVisualization;
+    
+    //public int currentWaypointIndex = -1;
     //public float missionProgress;
 
     //[SerializeField] Transform droneParent;
@@ -20,17 +22,19 @@ public class WorldVisUpdater : MonoBehaviour
     //Gradient defaultGradient = new Gradient();
     Color inspectionTrajColor = new Color(0f, 1f, 1f);
 
-    public Vector3 vectorToSurface;
-    public Transform currentHomepoint;
+    //public Vector3 vectorToSurface;
+    //public Transform currentHomepoint;
     Transform currentEnabledHomepoint;
-    public float currentBatteryPercentage;
 
-    public int pos_sig_lvl;
+    List<Waypoint> waypoints = new List<Waypoint>();
+    //public float currentBatteryPercentage;
 
-    public bool inBuffer;
-    public float distToBuffer;
+    //public int pos_sig_lvl;
 
-    public RaycastHit? currentHit;
+    //public bool inBuffer;
+    //public float distToBuffer;
+
+    //public RaycastHit? currentHit;
 
     List<GameObject> spawnedCoverageObjects = new List<GameObject>();
 
@@ -52,7 +56,9 @@ public class WorldVisUpdater : MonoBehaviour
 
     void ResetTrajectoryVis(){
         LineRenderer traj = flightPlan.visRoot.GetChild(0).GetComponent<LineRenderer>();
-        foreach(Waypoint wp in waypoints){
+        foreach(Transform t in traj.transform.GetChild(0)){
+            Waypoint wp = t.GetComponent<Waypoint>();
+            waypoints.Add(wp);
             wp.currentWaypointState = Waypoint.WaypointState.Neutral;
         }
         Gradient g = traj.colorGradient;
@@ -97,17 +103,17 @@ public class WorldVisUpdater : MonoBehaviour
         if(!flightPlan.gameObject.activeInHierarchy)
             return;
 
-        if(waypoints == null || waypoints.Length <= 0)
+        if(waypoints == null || waypoints.Count <= 0)
             return;
         
         //LineRenderer traj = flightPlan.visRoot.GetChild(0).GetComponent<LineRenderer>();
         if(DroneManager.currentMissionState == DroneManager.MissionState.Inspecting){
-            for(int i = 0; i < waypoints.Length; i++){
-                if(i == currentWaypointIndex) {
+            for(int i = 0; i < waypoints.Count; i++){
+                if(i == Communication.currentWaypointIndex) {
                     waypoints[i].currentWaypointState = Waypoint.WaypointState.Next;
-                    waypoints[i].missionProgress = (float)currentWaypointIndex/waypoints.Length;
+                    waypoints[i].missionProgress = (float)Communication.currentWaypointIndex/waypoints.Count;
                 }
-                else if(i == currentWaypointIndex+1)
+                else if(i == Communication.currentWaypointIndex + 1)
                     waypoints[i].currentWaypointState = Waypoint.WaypointState.NextNext;
                 else
                     waypoints[i].currentWaypointState = Waypoint.WaypointState.Hidden;
@@ -156,13 +162,15 @@ public class WorldVisUpdater : MonoBehaviour
         }
     }
 
-    public void UpdateWaypontList(Waypoint[] wps){
-        waypoints = wps;
-    }
-
-    public void SpawnCoverageObject(bool marked){
+    //public void UpdateWaypontList(Waypoint[] wps){
+    //    waypoints = wps;
+    //}
+//
+    void UpdateCamCoverage(){
         if(pos_sig_lvl != 3)
             return;
+
+        
         GameObject covObj = Instantiate(coverageObject);
         covObj.transform.position = PositionalSensorSimulator.dronePositionVirtual + vectorToSurface;
         covObj.transform.rotation = Quaternion.LookRotation(Vector3.up, -vectorToSurface.normalized);

@@ -7,8 +7,9 @@ public class InteractiveCamera : MonoBehaviour
 {
     [SerializeField] private Camera fpvCam;
     [SerializeField] private LayerMask buildingCollision;
-    [SerializeField] private WorldVisUpdater worldVisUpdater;
-    [SerializeField] private UIUpdater uIUpdater;
+    [SerializeField] private DroneManager droneManager;
+    //[SerializeField] private WorldVisUpdater worldVisUpdater;
+    //[SerializeField] private UIUpdater uIUpdater;
     // Start is called before the first frame update
     void Start()
     {
@@ -29,8 +30,10 @@ public class InteractiveCamera : MonoBehaviour
 
         RaycastHit buildingHit;
         if(Physics.Raycast(ray, out buildingHit, float.PositiveInfinity, buildingCollision)){
-            worldVisUpdater.currentHit = buildingHit;
-            uIUpdater.MarkDefect();
+
+            //worldVisUpdater.currentHit = buildingHit;
+            //uIUpdater.MarkDefect();
+            
         }
     }
 }

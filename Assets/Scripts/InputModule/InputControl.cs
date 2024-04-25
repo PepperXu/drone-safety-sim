@@ -6,7 +6,7 @@ using UnityEngine;
 public class InputControl : MonoBehaviour {
 
 	private bool inputEnabled = false;
-	public VelocityControl vc;
+	//public VelocityControl vc;
 
 	private float abs_height = 1;
 
@@ -21,7 +21,9 @@ public class InputControl : MonoBehaviour {
 	private bool autopilot_toggled_on;
 	private bool autopilot_toggled_off;
 
-	[SerializeField] UIUpdater uiUpdater;
+	[SerializeField] private DroneManager droneManager;
+
+	//[SerializeField] UIUpdater uiUpdater;
 
 
 	// Use this for initialization
@@ -32,17 +34,22 @@ public class InputControl : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
-		if(DroneManager.currentMissionState == DroneManager.MissionState.Planning)
-			return;
+		//if(DroneManager.currentMissionState == DroneManager.MissionState.Planning)
+		//	return;
 
-		if (Input.GetButtonDown("TakeOff") || take_off_button_pressed)
-		{
-			take_off_button_pressed = false;
-			vc.take_off_flag = true;
-		}
+		
 
 
 		if (inputEnabled){
+			
+			if(!droneManager)
+				Debug.LogError("Drone Manager Not Found!");
+
+			if (Input.GetButtonDown("TakeOff") || take_off_button_pressed)
+			{
+				take_off_button_pressed = false;
+				droneManager.take_off_flag = true;
+			}
 
 			float pitchAxis = Input.GetAxis("Pitch");
 			float rollAxis = Input.GetAxis ("Roll");
@@ -60,35 +67,52 @@ public class InputControl : MonoBehaviour {
 			} else {
 				height_diff = throttleAxix * vertical_sensitivity;
 			}
+			
 
-			if (DroneManager.currentControlType == DroneManager.ControlType.Manual)
-			{
-				vc.desired_vx = vx;
-				vc.desired_vy = vy;
-				vc.desired_yaw = yaw;
-				vc.desired_height += height_diff;
-				if (Input.GetButtonDown("AutoPilot") || autopilot_toggled_on)
-            	{
-					autopilot_toggled_on = false;
-					DroneManager.autopilot_flag = true;
-				}
-			} else {
-				if (Input.GetButtonDown("AutoPilot") || autopilot_toggled_off || Mathf.Abs(pitchAxis) > 0.1f || Mathf.Abs(rollAxis) > 0.1f || Mathf.Abs(yawAxis) > 0.1f || Mathf.Abs(throttleAxix) > 0.1f)
-            	{
-					DroneManager.autopilot_stop_flag = true;
-					autopilot_toggled_off = false;
-					//DroneManager.currentMissionState = DroneManager.MissionState.AutopilotInterupted;
-            	}
+			if (Input.GetButtonDown("AutoPilot") || autopilot_toggled_on)
+            {
+				autopilot_toggled_on = false;
+				droneManager.autopilot_flag = true;
 			}
 
-            if (Input.GetButtonDown("RTH") || rth_button_pressed)
+			if(Mathf.Abs(pitchAxis) > 0.1f || Mathf.Abs(rollAxis) > 0.1f || Mathf.Abs(yawAxis) > 0.1f || Mathf.Abs(throttleAxix) > 0.1f){
+				droneManager.autopilot_stop_flag = true;
+				autopilot_toggled_off = false;
+				droneManager.SetCurrentDesiredVelocityFromManualInput(vx, vy, yaw, height_diff);
+			}
+
+			if (Input.GetButtonDown("AutoPilot") || autopilot_toggled_off)
+            {
+				droneManager.autopilot_stop_flag = true;
+				autopilot_toggled_off = false;	
+				//DroneManager.currentMissionState = DroneManager.MissionState.AutopilotInterupted;
+            }
+
+			if (Input.GetButtonDown("RTH") || rth_button_pressed)
             {
 				rth_button_pressed = false;
-				DroneManager.rth_flag = true;
+				droneManager.rth_flag = true;
             }
+
 			if(Input.GetButtonDown("MarkDefect")){
-				uiUpdater.MarkDefect();
+				//uiUpdater.MarkDefect();
+				droneManeger.MarkDefect();
 			}
+
+
+			//if (DroneManager.currentControlType == DroneManager.ControlType.Manual)
+			//{
+			//	vc.desired_vx = vx;
+			//	vc.desired_vy = vy;
+			//	vc.desired_yaw = yaw;
+			//	vc.desired_height += height_diff;
+			//	
+			//} else {
+			//	
+			//}
+//
+            
+			
 			
 		}
 	}

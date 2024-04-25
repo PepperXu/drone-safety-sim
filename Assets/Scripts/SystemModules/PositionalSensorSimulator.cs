@@ -10,7 +10,7 @@ public class PositionalSensorSimulator : MonoBehaviour
     //[SerializeField] WorldVisUpdater worldVisUpdater;
     //[SerializeField] AutopilotManager autopilotManager;
     //[SerializeField] VelocityControl vc;
-
+    [SerializeField] StateFinder state;
     [SerializeField] Transform buildingCollision;
     [SerializeField] Transform contingencyBuffer;
 
@@ -56,12 +56,9 @@ public class PositionalSensorSimulator : MonoBehaviour
 
         if(switch_gps_normal){
             switch_gps_normal = false;
-            Communication.positionData.virtualPosition = StateFinder.pose.WorldPosition;
+            Communication.positionData.virtualPosition = state.pose.WorldPosition;
             updateRate = Time.deltaTime;
         }
-
-        
-        
 
         if(offsetRefreshTimer <= 0f){
             Vector3 newOffset = Random.onUnitSphere * Random.Range (0f, currentMaxPosUncertainty);
@@ -69,6 +66,7 @@ public class PositionalSensorSimulator : MonoBehaviour
             offsetRefreshTimer = SamplePositive(offsetRefreshIntervalMean, offsetRefreshIntervalVar);
             //updateRate = SamplePositive(signalUpdateRateMean, signalUpdateRateVar);
         } 
+
         offsetRefreshTimer -= Time.deltaTime;
 
         
@@ -85,7 +83,7 @@ public class PositionalSensorSimulator : MonoBehaviour
                     currentOffset = Communication.positionData.virtualPosition - lastDronePos;
                     targetOffset = Vector3.MoveTowards(currentOffset, new Vector3(positionOffset.x, 0f , positionOffset.z), gpsDriftSpeedNormal);
                     
-                    Vector3 virtualDronePosCurrent = StateFinder.pose.WorldPosition + targetOffset;
+                    Vector3 virtualDronePosCurrent = state.pose.WorldPosition + targetOffset;
                     
                     Communication.positionData.virtualPosition = virtualDronePosCurrent;
                     Communication.positionData.v2Surf = CheckDistanceToBuildingSurface(virtualDronePosCurrent);
@@ -101,14 +99,14 @@ public class PositionalSensorSimulator : MonoBehaviour
                     currentMaxPosUncertainty = maxPositionUncertaintyAbnormal;
                     currentOffset = Communication.positionData.virtualPosition - lastDronePos;
                     targetOffset = Vector3.MoveTowards(currentOffset, new Vector3(positionOffset.x, 0f , positionOffset.z), gpsDriftSpeedAbnormal);
-                    Communication.positionData.virtualPosition = StateFinder.pose.WorldPosition + targetOffset;
+                    Communication.positionData.virtualPosition = state.pose.WorldPosition + targetOffset;
                     updateRate = Time.deltaTime;
                     //updateRate = SamplePositive(signalUpdateRateMean, signalUpdateRateVar);
                     break;
                 case 0:
                     break;
             }
-            lastDronePos = StateFinder.pose.WorldPosition;
+            lastDronePos = state.pose.WorldPosition;
             yield return new WaitForSeconds(updateRate);
         }
     }

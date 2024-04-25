@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -15,7 +16,7 @@ public class StateFinder : MonoBehaviour {
 		public Vector3 WorldAcceleration;
 		public float Altitude;
 	}
-	public static Pose pose;
+	public Pose pose;
 
 	float landedHeight;
 	public float Altitude; // The current altitude from the zero position
@@ -82,14 +83,19 @@ public class StateFinder : MonoBehaviour {
 	}
 
 	public void Reset(float landedHeight) {
-		flag = true;
-		LocalVelocityVector = Vector3.zero;
-		AngularVelocityVector = Vector3.zero;
-		pose.Angles = Vector3.zero;
 		this.landedHeight = landedHeight;
-		Altitude = 0.0f;
-
-		enabled = true;
+		flag = true;
 	}
+
+	//public void Reset(float landedHeight) {
+	//	
+	//	LocalVelocityVector = Vector3.zero;
+	//	AngularVelocityVector = Vector3.zero;
+	//	pose.Angles = Vector3.zero;
+	//	this.landedHeight = landedHeight;
+	//	Altitude = 0.0f;
+//
+	//	enabled = true;
+	//}
 
 }
