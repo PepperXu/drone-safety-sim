@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Policy;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit.Utilities.Tweenables.Primitives;
 
@@ -33,12 +35,12 @@ public class DroneManager : MonoBehaviour
         Manual
     }
 
-    [SerializeField] private UIUpdater uiUpdater;
-    [SerializeField] private ControlVisUpdater controlVisUpdater;
-    [SerializeField] private WorldVisUpdater worldVisUpdater;
-    [SerializeField] private StateFinder state;
-    [SerializeField] private VelocityControl vc;
-    [SerializeField] private InputControl ic;
+    //[SerializeField] private UIUpdater uiUpdater;
+    //[SerializeField] private ControlVisUpdater controlVisUpdater;
+    //[SerializeField] private WorldVisUpdater worldVisUpdater;
+    //[SerializeField] private StateFinder state;
+    //[SerializeField] private VelocityControl vc;
+    //[SerializeField] private InputControl ic;
     
     //private VisType[] safeVis;
     //private VisType[] misVis;
@@ -51,28 +53,42 @@ public class DroneManager : MonoBehaviour
 
     //private bool controlActive = false;
 
-    public static bool autopilot_flag = false, autopilot_stop_flag = false, rth_flag = false, take_photo_flag = false, mark_defect_flag = false, finish_planning_flag = false;
+    public static bool take_off_flag = false, autopilot_flag = false, autopilot_stop_flag = false, rth_flag = false, take_photo_flag = false, mark_defect_flag = false, finish_planning_flag = false;
+
+    //Events invoked as transition
+    public static UnityEvent takeOffEvent = new UnityEvent(), autopilotEvent = new UnityEvent(), autopilotStopEvent = new UnityEvent(), returnToHomeEvent = new UnityEvent(), takePhotoEvent = new UnityEvent(), markDefectEvent = new UnityEvent(), finishPlanningEvent = new UnityEvent();
+    //Events invoked repeatedly during state
+    public static UnityEvent onFlightEvent = new UnityEvent(), landingEvent = new UnityEvent(), landedEvent = new UnityEvent();
+
+    public static UnityEvent<float, float, float, float> setVelocityControlEvent = new UnityEvent<float, float, float, float>();
+
+    public static UnityEvent resetAllEvent = new UnityEvent();
+
+    public static float desired_height = 0.0f;
+    public static float desired_vx = 0.0f;
+    public static float desired_vy = 0.0f;
+    public static float desired_yaw = 0.0f;
 
     //[SerializeField] float predictStepLength = 1f;
     //[SerializeField] int predictSteps = 3;
 
-    [SerializeField] FlightPlanning flightPlanning;
+    //[SerializeField] FlightPlanning flightPlanning;
 
     //[SerializeField] Transform contingencyBuffer;
 
     //[SerializeField] LayerMask realObstacleLayerMask;
 
-    [SerializeField] AutopilotManager autopilotManager;
-    [SerializeField] CameraController camController;
+    //[SerializeField] AutopilotManager autopilotManager;
+    //[SerializeField] CameraController camController;
 
     
 
-    [SerializeField] Battery battery;
-    [SerializeField] PositionalSensorSimulator posSensor;
-    [SerializeField] RandomPulseNoise wind;
+    //[SerializeField] Battery battery;
+    //[SerializeField] PositionalSensorSimulator posSensor;
+    //[SerializeField] RandomPulseNoise wind;
 
-    [SerializeField] EventTriggerDetection eventTriggerDetection;
-    [SerializeField] CollisionSensing collisionSensing;
+    //[SerializeField] EventTriggerDetection eventTriggerDetection;
+    //[SerializeField] CollisionSensing collisionSensing;
 
     //public static float bufferCautionThreahold = 1f, surfaceCautionThreshold = 6.0f, surfaceWarningThreshold = 4.0f;
     //private float windStrengthWarningCoolDownTimer, windStrengthWarningCoolDownTime = 3f;
@@ -91,22 +107,31 @@ public class DroneManager : MonoBehaviour
         currentControlType = ControlType.Manual;
         //currentSafetyState = SafetyState.Healthy;
         VisType.globalVisType = VisType.VisualizationType.None;
-        controlVisUpdater.SetControlVisActive(false);
-        autopilotManager.ResetAutopilot();
-        flightPlanning.ResetPathPlanning();
-        vc.transform.localPosition = Vector3.zero;
-        vc.transform.localEulerAngles = Vector3.zero;
-        vc.ResetVelocityControl();
-        worldVisUpdater.ResetWorldVis();
-        uiUpdater.ResetUI();
-        camController.ResetCamera();
-        battery.ResetBattery();
-        posSensor.ResetSignalLevel();
+        
+        //controlVisUpdater.SetControlVisActive(false);
+        //autopilotManager.ResetAutopilot();
+        //flightPlanning.ResetPathPlanning();
+        //vc.transform.localPosition = Vector3.zero;
+        //vc.transform.localEulerAngles = Vector3.zero;
+        //vc.ResetVelocityControl();
+        //worldVisUpdater.ResetWorldVis();
+        //uiUpdater.ResetUI();
+        //camController.ResetCamera();
+        //battery.ResetBattery();
+        //posSensor.ResetSignalLevel();
+        ResetAllFlags();
+
+        resetAllEvent.Invoke();
+    }
+
+    void ResetAllFlags(){
+        take_off_flag = false;
         autopilot_flag = false;
         autopilot_stop_flag = false;
         rth_flag = false; 
         take_photo_flag = false;
         mark_defect_flag = false;
+
     }
 
     // Update is called once per frame
@@ -114,40 +139,26 @@ public class DroneManager : MonoBehaviour
     void Update()
     {
         
+
+
         //Obsolete: the planning phase is automated. 
         //if(currentMissionState == MissionState.Planning && finish_planning_flag){
         //    finish_planning_flag = false;
         //    currentMissionState = MissionState.MovingToFlightZone;
         //}
 
+        if(take_off_flag){
+            take_off_flag = false;
+            takeOffEvent.Invoke();
+        }
 
-        //During normal flight
-        if (vc.currentFlightState == VelocityControl.FlightState.Navigating || vc.currentFlightState == VelocityControl.FlightState.Hovering) {
-            ic.EnableControl(true);
-            controlVisUpdater.SetControlVisActive(true);
-            collisionSensing.collisionSensingEnabled = true;
+        if(VelocityControl.currentFlightState == VelocityControl.FlightState.Hovering || VelocityControl.currentFlightState == VelocityControl.FlightState.Navigating){
 
-
-            //bool inBuffer = false;
-            Vector3 v2bound = CheckPositionInContingencyBuffer(out inBuffer);
-            worldVisUpdater.inBuffer = inBuffer;
-            worldVisUpdater.distToBuffer = v2bound.magnitude;
-            controlVisUpdater.inBuffer = inBuffer;
-            controlVisUpdater.vectorToNearestBufferBound = v2bound;
-            Vector3 v2surf = CheckDistanceToBuildingSurface();
-            Vector3 v2surfTrue = CheckTrueDistanceToBuildingSurface();
-            controlVisUpdater.vectorToNearestSurface = v2surf;
-            autopilotManager.vectorToBuildingSurface = v2surf;
-            worldVisUpdater.vectorToSurface = v2surf;
-            uiUpdater.vector2surface = v2surfTrue;
-            
-            //if(currentMissionState != MissionState.Inspecting && currentMissionState != MissionState.Returning)
-            //    currentMissionState = inBuffer?MissionState.InFlightZone:MissionState.MovingToFlightZone;
-
-
-            if (rth_flag)
+            onFlightEvent.Invoke();
+            if(rth_flag)
             {
-                autopilotManager.EnableRTH();
+                //autopilotManager.EnableRTH();
+                returnToHomeEvent.Invoke();
                 currentControlType = ControlType.Autonomous;
                 currentMissionState = MissionState.Returning;
                 rth_flag = false;
@@ -155,7 +166,8 @@ public class DroneManager : MonoBehaviour
 
             if(mark_defect_flag){
                 mark_defect_flag = false;
-                camController.TakePhoto(true);
+                markDefectEvent.Invoke();
+                //camController.TakePhoto(true);
                 //worldVisUpdater.SpawnCoverageObject(true); 
             }
 
@@ -163,97 +175,180 @@ public class DroneManager : MonoBehaviour
             {
                 if (autopilot_flag)
                 {
-                    if (flightPlanning.isPathPlanned())
-                    {
-                        autopilotManager.EnableAutopilot();
-                        currentControlType = ControlType.Autonomous;
-                        currentMissionState = MissionState.Inspecting;
-                    }
+                    autopilotEvent.Invoke();
+                    //autopilotManager.EnableAutopilot();
+                    currentControlType = ControlType.Autonomous;
+                    currentMissionState = MissionState.Inspecting;
                     autopilot_flag = false;
                 }
             } else if(currentMissionState == MissionState.Inspecting){
-                if(!inBuffer){
+                if(!Communication.positionData.inBuffer){
                     autopilot_stop_flag = true;
                 }
                 if(take_photo_flag)
                 {
                     take_photo_flag = false;
-                    camController.TakePhoto(false);
-                    //worldVisUpdater.SpawnCoverageObject(false);
+                    takePhotoEvent.Invoke();
+                    //camController.TakePhoto(false);
                 }
             }
-
-            //if (currentFlightState == FlightState.Navigating){
-            //    if(Vector3.Magnitude(state.pose.WorldAcceleration) < 0.1f && Vector3.Magnitude(state.pose.WorldVelocity) < 0.1f){
-            //        currentFlightState = FlightState.Hovering;
-            //    } else {
-            //        if(vc.desired_vx == 0 && vc.desired_vy == 0 && vc.desired_yaw == 0 && vc.height_diff == 0){ 
-            //            controlActive = false;
-            //        } else {
-            //            controlActive = true;
-            //        }
-            //        PredictFutureTrajectory();
-            //    }
-            //} 
-//
-            //if(currentFlightState == FlightState.Hovering){
-            //    if(vc.desired_vx != 0 || vc.desired_vy != 0 || vc.desired_yaw != 0 || vc.height_diff != 0){
-            //        currentFlightState = FlightState.Navigating;
-            //        controlActive = true;
-            //    }else{
-            //        controlVisUpdater.predictedPoints = new Vector3[0];
-            //    }
-            //}
-
             if(autopilot_stop_flag){
-                autopilotManager.StopAutopilot();
+                autopilotStopEvent.Invoke();
+                //autopilotManager.StopAutopilot();
                 //(v2surf.magnitude, battery.GetBatteryLevel(), posSensor.GetSignalLevel(), wind.GetCurrentWindStrength());
                 currentControlType = ControlType.Manual;
                 currentMissionState = MissionState.AutopilotInterupted;
                 autopilot_stop_flag = false;
             }
+            setVelocityControlEvent.Invoke(desired_vy, desired_vx, desired_yaw, desired_height);
 
-            //UpdateSafetyState(inBuffer, v2bound.magnitude, v2surf.magnitude, battery.GetBatteryLevel(), battery.GetBatteryVoltage(), posSensor.GetSignalLevel(), wind.GetCurrentWindStrength());
-        } 
-        else
-        {
-            //uiUpdater.enableSound = false;
-            
-            ic.EnableControl(false);
-            if(vc.currentFlightState == VelocityControl.FlightState.Landing){
-                collisionSensing.collisionSensingEnabled = false;
-                controlVisUpdater.SetControlVisActive(false);
+        } else {
+            ResetAllFlags();
+            if(VelocityControl.currentFlightState == VelocityControl.FlightState.Landing){
+                landingEvent.Invoke();
+            } else if(VelocityControl.currentFlightState == VelocityControl.FlightState.Landed){
+                landedEvent.Invoke();
             }
         }
 
-        //if (currentFlightState != FlightState.Landed)
+
+
+        
+
+
+        //During normal flight
+        //if (vc.currentFlightState == VelocityControl.FlightState.Navigating || vc.currentFlightState == VelocityControl.FlightState.Hovering) {
+        //    ic.EnableControl(true);
+        //    controlVisUpdater.SetControlVisActive(true);
+        //    collisionSensing.collisionSensingEnabled = true;
+//
+//
+        //    //bool inBuffer = false;
+        //    Vector3 v2bound = CheckPositionInContingencyBuffer(out inBuffer);
+        //    worldVisUpdater.inBuffer = inBuffer;
+        //    worldVisUpdater.distToBuffer = v2bound.magnitude;
+        //    controlVisUpdater.inBuffer = inBuffer;
+        //    controlVisUpdater.vectorToNearestBufferBound = v2bound;
+        //    Vector3 v2surf = CheckDistanceToBuildingSurface();
+        //    Vector3 v2surfTrue = CheckTrueDistanceToBuildingSurface();
+        //    controlVisUpdater.vectorToNearestSurface = v2surf;
+        //    autopilotManager.vectorToBuildingSurface = v2surf;
+        //    worldVisUpdater.vectorToSurface = v2surf;
+        //    uiUpdater.vector2surface = v2surfTrue;
+        //    
+        //    //if(currentMissionState != MissionState.Inspecting && currentMissionState != MissionState.Returning)
+        //    //    currentMissionState = inBuffer?MissionState.InFlightZone:MissionState.MovingToFlightZone;
+//
+//
+        //    if (rth_flag)
+        //    {
+        //        autopilotManager.EnableRTH();
+        //        currentControlType = ControlType.Autonomous;
+        //        currentMissionState = MissionState.Returning;
+        //        rth_flag = false;
+        //    }
+//
+        //    if(mark_defect_flag){
+        //        mark_defect_flag = false;
+        //        camController.TakePhoto(true);
+        //        //worldVisUpdater.SpawnCoverageObject(true); 
+        //    }
+//
+        //    if (currentMissionState == MissionState.InFlightZone)
+        //    {
+        //        if (autopilot_flag)
+        //        {
+        //            if (flightPlanning.isPathPlanned())
+        //            {
+        //                autopilotManager.EnableAutopilot();
+        //                currentControlType = ControlType.Autonomous;
+        //                currentMissionState = MissionState.Inspecting;
+        //            }
+        //            autopilot_flag = false;
+        //        }
+        //    } else if(currentMissionState == MissionState.Inspecting){
+        //        if(!inBuffer){
+        //            autopilot_stop_flag = true;
+        //        }
+        //        if(take_photo_flag)
+        //        {
+        //            take_photo_flag = false;
+        //            camController.TakePhoto(false);
+        //            //worldVisUpdater.SpawnCoverageObject(false);
+        //        }
+        //    }
+//
+        //    //if (currentFlightState == FlightState.Navigating){
+        //    //    if(Vector3.Magnitude(state.pose.WorldAcceleration) < 0.1f && Vector3.Magnitude(state.pose.WorldVelocity) < 0.1f){
+        //    //        currentFlightState = FlightState.Hovering;
+        //    //    } else {
+        //    //        if(vc.desired_vx == 0 && vc.desired_vy == 0 && vc.desired_yaw == 0 && vc.height_diff == 0){ 
+        //    //            controlActive = false;
+        //    //        } else {
+        //    //            controlActive = true;
+        //    //        }
+        //    //        PredictFutureTrajectory();
+        //    //    }
+        //    //} 
+////
+        //    //if(currentFlightState == FlightState.Hovering){
+        //    //    if(vc.desired_vx != 0 || vc.desired_vy != 0 || vc.desired_yaw != 0 || vc.height_diff != 0){
+        //    //        currentFlightState = FlightState.Navigating;
+        //    //        controlActive = true;
+        //    //    }else{
+        //    //        controlVisUpdater.predictedPoints = new Vector3[0];
+        //    //    }
+        //    //}
+//
+        //    if(autopilot_stop_flag){
+        //        autopilotManager.StopAutopilot();
+        //        //(v2surf.magnitude, battery.GetBatteryLevel(), posSensor.GetSignalLevel(), wind.GetCurrentWindStrength());
+        //        currentControlType = ControlType.Manual;
+        //        currentMissionState = MissionState.AutopilotInterupted;
+        //        autopilot_stop_flag = false;
+        //    }
+//
+        //    //UpdateSafetyState(inBuffer, v2bound.magnitude, v2surf.magnitude, battery.GetBatteryLevel(), battery.GetBatteryVoltage(), posSensor.GetSignalLevel(), wind.GetCurrentWindStrength());
+        //} 
+        //else
         //{
-        //    //bool hitGround = false;
-        //    //Vector3 vectorToGround = Vector3.down * state.Altitude;
-        //    //bool trueHitGround = false;
-        //    //Vector3 trueVectorToGround = CheckTrueDistToGround(out trueHitGround);
-        //    //vc.vectorToGround = vectorToGround;
-        //    //controlVisUpdater.vectorToGround = vectorToGround;
-        //    //uiUpdater.vpsHeight = vectorToGround.magnitude;
-        //} else {
-        if (vc.currentFlightState == VelocityControl.FlightState.Landed){
-            if(currentMissionState == MissionState.Returning){
-                currentMissionState = MissionState.MovingToFlightZone;
-            }
-            eventTriggerDetection.ResetEventSimulation();
-        }
+        //    //uiUpdater.enableSound = false;
+        //    
+        //    ic.EnableControl(false);
+        //    if(vc.currentFlightState == VelocityControl.FlightState.Landing){
+        //        collisionSensing.collisionSensingEnabled = false;
+        //        controlVisUpdater.SetControlVisActive(false);
+        //    }
+        //}
+//
+        ////if (currentFlightState != FlightState.Landed)
+        ////{
+        ////    //bool hitGround = false;
+        ////    //Vector3 vectorToGround = Vector3.down * state.Altitude;
+        ////    //bool trueHitGround = false;
+        ////    //Vector3 trueVectorToGround = CheckTrueDistToGround(out trueHitGround);
+        ////    //vc.vectorToGround = vectorToGround;
+        ////    //controlVisUpdater.vectorToGround = vectorToGround;
+        ////    //uiUpdater.vpsHeight = vectorToGround.magnitude;
+        ////} else {
+        //if (vc.currentFlightState == VelocityControl.FlightState.Landed){
+        //    if(currentMissionState == MissionState.Returning){
+        //        currentMissionState = MissionState.MovingToFlightZone;
+        //    }
+        //    eventTriggerDetection.ResetEventSimulation();
+        //}
     }
 
-    public void SetCurrentDesiredVelocityFromManualInput(float vx, float vy, float yaw, float heightDiff){
-        vc.desired_vx = vx;
-        vc.desired_vy = vy;
-        vc.desired_yaw = yaw;
-        vc.desired_height += heightDiff;
-    }
+    //public static void SetCurrentDesiredVelocityFromManualInput(float vx, float vy, float yaw, float heightDiff){
+    //    desired_vx = vx;
+    //    desired_vy = vy;
+    //    desired_yaw = yaw;
+    //    desired_height += heightDiff;
+    //}
 
-    public void MarkDefect(){
-        camController.TakePhoto(true);
-    }
+    //public void MarkDefect(){
+    //    camController.TakePhoto(true);
+    //}
 
     //Predict the future trajectory based on number of prediction steps and the predict step length (in seconds), 
     //and the current state.pose.WorldVelocity and state.pose.WorldAcceleration.

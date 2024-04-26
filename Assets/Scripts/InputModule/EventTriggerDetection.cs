@@ -19,7 +19,15 @@ public class EventTriggerDetection : MonoBehaviour {
     bool batteryDropped = false;
     bool isGPSDenied = false;
     
-    public void ResetEventSimulation(){
+    void OnEnable(){
+        DroneManager.resetAllEvent.AddListener(ResetEventSimulation);
+    }
+
+    void OnDisable(){
+        DroneManager.resetAllEvent.RemoveListener(ResetEventSimulation);
+    }
+
+    void ResetEventSimulation(){
         battery.ResetBattery();
         pss.ResetSignalLevel();
         batteryDropped = false;

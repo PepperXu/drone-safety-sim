@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class VelocityControl : MonoBehaviour {
 
-    public StateFinder state;
+    //public Communicatio state;
 
     public GameObject propFL;
     public GameObject propFR;
@@ -22,22 +22,22 @@ public class VelocityControl : MonoBehaviour {
     private float max_roll = 0.175f; // 10 Degrees in radians, otherwise small-angle approximation dies
     private float max_alpha = 10.0f;
     //must set this
-    public float desired_height = 0.0f;
-    public float desired_vx = 0.0f;
-    public float desired_vy = 0.0f;
-    public float desired_yaw = 0.0f;
+    private float desired_height = 0.0f;
+    private float desired_vx = 0.0f;
+    private float desired_vy = 0.0f;
+    private float desired_yaw = 0.0f;
     //must set this
-    public float take_off_height = 4.0f;
+    [SerializeField] private float take_off_height = 4.0f;
 
-    public float groundOffset = 0.06f;
+    float groundOffset = 0.06f;
 
     private float previous_desired_height;
-    [HideInInspector]
-    public float height_diff;
+    
+    float height_diff;
 
-    private bool wait = false;
-    private bool flag = true;
-    public bool take_off_flag = false;
+    //private bool wait = false;
+    //private bool flag = true;
+    //public bool take_off_flag = false;
 
     private float speedScale = 500.0f;
 
@@ -48,8 +48,8 @@ public class VelocityControl : MonoBehaviour {
     private Rigidbody rb;
 
     //public Vector3 vectorToGround;
-    public int collisionHitCount = 0;
-    public bool out_of_balance = false;
+    //public int collisionHitCount = 0;
+    //public bool out_of_balance = false;
 
     [SerializeField] AudioClip take_off, flying, landing;
     AudioSource audioSource;
@@ -59,21 +59,29 @@ public class VelocityControl : MonoBehaviour {
         TakingOff,
         Hovering,
         Navigating,
-        Landing
+        Landing,
+
+        Collided
     }
 
-    public FlightState currentFlightState = FlightState.Landed;
+    public static FlightState currentFlightState {get; private set;}
 
-    [SerializeField] AutopilotManager autopilotManager;
+    //[SerializeField] AutopilotManager autopilotManager;
 
 
     // Use this for initialization
-    void Start () {
-          
+    void OnEnable () {
+        DroneManager.setVelocityControlEvent.AddListener(SetVelocityParam);
+        DroneManager.resetAllEvent.AddListener(ResetVelocityControl);
+    }
+
+    void OnDisable(){
+        DroneManager.setVelocityControlEvent.RemoveListener(SetVelocityParam);
+        DroneManager.resetAllEvent.RemoveListener(ResetVelocityControl);
     }
 
     //For both initialization and reset.
-    public void ResetVelocityControl(){
+    void ResetVelocityControl(){
         currentFlightState = FlightState.Landed;
         desired_vx = 0.0f;
         desired_vy = 0.0f;
@@ -84,11 +92,17 @@ public class VelocityControl : MonoBehaviour {
         rb.useGravity = false;
         landedHeight = transform.position.y;
         desired_height = landedHeight;
-        collisionHitCount = 0;
-        out_of_balance = false;
-        //state.Reset(landedHeight);
+        Communication.ResetCollision();
+        Communication.ResetConstProps(landedHeight);
         //state.GetState();
         audioSource.Stop();
+    }
+
+    void SetVelocityParam(float vx, float vy, float yaw, float height_diff){
+        this.desired_vx = vx;
+        this.desired_vy = vy;
+        this.desired_yaw = yaw;
+        this.height_diff = height_diff;
     }
 
     void TakeOff()
@@ -99,7 +113,7 @@ public class VelocityControl : MonoBehaviour {
         desired_height = landedHeight + take_off_height;
         rb.isKinematic = false;
         rb.useGravity = true;
-        Vector3 desiredForce = new Vector3(0.0f, gravity * state.Mass, 0.0f);
+        Vector3 desiredForce = new Vector3(0.0f, gravity * Communication.constProps.Mass, 0.0f);
         rb.AddForce(desiredForce, ForceMode.Acceleration);
         currentFlightState = FlightState.TakingOff;
         StartCoroutine(PlayTakeOffAudio());
@@ -134,26 +148,26 @@ public class VelocityControl : MonoBehaviour {
     // Update is called once per frame
     private void Update()
     {
-        if (take_off_flag)
-        {
-            take_off_flag = false;
-            TakeOff();
-        }
+        //if (take_off_flag)
+        //{
+        //    take_off_flag = false;
+        //    TakeOff();
+        //}
         if(currentFlightState == FlightState.TakingOff){
-            if(Mathf.Abs(state.Altitude - desired_height) < 0.1f)
+            if(Mathf.Abs(Communication.realPose.Altitude - desired_height) < 0.1f)
                 currentFlightState = FlightState.Hovering;
         }
         if (currentFlightState == FlightState.Navigating || currentFlightState == FlightState.Hovering || currentFlightState == FlightState.Landing)
         {
-            float dis2ground = state.Altitude;
+            float dis2ground = Communication.realPose.Altitude;
             if (currentFlightState != FlightState.Landing)
             {
                 if (dis2ground < landingHeightThreshold)
                 {
                     currentFlightState = FlightState.Landing;
                     ExperimentServer.RecordData("Landing at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
-                    //DroneManager.autopilot_stop_flag = true;
-                    autopilotManager.StopAutopilot();
+                    DroneManager.autopilot_stop_flag = true;
+                    //autopilotManager.StopAutopilot();
                     PlayLandingAudio();
                     desired_height = transform.position.y - dis2ground;
                     desired_vx = 0f;
@@ -185,11 +199,11 @@ public class VelocityControl : MonoBehaviour {
 
         height_diff = desired_height - previous_desired_height;
 
-        float heightError = state.Altitude - desired_height + 3.27f;
+        float heightError = Communication.realPose.Altitude - desired_height + 3.27f;
         //Debug.Log(heightError);
 
         Vector3 desiredVelocity = new Vector3 (desired_vy, -1.0f * heightError / time_constant_z_velocity, desired_vx);
-        Vector3 velocityError = state.LocalVelocityVector - desiredVelocity;
+        Vector3 velocityError = Communication.realPose.LocalVelocityVector - desiredVelocity;
 
         Vector3 desiredAcceleration = velocityError * -1.0f / time_constant_acceleration;
 
@@ -205,23 +219,23 @@ public class VelocityControl : MonoBehaviour {
             desiredTheta.z = -1.0f * max_roll;
         }
 
-        Vector3 thetaError = state.pose.Angles - desiredTheta;
+        Vector3 thetaError = Communication.realPose.Angles - desiredTheta;
 
         desiredOmega = thetaError * -1.0f / time_constant_omega_xy_rate;
         desiredOmega.y = desired_yaw;
 
-        Vector3 omegaError = state.AngularVelocityVector - desiredOmega;
+        Vector3 omegaError = Communication.realPose.AngularVelocityVector - desiredOmega;
 
         Vector3 desiredAlpha = Vector3.Scale(omegaError, new Vector3(-1.0f/time_constant_alpha_xy_rate, -1.0f/time_constant_alpha_z_rate, -1.0f/time_constant_alpha_xy_rate));
         desiredAlpha = Vector3.Min (desiredAlpha, Vector3.one * max_alpha);
         desiredAlpha = Vector3.Max (desiredAlpha, Vector3.one * max_alpha * -1.0f);
 
-        float desiredThrust = (gravity + desiredAcceleration.y) / (Mathf.Cos (state.pose.Angles.z) * Mathf.Cos (state.pose.Angles.x));
+        float desiredThrust = (gravity + desiredAcceleration.y) / (Mathf.Cos (Communication.realPose.Angles.z) * Mathf.Cos (Communication.realPose.Angles.x));
         desiredThrust = Mathf.Min (desiredThrust, 2.0f * gravity);
         desiredThrust = Mathf.Max (desiredThrust, 0.0f);
 
-        Vector3 desiredTorque = Vector3.Scale (desiredAlpha, state.Inertia * 2f);
-        Vector3 desiredForce = new Vector3 (0.0f, desiredThrust * state.Mass, 0.0f);
+        Vector3 desiredTorque = Vector3.Scale (desiredAlpha, Communication.constProps.Inertia * 2f);
+        Vector3 desiredForce = new Vector3 (0.0f, desiredThrust * Communication.constProps.Mass, 0.0f);
 
         rb.AddRelativeTorque (desiredTorque, ForceMode.Acceleration);
         rb.AddRelativeForce (desiredForce , ForceMode.Acceleration);
@@ -245,11 +259,12 @@ public class VelocityControl : MonoBehaviour {
         if(currentFlightState == FlightState.Navigating || currentFlightState == FlightState.Hovering)
         {
             //DroneManager.currentSystemState = DroneManager.SystemState.Emergency;
-            collisionHitCount++;
+            Communication.collisionData.collisionCount++;
             if(transform.up.y < 0.6f)
-                out_of_balance = true;
-            //DroneManager.autopilot_stop_flag = true;
-            autopilotManager.StopAutopilot();
+                Communication.collisionData.out_of_balance = true;
+            DroneManager.autopilot_stop_flag = true;
+            currentFlightState = FlightState.Collided;
+            //autopilotManager.StopAutopilot();
             ExperimentServer.RecordData("Collides with an obstacle at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
         }
     }

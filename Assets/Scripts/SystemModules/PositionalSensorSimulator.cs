@@ -86,7 +86,8 @@ public class PositionalSensorSimulator : MonoBehaviour
                     Vector3 virtualDronePosCurrent = state.pose.WorldPosition + targetOffset;
                     
                     Communication.positionData.virtualPosition = virtualDronePosCurrent;
-                    Communication.positionData.v2Surf = CheckDistanceToBuildingSurface(virtualDronePosCurrent);
+                    Communication.positionData.v2bound = CheckPositionInContingencyBuffer(out Communication.positionData.inBuffer, virtualDronePosCurrent);
+                    Communication.positionData.v2surf = CheckDistanceToBuildingSurface(virtualDronePosCurrent);
                     updateRate = Time.deltaTime;
                     break;
                 case 2:
@@ -99,7 +100,11 @@ public class PositionalSensorSimulator : MonoBehaviour
                     currentMaxPosUncertainty = maxPositionUncertaintyAbnormal;
                     currentOffset = Communication.positionData.virtualPosition - lastDronePos;
                     targetOffset = Vector3.MoveTowards(currentOffset, new Vector3(positionOffset.x, 0f , positionOffset.z), gpsDriftSpeedAbnormal);
-                    Communication.positionData.virtualPosition = state.pose.WorldPosition + targetOffset;
+                    Vector3 vdronePos = state.pose.WorldPosition + targetOffset;
+                    
+                    Communication.positionData.virtualPosition = vdronePos;
+                    Communication.positionData.v2bound = CheckPositionInContingencyBuffer(out Communication.positionData.inBuffer, vdronePos);
+                    Communication.positionData.v2surf = CheckDistanceToBuildingSurface(vdronePos);
                     updateRate = Time.deltaTime;
                     //updateRate = SamplePositive(signalUpdateRateMean, signalUpdateRateVar);
                     break;
@@ -119,10 +124,10 @@ public class PositionalSensorSimulator : MonoBehaviour
         
         if(Mathf.Abs(localDronePos.x) < 0.5f && Mathf.Abs(localDronePos.z) < 0.5f)
             return Vector3.positiveInfinity;
-
+//
         if(Mathf.Abs(localDronePos.x) >= 0.5f && Mathf.Abs(localDronePos.z) >= 0.5f)
             return Vector3.positiveInfinity;
-
+//
         if(Mathf.Abs(localDronePos.x) < 0.5f)
             return -buildingCollision.forward * (Mathf.Abs(localDronePos.z) - 0.5f) * Mathf.Sign(localDronePos.z) * buildingCollision.localScale.z;
         

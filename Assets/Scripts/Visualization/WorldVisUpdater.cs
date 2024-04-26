@@ -24,7 +24,7 @@ public class WorldVisUpdater : MonoBehaviour
 
     //public Vector3 vectorToSurface;
     //public Transform currentHomepoint;
-    Transform currentEnabledHomepoint;
+    //[SerializeField] Transform currentEnabledHomepoint;
 
     List<Waypoint> waypoints = new List<Waypoint>();
     //public float currentBatteryPercentage;
@@ -90,13 +90,13 @@ public class WorldVisUpdater : MonoBehaviour
             //landing_zones.showVisualization = false;
             landing_zones.SwitchHiddenVisTypeLocal(false);
         }
-        if(currentEnabledHomepoint != currentHomepoint){
-            if(currentEnabledHomepoint != null){
-                currentEnabledHomepoint.gameObject.SetActive(false);
-            }
-            currentHomepoint.gameObject.SetActive(true);
-            currentEnabledHomepoint = currentHomepoint;
-        }
+        //if(currentEnabledHomepoint != currentHomepoint){
+        //    if(currentEnabledHomepoint != null){
+        //        currentEnabledHomepoint.gameObject.SetActive(false);
+        //    }
+        //    currentHomepoint.gameObject.SetActive(true);
+        //    currentEnabledHomepoint = currentHomepoint;
+        //}
     }
 
     void UpdateFlightPlanVis(){
@@ -153,7 +153,7 @@ public class WorldVisUpdater : MonoBehaviour
         while(true){
             UpdateFlightPlanVis();
             UpdateHomepointVis();
-            if(!inBuffer || distToBuffer < 1f){
+            if(!Communication.positionData.inBuffer || Communication.positionData.v2bound.magnitude < 1f){
                 contingencyBuffer.showVisualization = true;
             } else {
                 contingencyBuffer.showVisualization = false;
@@ -167,14 +167,14 @@ public class WorldVisUpdater : MonoBehaviour
     //}
 //
     void UpdateCamCoverage(){
-        if(pos_sig_lvl != 3)
+        if(Communication.positionData.signalLevel != 3)
             return;
 
-        
+
         GameObject covObj = Instantiate(coverageObject);
-        covObj.transform.position = PositionalSensorSimulator.dronePositionVirtual + vectorToSurface;
-        covObj.transform.rotation = Quaternion.LookRotation(Vector3.up, -vectorToSurface.normalized);
-        covObj.transform.localScale *= vectorToSurface.magnitude;
+        covObj.transform.position = Communication.positionData.virtualPosition + Communication.positionData.v2surf;
+        covObj.transform.rotation = Quaternion.LookRotation(Vector3.up, - Communication.positionData.v2surf.normalized);
+        covObj.transform.localScale *=  Communication.positionData.v2surf.magnitude;
         covObj.transform.parent = coverage.visRoot;
         spawnedCoverageObjects.Add(covObj);
         if(marked){

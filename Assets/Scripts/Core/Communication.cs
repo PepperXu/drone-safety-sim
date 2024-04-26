@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class Communication : MonoBehaviour
 {
@@ -25,7 +26,8 @@ public class Communication : MonoBehaviour
 
         public int collisionCount;
 
-        public bool collided;
+        public bool out_of_balance;
+
         public int GetShortestDistanceIndex(){
             float minDist = float.MaxValue;
             int indx = 0;
@@ -43,23 +45,50 @@ public class Communication : MonoBehaviour
     public struct PositionData{
         public Vector3 virtualPosition;
         public int signalLevel; 
-        public Vector3 v2Surf;
+        public Vector3 v2surf;
         public Vector3 v2bound;
-        public Vector3 v2ground;
+        //public Vector3 v2ground;
+        public bool inBuffer;
+    }
+
+    public struct RealPose{
+		public Vector3 WorldPosition;
+		public Vector3 Angles;
+		public Vector3 WorldVelocity;
+		public Vector3 WorldAcceleration;
+		public float Altitude;
+        public Vector3 LocalVelocityVector; 
+        public Vector3 previousWorldVelocity;
+	    public Vector3 AngularVelocityVector; 
+	}
+
+    public struct ConstantProperties{
+        public float landedHeight;
+        public Vector3 Inertia;
+	    public float Mass;
+    }
+
+    public struct Battery{
+        public float batteryPercentage;
+        public float batteryRemainingTime;
+        public float voltageLevel;
     }
 
 
-
-
-
-
-
+    public static RealPose realPose;
     public static CollisionData collisionData;
     public static PositionData positionData;
+
+    public static ConstantProperties constProps;
+    public static Battery battery;
 
     public static Vector3[] flightTrajectory;
     public static bool pathPlanned = false;
     public static int currentWaypointIndex = -1;
+
+    public static Rigidbody droneRb;
+
+    public static UnityEvent finishPlanning = new UnityEvent();
 
 
     [SerializeField] float inputLatency;
@@ -69,6 +98,10 @@ public class Communication : MonoBehaviour
     RenderTexture renderTexture;
     [SerializeField] RenderTexture destRT;
 
+    [SerializeField] Transform droneTransform;
+
+    
+
     int bufferSize = 16;
     Frame[] storedFrames;
     public static bool cameraImageReceived = true;
@@ -76,6 +109,10 @@ public class Communication : MonoBehaviour
     int currentFrameIndex = 0;
     int renderedFrameBufferIndex = 0;
 
+
+    void OnEnable(){
+        droneRb = droneTransform.GetComponent<Rigidbody> ();
+    }
     // Start is called before the first frame update
     void Start()
     {
@@ -95,8 +132,38 @@ public class Communication : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
-        //Debug.Log(RenderTexture.active);
+
+		Vector3 worldDown = droneTransform.InverseTransformDirection (Vector3.down);
+		float Pitch = worldDown.z; // Small angle approximation
+		float Roll = -worldDown.x; // Small angle approximation
+		float Yaw = droneTransform.eulerAngles.y;
+
+		realPose.Angles = new Vector3 (Pitch, Yaw, Roll);
+
+		realPose.Altitude = droneTransform.position.y - constProps.landedHeight;
+
+		realPose.WorldVelocity = droneRb.velocity;
+		realPose.LocalVelocityVector = droneTransform.InverseTransformDirection (realPose.WorldVelocity);
+
+		realPose.WorldAcceleration = (realPose.WorldVelocity - realPose.previousWorldVelocity)/Time.fixedDeltaTime;
+
+		realPose.AngularVelocityVector = droneRb.angularVelocity;
+		realPose.AngularVelocityVector = droneTransform.InverseTransformDirection (realPose.AngularVelocityVector);
+
+		realPose.WorldPosition = droneTransform.transform.position;
+		realPose.previousWorldVelocity = realPose.WorldVelocity;
+
+    }
+
+    public static void ResetConstProps(float landedHeight){
+        constProps.Inertia = droneRb.inertiaTensor;
+        constProps.Mass = droneRb.mass;
+        constProps.landedHeight = landedHeight;
+    }
+
+    public static void ResetCollision(){
+        collisionData.collisionCount = 0;
+        collisionData.out_of_balance = false;
     }
 
     IEnumerator LaggedTransferInputCommand(){

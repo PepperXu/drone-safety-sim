@@ -12,13 +12,13 @@ public class AutopilotManager : MonoBehaviour
     int currentWaypointIndex = 0;
 
     //[SerializeField] FlightPlanning flightPlanning;
-    [SerializeField] VelocityControl vc;
+    //[SerializeField] VelocityControl vc;
     //[SerializeField] UIUpdater uiUpdater;
     //[SerializeField] WorldVisUpdater wordVis;
 
-    [SerializeField] Transform[] homePoints;
+    //[SerializeField] Transform[] homePoints;
 
-    Transform currentHomepoint;
+    [SerializeField] Transform Homepoint;
     float ground_offset = 0.2f;
 
 
@@ -35,12 +35,21 @@ public class AutopilotManager : MonoBehaviour
     bool autopilot_initialized = false;
 
     // Start is called before the first frame update
-    void Start()
-    {
-        StartCoroutine(GetCurrentHomepointCoroutine());
+
+
+    void OnEnable(){
+        DroneManager.resetAllEvent.AddListener(ResetAutopilot);
     }
 
-    public void ResetAutopilot(){
+    void OnDisable(){
+        DroneManager.resetAllEvent.RemoveListener(ResetAutopilot);
+    }
+    void Start()
+    {
+        //StartCoroutine(GetCurrentHomepointCoroutine());
+    }
+
+    void ResetAutopilot(){
         autopilot_initialized = false;
         isAutopiloting = false;
         isRTH = false;
@@ -54,34 +63,35 @@ public class AutopilotManager : MonoBehaviour
         if(isAutopiloting){
             if (isRTH)
             {
-                if(DroneManager.currentFlightState == DroneManager.FlightState.Navigating || DroneManager.currentFlightState == DroneManager.FlightState.Hovering)
+                if(VelocityControl.currentFlightState == VelocityControl.FlightState.Navigating || VelocityControl.currentFlightState == VelocityControl.FlightState.Hovering)
                 {
-                    Vector3 offset = currentHomepoint.position - vc.transform.position + Vector3.up * ground_offset;
+                    Vector3 offset = Homepoint.position - Communication.realPose.WorldPosition + Vector3.up * ground_offset;
                     Vector3 offsetXZ = new Vector3(offset.x, 0f, offset.z);
 
                     if(offsetXZ.magnitude > 0.5f)
                     {
-                        Vector3 localDir = vc.transform.InverseTransformDirection(offsetXZ);
+                        Vector3 localDir = Communication.droneRb.transform.InverseTransformDirection(offsetXZ);
                         if (localDir.magnitude > autopilot_slowing_start_dist)
                         {
                             localDir = localDir.normalized * autopilot_max_speed;
                         } else {
                             localDir = localDir.normalized * localDir.magnitude/autopilot_slowing_start_dist*autopilot_max_speed;
                         }
-                        vc.desired_vx = localDir.z;
-                        vc.desired_vy = localDir.x;
+                        DroneManager.desired_vx = localDir.z;
+                        DroneManager.desired_vy = localDir.x;
                     } else
                     {
                         if(Mathf.Abs(offset.y) > 0.2f)
                         {
                             if(Mathf.Abs(offset.y) > autopilot_slowing_start_dist)
                             {
-                                vc.desired_height = vc.transform.position.y + Mathf.Sign(offset.y) * autopilot_max_speed;
+                                DroneManager.desired_height = Communication.realPose.WorldPosition.y + Mathf.Sign(offset.y) * autopilot_max_speed;
                             } else {
-                                vc.desired_height = vc.transform.position.y + Mathf.Sign(offset.y) * autopilot_max_speed * (Mathf.Abs(offset.y)/autopilot_slowing_start_dist) ;
+                                DroneManager.desired_height = Communication.realPose.WorldPosition.y + Mathf.Sign(offset.y) * autopilot_max_speed * (Mathf.Abs(offset.y)/autopilot_slowing_start_dist) ;
                             }
                         } 
                     }
+                    DroneManager.desired_yaw = 0f;
                 } else {
                     isAutopiloting = false;
                     isRTH = false;
@@ -89,12 +99,12 @@ public class AutopilotManager : MonoBehaviour
             }
             else
             {
-                Vector3 target = Vector3.zero;
+                Vector3 target;
 
                 if(currentWaypointIndex < Communication.flightTrajectory.Length){
                     target= Communication.flightTrajectory[currentWaypointIndex];
                 
-                    Vector3 sensedPosition = PositionalSensorSimulator.dronePositionVirtual;
+                    Vector3 sensedPosition = Communication.positionData.virtualPosition;
                     //Debug.LogWarning("Moving to waypoint " + currentWaypointIndex);
                     Vector3 offset = target - sensedPosition;
                     if (offset.magnitude < 0.5f)
@@ -116,8 +126,8 @@ public class AutopilotManager : MonoBehaviour
                     }
                     else
                     {
-                        Vector3 localDir = vc.transform.InverseTransformDirection(offset);
-                        float heightTarget = target.y;
+                        Vector3 localDir = Communication.droneRb.transform.InverseTransformDirection(offset);
+                        float heightTarget;
                         if(Mathf.Abs(offset.y) > autopilot_slowing_start_dist)
                         {
                             heightTarget = autopilot_max_speed * Mathf.Sign(offset.y) + sensedPosition.y;
@@ -131,11 +141,11 @@ public class AutopilotManager : MonoBehaviour
                         } else {
                             localDirXY = localDirXY.normalized * localDirXY.magnitude/autopilot_slowing_start_dist*autopilot_max_speed;
                         }
-                        vc.desired_height = heightTarget;
-                        vc.desired_vx = localDirXY.y;
-                        vc.desired_vy = localDirXY.x;
+                        DroneManager.desired_height = heightTarget;
+                        DroneManager.desired_vx = localDirXY.y;
+                        DroneManager.desired_vy = localDirXY.x;
                         if(vectorToBuildingSurface.magnitude < 10f){
-                            Vector3 localVector = vc.transform.InverseTransformDirection(vectorToBuildingSurface).normalized;
+                            Vector3 localVector = Communication.droneRb.transform.InverseTransformDirection(vectorToBuildingSurface).normalized;
                             Vector2 localVectorXY = new Vector2(localVector.x, localVector.z);
                             float angleOffset = Vector2.SignedAngle(-Vector2.up, localVectorXY);
                             while(angleOffset > 180f){
@@ -150,7 +160,7 @@ public class AutopilotManager : MonoBehaviour
                             if(angleOffset < -5f){
                                 angleOffset = -5f;
                             }
-                            vc.desired_yaw = angleOffset;
+                            DroneManager.desired_yaw = angleOffset;
                         }
                     }
                 }
@@ -171,20 +181,20 @@ public class AutopilotManager : MonoBehaviour
         } else {
             int i = this.currentWaypointIndex;
             Vector3 target = Communication.flightTrajectory[i];
-            float shortestDistance = (PositionalSensorSimulator.dronePositionVirtual - target).magnitude;
+            float shortestDistance = (Communication.positionData.virtualPosition - target).magnitude;
             while(i < Communication.flightTrajectory.Length - 1){
                 i++;
                 target = Communication.flightTrajectory[i];
-                if((PositionalSensorSimulator.dronePositionVirtual - target).magnitude > shortestDistance){
+                if((Communication.positionData.virtualPosition - target).magnitude > shortestDistance){
                     this.currentWaypointIndex = i-1;
                     break;
                 } else {
-                    shortestDistance = (PositionalSensorSimulator.dronePositionVirtual - target).magnitude;
+                    shortestDistance = (Communication.positionData.virtualPosition - target).magnitude;
                     i++;
                 }
             }
         }
-        wordVis.currentWaypointIndex = this.currentWaypointIndex;
+        //wordVis.currentWaypointIndex = this.currentWaypointIndex;
         ExperimentServer.RecordData("Autopilot From Waypoint", this.currentWaypointIndex +"", "");
     }
 
@@ -192,8 +202,8 @@ public class AutopilotManager : MonoBehaviour
     public void EnableRTH(){
         isAutopiloting = true;
         isRTH = true;
-        int idx = GetCurrentHomepoint();
-        ExperimentServer.RecordData("Returning To Homepoint", idx + "", "");
+        //int idx = GetCurrentHomepoint();
+        ExperimentServer.RecordData("Returning To Homepoint", "", "");
     }   
 
     public void StopAutopilot(){
@@ -203,31 +213,31 @@ public class AutopilotManager : MonoBehaviour
 
     
 
-    IEnumerator GetCurrentHomepointCoroutine()
-    {
-        while(true){
-            GetCurrentHomepoint();
-            yield return new WaitForSeconds(1f);
-        }
-    }
+    //IEnumerator GetCurrentHomepointCoroutine()
+    //{
+    //    while(true){
+    //        GetCurrentHomepoint();
+    //        yield return new WaitForSeconds(1f);
+    //    }
+    //}
 
-    int GetCurrentHomepoint(){
-        float shortestDistance = float.MaxValue;
-        int shortestDistIndex = 0;
-        for(int i = 0; i < homePoints.Length; i++)
-        {
-            Transform homepoint = homePoints[i];
-            Vector3 distance = homepoint.position - vc.transform.position;
-            if(distance.magnitude < shortestDistance)
-            {
-                shortestDistance = distance.magnitude;
-                currentHomepoint = homepoint;
-                wordVis.currentHomepoint = currentHomepoint;
-                shortestDistIndex = i;
-            }
-        }
-        return shortestDistIndex;
-    }
+    //int GetCurrentHomepoint(){
+    //    float shortestDistance = float.MaxValue;
+    //    int shortestDistIndex = 0;
+    //    for(int i = 0; i < homePoints.Length; i++)
+    //    {
+    //        Transform homepoint = homePoints[i];
+    //        Vector3 distance = homepoint.position - vc.transform.position;
+    //        if(distance.magnitude < shortestDistance)
+    //        {
+    //            shortestDistance = distance.magnitude;
+    //            currentHomepoint = homepoint;
+    //            //wordVis.currentHomepoint = currentHomepoint;
+    //            shortestDistIndex = i;
+    //        }
+    //    }
+    //    return shortestDistIndex;
+    //}
 
     //float GetMissionProgress()
     //{

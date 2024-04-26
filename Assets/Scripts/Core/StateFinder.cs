@@ -18,8 +18,8 @@ public class StateFinder : MonoBehaviour {
 	}
 	public Pose pose;
 
-	float landedHeight;
-	public float Altitude; // The current altitude from the zero position
+	
+	//public float Altitude; // The current altitude from the zero position
 
 	public Vector3 LocalVelocityVector; // Velocity vector
 
@@ -59,7 +59,7 @@ public class StateFinder : MonoBehaviour {
 //
 		pose.Angles = new Vector3 (Pitch, Yaw, Roll);
 
-		Altitude = droneTransform.transform.position.y - landedHeight;
+		//Altitude = droneTransform.transform.position.y - landedHeight;
 
 		pose.WorldVelocity = droneTransform.transform.GetComponent<Rigidbody> ().velocity;
 		LocalVelocityVector = droneTransform.transform.InverseTransformDirection (pose.WorldVelocity);
@@ -83,7 +83,7 @@ public class StateFinder : MonoBehaviour {
 	}
 
 	public void Reset(float landedHeight) {
-		this.landedHeight = landedHeight;
+		//this.landedHeight = landedHeight;
 		flag = true;
 	}
 
