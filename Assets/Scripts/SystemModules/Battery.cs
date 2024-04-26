@@ -11,21 +11,22 @@ public class Battery : MonoBehaviour
     private const float batteryCapacity = 1440f;
     //private float optimalFlightSpeed = 6.94f;
     private const float normalDischargeRate = 8.754f;
-    private const float normalWindStrength = 20f;
-    private const float noWindDischargeRate = 7.66f;
-    const float voltageDropDischargeRateCoeff = 1.5f;
+    //private const float normalWindStrength = 20f;
+    //private const float noWindDischargeRate = 7.66f;
+    //const float voltageDropDischargeRateCoeff = 1.5f;
 
     private const float normalBatteryVoltage = 11.4f;
-    private const float voltageDropPerLevel = 1f;
-    float abnormalDischargeRate = 0f;
+    private const float criticalPercentage = 0.2f;
+    private const float batLowPercentage = 0.3f;
+    //private const float voltageDropPerLevel = 1f;
 
-    float randomNoise;
+    //float randomNoise;
     float currentBatteryPercentage;
     float currentBatteryCapacity;
     float currentDischargeRate;
-    float dischargeRateWindCoeff;
+    //float dischargeRateWindCoeff;
     float remainingTimeInSeconds;
-    float currentVoltage;
+    //float currentVoltage;
 
     int batteryLevel = -1;
 
@@ -40,37 +41,39 @@ public class Battery : MonoBehaviour
     System.Random r;
 
     public void ResetBattery(){
-        dischargeRateWindCoeff = (normalDischargeRate - noWindDischargeRate) / normalWindStrength;
+        //dischargeRateWindCoeff = (normalDischargeRate - noWindDischargeRate) / normalWindStrength;
         r = new System.Random();
-        currentVoltage = normalBatteryVoltage;
+        //currentVoltage = normalBatteryVoltage;
         currentBatteryCapacity = batteryCapacity;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(DroneManager.currentFlightState != DroneManager.FlightState.Landed){
-            randomNoise = Sample(abnormalDischargeRate, 0.01f);
-            currentDischargeRate = Mathf.Abs(randomPulseNoise.GetCurrentWindStrength()) * dischargeRateWindCoeff + noWindDischargeRate + randomNoise;
+        if(VelocityControl.currentFlightState != VelocityControl.FlightState.Landed){
+            currentDischargeRate = normalDischargeRate;
         } else {
             currentDischargeRate = 0f;
         }
         currentBatteryCapacity -= Mathf.Max(0f, currentDischargeRate * Time.deltaTime / 3.6f);
-        currentBatteryPercentage = currentBatteryCapacity/batteryCapacity;
-        float predictedDischargeRate = randomPulseNoise.strength_mean * dischargeRateWindCoeff + noWindDischargeRate + abnormalDischargeRate;
-        remainingTimeInSeconds = (currentBatteryCapacity - batteryCapacity * 0.2f) / predictedDischargeRate * 3.6f;
-        uiUpdater.currentBatteryPercentage = currentBatteryPercentage;
-        uiUpdater.remainingTime = remainingTimeInSeconds;
-        uiUpdater.voltage = currentVoltage;
-        controlVisUpdater.batteryPercentage = currentBatteryPercentage;
-        controlVisUpdater.remainingTimeInSeconds = remainingTimeInSeconds;
-        worldVisUpdater.currentBatteryPercentage = currentBatteryPercentage;
+        currentBatteryPercentage = currentBatteryCapacity / batteryCapacity;
+        //float predictedDischargeRate = randomPulseNoise.strength_mean * dischargeRateWindCoeff + noWindDischargeRate + abnormalDischargeRate;
+        remainingTimeInSeconds = currentBatteryCapacity / currentDischargeRate * 3.6f;
+        Communication.battery.batteryPercentage = currentBatteryPercentage;
+        Communication.battery.batteryRemainingTime = remainingTimeInSeconds;
+        //Communication.battery.voltageLevel = currentVoltage
+        //uiUpdater.currentBatteryPercentage = currentBatteryPercentage;
+        //uiUpdater.remainingTime = remainingTimeInSeconds;
+        //uiUpdater.voltage = currentVoltage;
+        //controlVisUpdater.batteryPercentage = currentBatteryPercentage;
+        //controlVisUpdater.remainingTimeInSeconds = remainingTimeInSeconds;
+        //worldVisUpdater.currentBatteryPercentage = currentBatteryPercentage;
     }
 
-    public void SetVoltageLevel(int level){
-        abnormalDischargeRate = (3 - level) * voltageDropDischargeRateCoeff;
-        currentVoltage = normalBatteryVoltage - (3 - level) * voltageDropPerLevel;
-    }
+    //public void SetVoltageLevel(int level){
+    //    abnormalDischargeRate = (3 - level) * voltageDropDischargeRateCoeff;
+    //    currentVoltage = normalBatteryVoltage - (3 - level) * voltageDropPerLevel;
+    //}
 
     public void ReduceBatteryCap(float percentage){
         currentBatteryCapacity = Mathf.Max(0f, currentBatteryCapacity-batteryCapacity*percentage);
@@ -80,70 +83,70 @@ public class Battery : MonoBehaviour
         currentBatteryCapacity = batteryCapacity * 0.3f;
     }
 
-    public float GetBatteryPercentage(){
-        return currentBatteryPercentage;
-    }
+    //public float GetBatteryPercentage(){
+    //    return currentBatteryPercentage;
+    //}
 
-    public int GetBatteryLevel(){
-        int batteryLevel;
-        if(currentBatteryPercentage > 0.46667f){
-            batteryLevel = 3;
-        } else if(currentBatteryPercentage > 0.3f){
-            batteryLevel = 2;
-        } else if(currentBatteryPercentage > 0.2){
-            batteryLevel = 1;
-        } else {
-            batteryLevel = 0;
-        }
+    //public int GetBatteryLevel(){
+    //    int batteryLevel;
+    //    if(currentBatteryPercentage > 0.46667f){
+    //        batteryLevel = 3;
+    //    } else if(currentBatteryPercentage > 0.3f){
+    //        batteryLevel = 2;
+    //    } else if(currentBatteryPercentage > 0.2){
+    //        batteryLevel = 1;
+    //    } else {
+    //        batteryLevel = 0;
+    //    }
+//
+    //    if(this.batteryLevel != batteryLevel){
+    //        if(batteryLevel == 3) {
+    //            ExperimentServer.RecordData("Battery full", "", "");
+    //        } else if (batteryLevel == 2){
+    //            ExperimentServer.RecordData("Battery low", "", "");
+    //        } else if (batteryLevel == 1){
+    //            ExperimentServer.RecordData("Battery critically low!", "", "");
+    //        } else {
+    //            ExperimentServer.RecordData("Battery empty!", "", "");
+    //        }
+    //    }
+//
+    //    this.batteryLevel = batteryLevel;
+    //    return batteryLevel;
+    //}
 
-        if(this.batteryLevel != batteryLevel){
-            if(batteryLevel == 3) {
-                ExperimentServer.RecordData("Battery full", "", "");
-            } else if (batteryLevel == 2){
-                ExperimentServer.RecordData("Battery low", "", "");
-            } else if (batteryLevel == 1){
-                ExperimentServer.RecordData("Battery critically low!", "", "");
-            } else {
-                ExperimentServer.RecordData("Battery empty!", "", "");
-            }
-        }
-
-        this.batteryLevel = batteryLevel;
-        return batteryLevel;
-    }
-
-    public int GetBatteryVoltageLevel(){
-        return 3 - (int)((normalBatteryVoltage - currentVoltage)/voltageDropPerLevel);
-    }
-
-    public float GetBatteryVoltage(){
-        return currentVoltage;
-    }
-
-    float Sample(float mean, float var)
-    {
-        float n = NextGaussianDouble();
-
-        return n * Mathf.Sqrt(var) + mean;
-    }
-
-    float SamplePositive(float mean, float var) {
-        return Mathf.Abs(Sample(mean, var));
-    }
-
-    float NextGaussianDouble()
-    {
-        float u, v, S;
-
-        do
-        {
-            u = 2.0f * (float) r.NextDouble() - 1.0f;
-            v = 2.0f * (float) r.NextDouble() - 1.0f;
-            S = u * u + v * v;
-        }
-        while (S >= 1.0f);
-
-        float fac = Mathf.Sqrt(-2.0f * Mathf.Log(S) / S);
-        return u * fac;
-    }
-}
+    //public int GetBatteryVoltageLevel(){
+    //    return 3 - (int)((normalBatteryVoltage - currentVoltage)/voltageDropPerLevel);
+    //}
+//
+    //public float GetBatteryVoltage(){
+    //    return currentVoltage;
+    //}
+//
+    //float Sample(float mean, float var)
+    //{
+    //    float n = NextGaussianDouble();
+//
+    //    return n * Mathf.Sqrt(var) + mean;
+    //}
+//
+    //float SamplePositive(float mean, float var) {
+    //    return Mathf.Abs(Sample(mean, var));
+    //}
+//
+    //float NextGaussianDouble()
+    //{
+    //    float u, v, S;
+//
+    //    do
+    //    {
+    //        u = 2.0f * (float) r.NextDouble() - 1.0f;
+    //        v = 2.0f * (float) r.NextDouble() - 1.0f;
+    //        S = u * u + v * v;
+    //    }
+    //    while (S >= 1.0f);
+//
+    //    float fac = Mathf.Sqrt(-2.0f * Mathf.Log(S) / S);
+    //    return u * fac;
+    //}
+}//
