@@ -67,7 +67,15 @@ public class FlightPlanning : MonoBehaviour
 
     // Start is called before the first frame update
 
-    public void ResetPathPlanning(){
+    void OnEnable(){
+        DroneManager.resetAllEvent.AddListener(ResetPathPlanning);
+    }
+
+    void OnDisable(){
+        DroneManager.resetAllEvent.RemoveListener(ResetPathPlanning);
+    }
+
+    void ResetPathPlanning(){
         pathPlanned = false;
         UpdateBoundsGeometry();
         //SetStartingPoint(0);
@@ -240,12 +248,12 @@ public class FlightPlanning : MonoBehaviour
         wpList.Add(wp.GetComponent<Waypoint>());
     }
 
-    public void FinishPlanning(){
+    void FinishPlanning(){
         if(pathPlanned){
-            //DroneManager.finish_planning_flag = true;
+            DroneManager.finish_planning_flag = true;
             planningUI.SetActive(false);
             monitoringUI.SetActive(true);
-            Communication.pathPlanned = true;
+            //Communication.pathPlanned = true;
             //worldVis.UpdateWaypontList(wpList.ToArray());
             VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
         }
@@ -355,9 +363,7 @@ public class FlightPlanning : MonoBehaviour
         surfaceVerts[3,3] = boundCenter + (Vector3)(m * new Vector3(boundExtends.x, boundExtends.y, boundExtends.z));
     }
 
-    public bool isPathPlanned () {
-        return pathPlanned;
-    }
+
 
     //public Vector3 GetCurrentWaypoint(int index, out bool out_of_bound){
     //    if(index >= flightTrajectory.Length)

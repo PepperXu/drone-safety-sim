@@ -43,22 +43,25 @@ public class UIUpdater : MonoBehaviour
     [Header("Buttons")]
     [SerializeField] Toggle autoPilotToggle;
 
-    [Header("Public Parameters")]
-    [SerializeField] StateFinder droneState;
-    int defectCount = 0;
+    //[SerializeField] StateFinder droneState;
+    //int defectCount = 0;
     string[] flightStateString = {"Landed", "Taking Off", "Hovering", "Navigating", "Landing"};
     string[] missionStateString = {"Planning", "Moving to Flight Zone", "In Flight Zone", "Inspecting", "Interrupted", "Returning"};
     string[] controlStateString = {"Auto", "Manual"};
+    
+    void OnEnable(){
+        DroneManager.markDefectEvent.AddListener(MarkDefect);
+    }
 
-    public void ResetUI(){
-        defectCount = 0;
+    void OnDisable(){
+        DroneManager.markDefectEvent.RemoveListener(MarkDefect);
     }
 
 
     // Update is called once per frame
     void Update()
     {
-        flightState.text = flightStateString[(int)DroneManager.currentFlightState];
+        flightState.text = flightStateString[(int)VelocityControl.currentFlightState];
         missionState.text = missionStateString[(int)DroneManager.currentMissionState];
         //systemState.text = Enum.GetName(typeof(DroneManager.SystemState), DroneManager.currentSystemState);
         controlState.text = controlStateString[(int)DroneManager.currentControlType];
@@ -67,51 +70,55 @@ public class UIUpdater : MonoBehaviour
         else   
             autoPilotToggle.isOn = false;
 
-        batteryPercentage.text = ((int) ((currentBatteryPercentage - 0.2f)/ 0.8f * 100f)) + "%";
+        batteryPercentage.text = ((int) (Communication.battery.batteryPercentage * 100f)) + "%";
         
-        int remainingTimeMinutes = Mathf.FloorToInt(remainingTime/60);
-        batteryRemainingTime.text = remainingTimeMinutes + ":" + Mathf.FloorToInt(remainingTime - remainingTimeMinutes * 60);
+        int remainingTimeMinutes = Mathf.FloorToInt(Communication.battery.batteryRemainingTime/60);
+        batteryRemainingTime.text = remainingTimeMinutes + ":" + Mathf.FloorToInt(Communication.battery.batteryRemainingTime - remainingTimeMinutes * 60);
 
-        if(currentBatteryPercentage >= 1f){
+        if(Communication.battery.batteryPercentage >= 1f){
             batteryIcon.sprite = batterySprites[0];
             batteryIcon.color = Color.green;
             batteryPercentage.color = Color.white;
             batteryRemainingTime.color = Color.white;
-            batteryPercentageCircular.color = Color.white;
-        } else if (currentBatteryPercentage > 0.73333f){
+            //batteryPercentageCircular.color = Color.white;
+        } else if (Communication.battery.batteryPercentage > 0.75f){
             batteryIcon.sprite = batterySprites[0];
             batteryIcon.color = Color.white;
             batteryPercentage.color = Color.white;
             batteryRemainingTime.color = Color.green;
-            batteryPercentageCircular.color = Color.white;
-        } else if(currentBatteryPercentage > 0.46667f) {
+            //batteryPercentageCircular.color = Color.white;
+        } else if(Communication.battery.batteryPercentage > 0.5f) {
             batteryIcon.sprite = batterySprites[1];
             batteryIcon.color = Color.white;
             batteryPercentage.color = Color.white;
             batteryRemainingTime.color = Color.green;
-            batteryPercentageCircular.color = Color.white;
-        } else if(currentBatteryPercentage > 0.3f){
+            //batteryPercentageCircular.color = Color.white;
+        } else if (Communication.battery.batteryPercentage > 0.3) {
+            batteryIcon.sprite = batterySprites[2];
+            batteryIcon.color = Color.white;
+            batteryPercentage.color = Color.white;
+            batteryRemainingTime.color = Color.green;
+        }
+        else if(Communication.battery.batteryPercentage > 0.25f){
             batteryIcon.sprite = batterySprites[2];
             batteryIcon.color = Color.yellow;
             batteryPercentage.color = Color.yellow;
             batteryRemainingTime.color = Color.yellow;
-            batteryPercentageCircular.color = Color.yellow;
-        } else if(currentBatteryPercentage > 0.2f){
+            //batteryPercentageCircular.color = Color.yellow;
+        } else if(Communication.battery.batteryPercentage > 0.2f){
             batteryIcon.sprite = batterySprites[3];
-            batteryIcon.color = Color.red;
-            batteryPercentage.color = Color.red;
-            batteryRemainingTime.color = Color.red;
-            batteryPercentageCircular.color = Color.red;
+            batteryIcon.color = Color.yellow;
+            batteryPercentage.color = Color.yellow;
+            batteryRemainingTime.color = Color.yellow;
         } else {
             batteryIcon.sprite = batterySprites[3];
             batteryIcon.color = Color.red;
             batteryPercentage.color = Color.red;
             batteryRemainingTime.color = Color.red;
-            batteryPercentageCircular.color = Color.red;
         }
 
 
-        switch(positional_signal_level){
+        switch(Communication.positionData.signalLevel){
             case 3:
                 GNSSIcon.sprite = GNSSSprites[0];
                 GNSSIcon.color = Color.white;
@@ -131,10 +138,10 @@ public class UIUpdater : MonoBehaviour
         }
 
 
-        distToHome.text = ((int)(transform.position-droneState.pose.WorldPosition).magnitude).ToString();
-        altitude.text = ((int)droneState.Altitude).ToString();
-        horiSpeed.text = ((int)new Vector3(droneState.pose.WorldVelocity.x, 0f, droneState.pose.WorldVelocity.z).magnitude).ToString();
-        vertSpeed.text = ((int)Mathf.Abs(droneState.pose.WorldVelocity.y)).ToString();
+        distToHome.text = ((int)(transform.position-Communication.realPose.WorldPosition).magnitude).ToString();
+        altitude.text = ((int)Communication.realPose.Altitude).ToString();
+        horiSpeed.text = ((int)new Vector3(Communication.realPose.WorldVelocity.x, 0f, Communication.realPose.WorldVelocity.z).magnitude).ToString();
+        vertSpeed.text = ((int)Mathf.Abs(Communication.realPose.WorldVelocity.y)).ToString();
 
         UpdateCompassUI();
     }
@@ -149,14 +156,12 @@ public class UIUpdater : MonoBehaviour
     //    MarkDefect();
     //}
 //
-    public void MarkDefect()
+    void MarkDefect()
     {
-        if(vector2surface.magnitude > 8f)
+        if(Communication.positionData.v2surf.magnitude > 8f)
             return;
 
-        defectCount++;
-
-        ExperimentServer.RecordData("Defect Marked at", droneState.pose.WorldPosition.x + "|" + droneState.pose.WorldPosition.y + "|" + droneState.pose.WorldPosition.z, "id: " + defectCount);
+       // defectCount++;
         Color c = cameraBorderUI.color;
         cameraBorderUI.color = new Color(c.r, c.g, c.b, 1f);
         //DroneManager.mark_defect_flag = true;
@@ -170,10 +175,10 @@ public class UIUpdater : MonoBehaviour
         northAngle = NormalizeAngle(northAngle);
         northIcon.localEulerAngles = new Vector3(0f, 0f, -northAngle);
        
-        float relativeHeading = droneState.transform.eulerAngles.y - headAnchor.transform.eulerAngles.y;
+        float relativeHeading = Communication.realPose.Angles.y - Communication.realPose.Angles.y;
         relativeHeading = NormalizeAngle(relativeHeading);
         headingIcon.localEulerAngles = new Vector3(0f, 0f, -relativeHeading);
-        Vector3 relativeOffsetLocal = headAnchor.InverseTransformPoint(droneState.transform.position);
+        Vector3 relativeOffsetLocal = headAnchor.InverseTransformPoint(Communication.realPose.WorldPosition);
         Vector2 relativeOffset2D = new Vector2(relativeOffsetLocal.x, relativeOffsetLocal.z);
         if (relativeOffset2D.magnitude <= 35f)
         {
@@ -184,8 +189,8 @@ public class UIUpdater : MonoBehaviour
             float offsetAngle = Mathf.Atan2(relativeOffset2D.x, relativeOffset2D.y);
             headingIcon.localPosition = new Vector3(35f * Mathf.Sin(offsetAngle), 35f * Mathf.Cos(offsetAngle), 0f);
         }
-        float pitch = NormalizeAngle(droneState.transform.localEulerAngles.x);
-        float roll = NormalizeAngle(droneState.transform.localEulerAngles.z);
+        float pitch = NormalizeAngle(Communication.realPose.Angles.x);
+        float roll = NormalizeAngle(Communication.realPose.Angles.z);
         if (Mathf.Abs(relativeHeading) < 90f)
         {
             attitudeIconAnchor.localPosition = new Vector3(0f, pitch, 0f);
@@ -218,10 +223,10 @@ public class UIUpdater : MonoBehaviour
         return normalizedAngularValue;
     }
 
-    public int GetDefectCount(){
-        return defectCount;
-    }
-
+    //int GetDefectCount(){
+    //   // return defectCount;
+    //}
+//
     //public string[] GetSystemStateText(){
     //    return systemStateString;
     //}

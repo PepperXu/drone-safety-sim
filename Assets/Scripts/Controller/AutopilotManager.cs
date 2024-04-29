@@ -39,10 +39,16 @@ public class AutopilotManager : MonoBehaviour
 
     void OnEnable(){
         DroneManager.resetAllEvent.AddListener(ResetAutopilot);
+        DroneManager.autopilotEvent.AddListener(EnableAutopilot);
+        DroneManager.autopilotStopEvent.AddListener(StopAutopilot);
+        DroneManager.returnToHomeEvent.AddListener(EnableRTH);
     }
 
     void OnDisable(){
         DroneManager.resetAllEvent.RemoveListener(ResetAutopilot);
+        DroneManager.autopilotEvent.RemoveListener(EnableAutopilot);
+        DroneManager.autopilotStopEvent.RemoveListener(StopAutopilot);
+        DroneManager.returnToHomeEvent.RemoveListener(EnableRTH);
     }
     void Start()
     {
@@ -169,7 +175,7 @@ public class AutopilotManager : MonoBehaviour
     }
 
 
-    public void EnableAutopilot()
+    void EnableAutopilot()
     {
         //vc.SetMaxPitchRoll(enable?0.175f:0.3f);
 
@@ -199,14 +205,14 @@ public class AutopilotManager : MonoBehaviour
     }
 
 
-    public void EnableRTH(){
+    void EnableRTH(){
         isAutopiloting = true;
         isRTH = true;
         //int idx = GetCurrentHomepoint();
         ExperimentServer.RecordData("Returning To Homepoint", "", "");
     }   
 
-    public void StopAutopilot(){
+    void StopAutopilot(){
         isAutopiloting = false;
         isRTH = false;
     }

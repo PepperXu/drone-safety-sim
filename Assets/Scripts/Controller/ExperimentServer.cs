@@ -95,12 +95,12 @@ public class ExperimentServer : MonoBehaviour
 
 		
 
-		if(DroneManager.currentFlightState == DroneManager.FlightState.TakingOff && !isRecording){
+		if(VelocityControl.currentFlightState == VelocityControl.FlightState.TakingOff && !isRecording){
 			StartRecording();
 			RecordData("Visualization Condition", visConditionString[(int)currentVisCondition] , "");
 		}
 
-		if(DroneManager.currentFlightState == DroneManager.FlightState.Landed && isRecording){
+		if(VelocityControl.currentFlightState == VelocityControl.FlightState.Landed && isRecording){
 			StopRecording();
 		}
 
@@ -132,11 +132,7 @@ public class ExperimentServer : MonoBehaviour
 					VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
 				} else {
 					if(currentVisCondition == VisualizationCondition.SafetyFirst){
-						if(DroneManager.currentSafetyState != DroneManager.SafetyState.Healthy){
-							VisType.globalVisType = VisType.VisualizationType.Both;
-						}else {
-							VisType.globalVisType = VisType.VisualizationType.MissionOnly;
-						}
+						VisType.globalVisType = VisType.VisualizationType.Both;
 					} else {
 						VisType.globalVisType = VisType.VisualizationType.MissionOnly;
 					}
@@ -313,11 +309,6 @@ public class ExperimentServer : MonoBehaviour
 			Debug.Log("Processing Client Message: " + clientMessage);
 			string[] splitMsg = clientMessage.Split(';');
 			switch(splitMsg[0]){
-				case "starting-point":
-					//if(DroneManager.currentMissionState == DroneManager.MissionState.Planning){
-					//	flightPlanning.SetStartingPoint(int.Parse(splitMsg[1]));
-					//}
-					break;
 				case "vis-condition":
 					currentVisCondition = (VisualizationCondition) int.Parse(splitMsg[1]);
 					break;
@@ -325,9 +316,6 @@ public class ExperimentServer : MonoBehaviour
 					randomPulseNoise.yawCenter = float.Parse(splitMsg[1]);
 					randomPulseNoise.strength_mean = float.Parse(splitMsg[2]);
 					randomPulseNoise.wind_change_flag = true;
-					break;
-				case "battery-voltage-level":
-					battery.SetVoltageLevel(int.Parse(splitMsg[1]));
 					break;
 				case "reduce-battery-capacity":
 					battery.ReduceBatteryCap(float.Parse(splitMsg[1]));
@@ -387,12 +375,9 @@ public class ExperimentServer : MonoBehaviour
 		string currentState = "current-state;" + 
 			(int)DroneManager.currentMissionState + ";" + 
 			(int)DroneManager.currentControlType + ";" + 
-			(int)DroneManager.currentSafetyState + ";" + 
 			(int)currentVisCondition + ";" + 
-			battery.GetBatteryVoltageLevel() + ";" + 
 			positionalSensorSimulator.GetSignalLevel() + ";" + 
-			uIUpdater.GetDefectCount() +  ";" + 
-			(switching_flag?3:(int)VisType.globalVisType) + "\n";
+			(switching_flag ? 3:(int)VisType.globalVisType) + "\n";
 		//msgQueue.Enqueue(currentState);
 		msgString += currentState;
 	}
@@ -403,7 +388,7 @@ public class ExperimentServer : MonoBehaviour
 	//	msgString += msg;
 	//}
 	private void SendDroneFlightStatus(){
-		string msg = "drone-status;" + (int)DroneManager.currentFlightState + "\n";
+		string msg = "drone-status;" + (int)VelocityControl.currentFlightState + "\n";
 		//msgQueue.Enqueue(msg);
 		msgString += msg;
 	}
@@ -414,7 +399,7 @@ public class ExperimentServer : MonoBehaviour
 	}
 
 	private void SendBatteryPercentage(){
-		string msg = "battery-percentage;" + battery.GetBatteryPercentage() + "\n";
+		string msg = "battery-percentage;" + Communication.battery.batteryPercentage + "\n";
 		//msgQueue.Enqueue(msg);
 		msgString += msg;
 	}

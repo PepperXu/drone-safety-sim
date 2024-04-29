@@ -219,8 +219,9 @@ public class RandomPulseNoise : MonoBehaviour {
             drone.AddForce(ray * strength_coef, ForceMode.Impulse);
         }
 
-        controlVisUpdater.windStrength = strength;
-        controlVisUpdater.windRotation = transform.rotation;
+        Communication.wind.direction = strength * transform.forward;
+        //controlVisUpdater.windStrength = strength;
+        //controlVisUpdater.windRotation = transform.rotation;
         //Debug.DrawRay(drone.position, ray, Color.green);
 	}
 

@@ -5,7 +5,8 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-    public static int photoTaken = 0;
+     static int photoTaken = 0;
+     static int defectMaked = 0;
     [SerializeField] RenderTexture camRT;
     [SerializeField] MeshRenderer frameFreezerRen;
     [SerializeField] UIUpdater uIUpdater;
@@ -13,19 +14,40 @@ public class CameraController : MonoBehaviour
     Texture2D tex;
     // Start is called before the first frame update
 
-    public void ResetCamera(){
-        photoTaken = 0;
+    void OnEnable(){
+        DroneManager.markDefectEvent.AddListener(TakePhotoAndMark);
+        DroneManager.takePhotoEvent.AddListener(TakePhoto);
+        DroneManager.resetAllEvent.AddListener(ResetCamera);
     }
+
+    void OnDisable(){
+        DroneManager.markDefectEvent.RemoveListener(TakePhotoAndMark);
+        DroneManager.takePhotoEvent.RemoveListener(TakePhoto);
+        DroneManager.resetAllEvent.RemoveListener(ResetCamera);
+    }
+
+    void ResetCamera(){
+        photoTaken = 0;
+        defectMaked = 0;
+    }
+    
     // Update is called once per frame
     void Update()
     {
 
     }
 
-    public void TakePhoto(bool marked){
+    void TakePhoto(){
         photoTaken++;
         if(ExperimentServer.isRecording)
-            SaveRenderTextureToFile(marked);
+            SaveRenderTextureToFile(false);
+    }
+
+    void TakePhotoAndMark(){
+        photoTaken++;
+        defectMaked++;
+        if(ExperimentServer.isRecording)
+            SaveRenderTextureToFile(true);
     }
 
     IEnumerator FreezeFrame(){
@@ -48,20 +70,20 @@ public class CameraController : MonoBehaviour
         tex.Apply();
         
         RenderTexture.active = oldRt;
-        string fileName = (marked?"marked_" + uIUpdater.GetDefectCount() :"capture_" + photoTaken) + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
+        string fileName = (marked?"marked_" + defectMaked :"capture_" + photoTaken) + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
         System.IO.File.WriteAllBytes(ExperimentServer.folderPath + "/" + fileName + ".png", tex.EncodeToPNG());
 
         if (Application.isPlaying)
             Destroy(tex);
         else
             DestroyImmediate(tex);
-        //if(marked)
-        //    StartCoroutine(FreezeFrame());
-        //else{
-        //    if (Application.isPlaying)
-        //        Destroy(tex);
-        //    else
-        //        DestroyImmediate(tex);
-        //}
+        if(marked)
+            StartCoroutine(FreezeFrame());
+        else{
+            if (Application.isPlaying)
+                Destroy(tex);
+            else
+                DestroyImmediate(tex);
+        }
     }
 }

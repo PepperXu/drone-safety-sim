@@ -9,7 +9,7 @@ public class Battery : MonoBehaviour
 {
     //private float hoveringDischargeRate = 7.66f;
     private const float batteryCapacity = 1440f;
-    //private float optimalFlightSpeed = 6.94f;
+    private const float autopilotFlightSpeed = 3f;
     private const float normalDischargeRate = 8.754f;
     //private const float normalWindStrength = 20f;
     //private const float noWindDischargeRate = 7.66f;
@@ -30,21 +30,19 @@ public class Battery : MonoBehaviour
 
     int batteryLevel = -1;
 
-
-    [SerializeField] StateFinder droneState;
-    [SerializeField] UIUpdater uiUpdater;
-    [SerializeField] RandomPulseNoise randomPulseNoise;
-    [SerializeField] ControlVisUpdater controlVisUpdater;
-    [SerializeField] WorldVisUpdater worldVisUpdater;
-
-
+    const float batteryLowThreshold = 0.3f;
+    const float batteryCriticalThreshold = 0.2f;
     System.Random r;
+
+    [SerializeField] Transform Homepoint;
 
     public void ResetBattery(){
         //dischargeRateWindCoeff = (normalDischargeRate - noWindDischargeRate) / normalWindStrength;
         r = new System.Random();
         //currentVoltage = normalBatteryVoltage;
         currentBatteryCapacity = batteryCapacity;
+        Communication.battery.rth = false;
+        Communication.battery.batteryState = "Normal";
     }
 
     // Update is called once per frame
@@ -61,6 +59,25 @@ public class Battery : MonoBehaviour
         remainingTimeInSeconds = currentBatteryCapacity / currentDischargeRate * 3.6f;
         Communication.battery.batteryPercentage = currentBatteryPercentage;
         Communication.battery.batteryRemainingTime = remainingTimeInSeconds;
+        float rthTimeThreshold = (Communication.positionData.virtualPosition - Homepoint.position).magnitude/3f;
+
+        if(rthTimeThreshold < remainingTimeInSeconds + 20f){
+            
+            if(!Communication.battery.rth){
+                Communication.battery.rth = true;
+                DroneManager.rth_flag = true;
+            }
+        } 
+
+        if(currentBatteryPercentage < batteryCriticalThreshold){
+            Communication.battery.batteryState = "Critical";
+        } else if (currentBatteryPercentage < batteryLowThreshold){
+            Communication.battery.batteryState = "Low";
+        } else {
+            Communication.battery.batteryState = "Normal";
+        }
+
+        
         //Communication.battery.voltageLevel = currentVoltage
         //uiUpdater.currentBatteryPercentage = currentBatteryPercentage;
         //uiUpdater.remainingTime = remainingTimeInSeconds;

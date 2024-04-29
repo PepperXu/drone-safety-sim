@@ -101,7 +101,7 @@ public class DroneManager : MonoBehaviour
     }
 
     public void ResetAllStates(){
-        finish_planning_flag = false;
+        
         //currentFlightState = FlightState.Landed;
         currentMissionState = MissionState.Planning;
         currentControlType = ControlType.Manual;
@@ -131,7 +131,7 @@ public class DroneManager : MonoBehaviour
         rth_flag = false; 
         take_photo_flag = false;
         mark_defect_flag = false;
-
+        finish_planning_flag = false;
     }
 
     // Update is called once per frame
@@ -139,13 +139,11 @@ public class DroneManager : MonoBehaviour
     void Update()
     {
         
-
-
-        //Obsolete: the planning phase is automated. 
-        //if(currentMissionState == MissionState.Planning && finish_planning_flag){
-        //    finish_planning_flag = false;
-        //    currentMissionState = MissionState.MovingToFlightZone;
-        //}
+        if(currentMissionState == MissionState.Planning && finish_planning_flag){
+            finish_planning_flag = false;
+            currentMissionState = MissionState.MovingToFlightZone;
+            finishPlanningEvent.Invoke();
+        }
 
         if(take_off_flag){
             take_off_flag = false;

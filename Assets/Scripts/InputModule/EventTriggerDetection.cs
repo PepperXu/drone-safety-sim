@@ -21,10 +21,12 @@ public class EventTriggerDetection : MonoBehaviour {
     
     void OnEnable(){
         DroneManager.resetAllEvent.AddListener(ResetEventSimulation);
+        DroneManager.landedEvent.AddListener(ResetEventSimulation);
     }
 
     void OnDisable(){
         DroneManager.resetAllEvent.RemoveListener(ResetEventSimulation);
+        DroneManager.landedEvent.RemoveListener(ResetEventSimulation);
     }
 
     void ResetEventSimulation(){

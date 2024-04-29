@@ -30,7 +30,8 @@ public class InteractiveCamera : MonoBehaviour
 
         RaycastHit buildingHit;
         if(Physics.Raycast(ray, out buildingHit, float.PositiveInfinity, buildingCollision)){
-
+            DroneManager.mark_defect_flag = true;
+            Communication.markDefectHit = buildingHit;
             //worldVisUpdater.currentHit = buildingHit;
             //uIUpdater.MarkDefect();
             

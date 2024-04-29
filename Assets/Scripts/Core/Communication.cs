@@ -22,7 +22,7 @@ public class Communication : MonoBehaviour
     }
 
     public struct CollisionData{
-        public float[] distances;
+        public Vector3[] distances;
 
         public int collisionCount;
 
@@ -32,8 +32,8 @@ public class Communication : MonoBehaviour
             float minDist = float.MaxValue;
             int indx = 0;
             for(int i = 0; i < distances.Length; i++){
-                if(distances[i] < minDist){
-                    minDist = distances[i];
+                if(distances[i].magnitude < minDist){
+                    minDist = distances[i].magnitude;
                     indx = i;
                 }
             }
@@ -72,23 +72,35 @@ public class Communication : MonoBehaviour
         public float batteryPercentage;
         public float batteryRemainingTime;
         public float voltageLevel;
+        public string batteryState;
+        public bool rth;
+    }
+
+    public struct Wind{
+        public Vector3 direction;
     }
 
 
     public static RealPose realPose;
-    public static CollisionData collisionData;
+    public static CollisionData collisionData = new CollisionData(){
+        distances = new Vector3[8]
+    };
     public static PositionData positionData;
 
     public static ConstantProperties constProps;
     public static Battery battery;
 
+    public static Wind wind;
+
     public static Vector3[] flightTrajectory;
-    public static bool pathPlanned = false;
+    
     public static int currentWaypointIndex = -1;
 
     public static Rigidbody droneRb;
 
-    public static UnityEvent finishPlanning = new UnityEvent();
+    public static RaycastHit? markDefectHit;
+
+    //public static UnityEvent finishPlanning = new UnityEvent();
 
 
     [SerializeField] float inputLatency;
@@ -116,7 +128,6 @@ public class Communication : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
         if (cameraLatency > 0f)
         {
             storedFrames = new Frame[bufferSize];

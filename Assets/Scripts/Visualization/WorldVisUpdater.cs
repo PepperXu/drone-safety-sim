@@ -38,14 +38,22 @@ public class WorldVisUpdater : MonoBehaviour
 
     List<GameObject> spawnedCoverageObjects = new List<GameObject>();
 
+
+    void OnEnable(){
+        DroneManager.finishPlanningEvent.AddListener(ResetWorldVis);
+        DroneManager.markDefectEvent.AddListener(SpawnCamCoverageWithMark);
+        DroneManager.takePhotoEvent.AddListener(SpawnCamCoverage);
+    }
     // Start is called before the first frame update
     void Start()
     {
-        
+        DroneManager.finishPlanningEvent.RemoveListener(ResetWorldVis);
+        DroneManager.markDefectEvent.RemoveListener(SpawnCamCoverageWithMark);
+        DroneManager.takePhotoEvent.RemoveListener(SpawnCamCoverage);
     }
 
 
-    public void ResetWorldVis(){
+    void ResetWorldVis(){
         //defaultGradient.colorKeys = new GradientColorKey[]{new(inspectionTrajColor, 0f), new(inspectionTrajColor, 1f)};
         //defaultGradient.alphaKeys = new GradientAlphaKey[]{new(0.5f, 0f), new(0.5f, 1f)};
         ResetTrajectoryVis();
@@ -83,7 +91,9 @@ public class WorldVisUpdater : MonoBehaviour
 
     void UpdateHomepointVis(){
 
-        if(DroneManager.currentMissionState == DroneManager.MissionState.Returning || currentBatteryPercentage < 0.46667f){
+
+
+        if(DroneManager.currentMissionState == DroneManager.MissionState.Returning || Communication.battery.rth){
             //landing_zones.showVisualization = true;
             landing_zones.SwitchHiddenVisTypeLocal(true);
         } else {
@@ -166,7 +176,7 @@ public class WorldVisUpdater : MonoBehaviour
     //    waypoints = wps;
     //}
 //
-    void UpdateCamCoverage(){
+    void SpawnCamCoverage(){
         if(Communication.positionData.signalLevel != 3)
             return;
 
@@ -177,18 +187,24 @@ public class WorldVisUpdater : MonoBehaviour
         covObj.transform.localScale *=  Communication.positionData.v2surf.magnitude;
         covObj.transform.parent = coverage.visRoot;
         spawnedCoverageObjects.Add(covObj);
-        if(marked){
-            if(currentHit != null){
-                RaycastHit hit = (RaycastHit)currentHit;
-                GameObject markObj = Instantiate(markedObject);
-                markObj.transform.position = hit.point + hit.normal.normalized * 0.01f;
-                markObj.transform.rotation = Quaternion.LookRotation(Vector3.up, hit.normal);
-                //markObj.transform.parent = coverage.visRoot;
-            }
-            //GameObject markObj = Instantiate(markedObject, covObj.transform);
-            //markObj.transform.localPosition = Vector3.zero;
-            //markObj.transform.localEulerAngles = Vector3.zero;
-            //markObj.transform.localScale = Vector3.one;
+    }
+
+    void SpawnCamCoverageWithMark(){
+        if(Communication.positionData.signalLevel != 3)
+            return;
+
+
+        GameObject covObj = Instantiate(coverageObject);
+        covObj.transform.position = Communication.positionData.virtualPosition + Communication.positionData.v2surf;
+        covObj.transform.rotation = Quaternion.LookRotation(Vector3.up, - Communication.positionData.v2surf.normalized);
+        covObj.transform.localScale *=  Communication.positionData.v2surf.magnitude;
+        covObj.transform.parent = coverage.visRoot;
+        spawnedCoverageObjects.Add(covObj);
+        if(Communication.markDefectHit != null){
+            RaycastHit hit = (RaycastHit)Communication.markDefectHit;
+            GameObject markObj = Instantiate(markedObject, covObj.transform);
+            markObj.transform.position = hit.point + hit.normal.normalized * 0.01f;
+            markObj.transform.rotation = Quaternion.LookRotation(Vector3.up, hit.normal);
         }
     }
 

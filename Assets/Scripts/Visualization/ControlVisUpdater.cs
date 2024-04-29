@@ -83,22 +83,33 @@ public class ControlVisUpdater : MonoBehaviour
 
     }
 
-    public void SetControlVisActive(bool active)
+    void OnEnable(){
+        DroneManager.landingEvent.AddListener(SetControlVisInactive);
+        DroneManager.onFlightEvent.AddListener(SetControlVisActive);
+    }
+
+    void OnDisable(){
+        DroneManager.landingEvent.RemoveListener(SetControlVisInactive);
+        DroneManager.onFlightEvent.RemoveListener(SetControlVisActive);
+    }
+
+    void SetControlVisActive()
     {
-        if(active){
-            if(!visActive){
-                visActive = true;
-                foreach(VisType vis in GetComponentsInChildren<VisType>())
-                    vis.showVisualization = true;
-                StartCoroutine(UpdateControlVis());
-            }
-        } else {
-            visActive = false;
-            StopAllCoroutines();
+        if(!visActive){
+            visActive = true;
             foreach(VisType vis in GetComponentsInChildren<VisType>())
-                vis.showVisualization = false;
+                vis.showVisualization = true;
+            StartCoroutine(UpdateControlVis());
         }
     }
+
+    void SetControlVisInactive(){
+        visActive = false;
+        StopAllCoroutines();
+        foreach(VisType vis in GetComponentsInChildren<VisType>())
+            vis.showVisualization = false;
+    }
+
     IEnumerator UpdateControlVis(){
         while(true){
             transform.position = Communication.positionData.virtualPosition;
@@ -107,7 +118,7 @@ public class ControlVisUpdater : MonoBehaviour
             UpdateDistance2Ground();
             UpdateDistance2Bound();
             UpdateDistance2Surface();
-            UpdateFutureTrajectory();
+            //UpdateFutureTrajectory();
             UpdateAttitudeVis();
             UpdateCameraFrustum();
             UpdateWindVis();
@@ -186,14 +197,15 @@ public class ControlVisUpdater : MonoBehaviour
     {
         if(!dis2SurfaceVis.gameObject.activeInHierarchy)
             return;
-        float dis2surf = vectorToNearestSurface.magnitude;
+        Vector3 v2surf = Communication.collisionData.distances[Communication.collisionData.GetShortestDistanceIndex()];
+        float dis2surf = v2surf.magnitude;
         if (dis2surf > 12f)
         {
             dis2SurfaceVis.showVisualization = false;
             return;
         }
         dis2SurfaceVis.showVisualization = true;
-        Vector3 hitPoint = transform.position + vectorToNearestSurface;
+        Vector3 hitPoint = transform.position + v2surf;
         Vector3 localHitPos = transform.InverseTransformPoint(hitPoint);
         localHitPos = new Vector3(localHitPos.x, 0f, localHitPos.z);
         float angle = Vector3.SignedAngle(localHitPos, Vector3.right, Vector3.up);
@@ -206,16 +218,16 @@ public class ControlVisUpdater : MonoBehaviour
         Transform projectionDisc = dis2SurfaceVis.visRoot.GetChild(1);
         Transform textLabel = dis2SurfaceVis.visRoot.GetChild(2);
 
-        projectionAnchor.rotation = Quaternion.LookRotation(vectorToNearestSurface, Vector3.up);
+        projectionAnchor.rotation = Quaternion.LookRotation(v2surf, Vector3.up);
         projection.GetComponent<SpriteRenderer>().size = new Vector2(dis2surf/12f, 1f);
         projection.localPosition = Vector3.forward * dis2surf /2f;
-        projectionDisc.position = hitPoint - vectorToNearestSurface.normalized * 0.01f;
+        projectionDisc.position = hitPoint - v2surf.normalized * 0.01f;
         projectionDisc.localRotation =  Quaternion.LookRotation(localHitPos, Vector3.up);
         textLabel.localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
         textLabel.GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2surf * 10f) / 10f + " m";
 
         
-        if(dis2surf < DroneManager.surfaceCautionThreshold){
+        if(dis2surf < surfaceCautionThreshold){
             dis2SurfaceVis.SwitchHiddenVisTypeLocal(true);
         } else {
             dis2SurfaceVis.SwitchHiddenVisTypeLocal(false);
@@ -251,7 +263,7 @@ public class ControlVisUpdater : MonoBehaviour
     {
         if(!attitude.gameObject.activeInHierarchy)
             return;
-        float pitch = droneParent.localEulerAngles.x;
+        float pitch = Communication.realPose.Angles.x;
         while (pitch >= 180f)
         {
             pitch -= 360f;
@@ -260,7 +272,7 @@ public class ControlVisUpdater : MonoBehaviour
         {
             pitch += 360f;
         }
-        float roll = droneParent.localEulerAngles.z;
+        float roll = Communication.realPose.Angles.z;
         while (roll >= 180f)
         {
             roll -= 360f;
@@ -300,13 +312,13 @@ public class ControlVisUpdater : MonoBehaviour
     }
 
     void UpdatePosCircle(){
-        posCircle.SetTransparency(Mathf.Max(0, 2-pos_sig_lvl));
+        posCircle.SetTransparency(Mathf.Max(0, 2-Communication.positionData.signalLevel));
     }
 
     void UpdateCameraFrustum(){
         if(!camFrustum.gameObject.activeInHierarchy)
             return;
-        float dis2surf = vectorToNearestSurface.magnitude;
+        float dis2surf = Communication.positionData.v2surf.magnitude;
         if(dis2surf > 8f){
             camFrustum.transform.GetChild(0).GetChild(0).localScale = Vector3.one * 3f;
             //camFrustum.showVisualization = false;
@@ -315,13 +327,13 @@ public class ControlVisUpdater : MonoBehaviour
             //camFrustum.showVisualization = true;
             camFrustum.transform.GetChild(0).GetChild(0).localScale = Vector3.one * dis2surf;
         }
-        camFrustum.SetTransparency(Mathf.Max(0, 2-pos_sig_lvl));
+        camFrustum.SetTransparency(Mathf.Max(0, 2-Communication.positionData.signalLevel));
     }
 
     void UpdateWindVis(){
         if(!windDir.gameObject.activeInHierarchy)
             return;
-        if(windStrength < 50f){
+        if(Communication.wind.direction.magnitude < 50f){
             windDir.showVisualization = false;
             dis2SurfaceVis.SwitchHiddenVisTypeLocal(false);
             dis2boundVis.SwitchHiddenVisTypeLocal(false);
@@ -332,8 +344,8 @@ public class ControlVisUpdater : MonoBehaviour
         dis2boundVis.SwitchHiddenVisTypeLocal(true);
         windDir.SwitchHiddenVisTypeLocal(true);
         windDir.showVisualization = true;
-        windDir.transform.localRotation = windRotation;
-        float windStrengthCoeff = windStrength/50f;
+        windDir.transform.localRotation = Quaternion.LookRotation(Communication.wind.direction, Vector3.up);
+        float windStrengthCoeff = Communication.wind.direction.magnitude/50f;
         //masterParticle.Stop();
         foreach(ParticleSystem par in windParticles){
             var main = par.main;
@@ -351,30 +363,32 @@ public class ControlVisUpdater : MonoBehaviour
     void UpdateBatteryRing(){
         if(!batteryRing.gameObject.activeInHierarchy)
             return;
-        batteryRingImg.fillAmount = (batteryPercentage - 0.2f)/0.8f;
-        int remainingTimeMinutes = Mathf.FloorToInt(remainingTimeInSeconds/60);
-        batteryRemainingTimeText.text = remainingTimeMinutes + ":" + Mathf.FloorToInt(remainingTimeInSeconds - remainingTimeMinutes * 60);
-        batteryRingTextAnchor.transform.localEulerAngles = new Vector3(0f,0f,-(1f-(batteryPercentage - 0.2f)/0.8f)*180f);
-        if(batteryPercentage > 0.46667f) {
-            batteryRingImg.color = Color.green;
-            dis2groundVis.SwitchHiddenVisTypeLocal(false);
-            batteryRing.SwitchHiddenVisTypeLocal(false);
-        } else if(batteryPercentage > 0.3f){
+        batteryRingImg.fillAmount = Communication.battery.batteryPercentage;
+        int remainingTimeMinutes = Mathf.FloorToInt(Communication.battery.batteryRemainingTime/60);
+        batteryRemainingTimeText.text = remainingTimeMinutes + ":" + Mathf.FloorToInt(Communication.battery.batteryRemainingTime - remainingTimeMinutes * 60);
+        batteryRingTextAnchor.transform.localEulerAngles = new Vector3(0f,0f,-(1f-Communication.battery.batteryPercentage)*180f);
+        if(Communication.battery.batteryState == "Low") {
             batteryRingImg.color = Color.yellow;
             dis2groundVis.SwitchHiddenVisTypeLocal(false);
             batteryRing.SwitchHiddenVisTypeLocal(true);
-        } else {
+        } else if(Communication.battery.batteryState == "Critical"){
+            
             batteryRingImg.color = Color.red;
             dis2groundVis.SwitchHiddenVisTypeLocal(true);
             batteryRing.SwitchHiddenVisTypeLocal(true);
+        } else {
+            batteryRingImg.color = Color.green;
+            dis2groundVis.SwitchHiddenVisTypeLocal(false);
+            batteryRing.SwitchHiddenVisTypeLocal(false);
+            
         }
-        batteryRing.SetTransparency(Mathf.Max(0, 2-pos_sig_lvl));
+        batteryRing.SetTransparency(Mathf.Max(0, 2-Communication.positionData.signalLevel));
     }
 
     void UpdatePositioningIndicator(){
         if(!posUncertainty.gameObject.activeInHierarchy)
             return;
-        if(pos_sig_lvl == 3){
+        if(Communication.positionData.signalLevel == 3){
             posUncertainty.SwitchHiddenVisTypeLocal(false);
             posUncertainty.visRoot.localScale = Vector3.one * 1.5f;
             Color c = posUncertaintySprite.color;
@@ -409,7 +423,7 @@ public class ControlVisUpdater : MonoBehaviour
     }
 
     void UpdateFlightStatus(){
-        if(DroneManager.currentFlightState == DroneManager.FlightState.TakingOff){
+        if(VelocityControl.currentFlightState == VelocityControl.FlightState.TakingOff){
             flightStatusTakeOff.SetActive(true);
             flightStatusInspecting.SetActive(false);
             flightStatusLanding.SetActive(false);
@@ -426,6 +440,6 @@ public class ControlVisUpdater : MonoBehaviour
             flightStatusInspecting.SetActive(false);
             flightStatusLanding.SetActive(false);
         }
-        flightStatusVis.SetTransparency(Mathf.Max(0, 2-pos_sig_lvl));
+        flightStatusVis.SetTransparency(Mathf.Max(0, 2 - Communication.positionData.signalLevel));
     }
 }

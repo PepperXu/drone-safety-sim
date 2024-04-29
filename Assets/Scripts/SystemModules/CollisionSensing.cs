@@ -6,7 +6,7 @@ using UnityEngine;
 public class CollisionSensing : MonoBehaviour
 {
 
-    float[] distances = new float[8];
+    Vector3[] distances = new Vector3[8];
     [SerializeField] LayerMask obstacleLayer;
     public bool collisionSensingEnabled = false;   
     // Start is called before the first frame update
@@ -27,9 +27,9 @@ public class CollisionSensing : MonoBehaviour
         for(float angle = 22.5f; angle < 360f; angle += 45f){
             RaycastHit hit;
             if(Physics.Raycast(transform.position, Quaternion.AngleAxis(angle, Vector3.up) * transform.forward, out hit, 10f, obstacleLayer)){
-                distances[index] = hit.distance;
+                distances[index] = hit.point - transform.position;
             } else {
-                distances[index] = float.MaxValue;
+                distances[index] = Vector3.positiveInfinity;
             }
             index++;
         }
