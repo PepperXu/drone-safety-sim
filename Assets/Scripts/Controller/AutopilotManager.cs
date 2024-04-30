@@ -27,7 +27,7 @@ public class AutopilotManager : MonoBehaviour
 
     float autopilot_max_speed = 3.0f;
     float autopilot_slowing_start_dist = 5.0f;
-    public Vector3 vectorToBuildingSurface;
+    //public Vector3 vectorToBuildingSurface;
 
     bool photoTaken = false;
     //public Vector3 positionOffset;
@@ -83,8 +83,8 @@ public class AutopilotManager : MonoBehaviour
                         } else {
                             localDir = localDir.normalized * localDir.magnitude/autopilot_slowing_start_dist*autopilot_max_speed;
                         }
-                        DroneManager.desired_vx = localDir.z;
-                        DroneManager.desired_vy = localDir.x;
+                        DroneManager.desired_vy = localDir.z;
+                        DroneManager.desired_vx = localDir.x;
                     } else
                     {
                         if(Mathf.Abs(offset.y) > 0.2f)
@@ -109,10 +109,13 @@ public class AutopilotManager : MonoBehaviour
 
                 if(currentWaypointIndex < Communication.flightTrajectory.Length){
                     target= Communication.flightTrajectory[currentWaypointIndex];
-                
+
+                    
                     Vector3 sensedPosition = Communication.positionData.virtualPosition;
                     //Debug.LogWarning("Moving to waypoint " + currentWaypointIndex);
                     Vector3 offset = target - sensedPosition;
+
+                    Debug.Log("current target offset" + offset);
                     if (offset.magnitude < 0.5f)
                     {
                         waitTimer += Time.deltaTime;
@@ -148,10 +151,10 @@ public class AutopilotManager : MonoBehaviour
                             localDirXY = localDirXY.normalized * localDirXY.magnitude/autopilot_slowing_start_dist*autopilot_max_speed;
                         }
                         DroneManager.desired_height = heightTarget;
-                        DroneManager.desired_vx = localDirXY.y;
-                        DroneManager.desired_vy = localDirXY.x;
-                        if(vectorToBuildingSurface.magnitude < 10f){
-                            Vector3 localVector = Communication.droneRb.transform.InverseTransformDirection(vectorToBuildingSurface).normalized;
+                        DroneManager.desired_vy = localDirXY.y;
+                        DroneManager.desired_vx = localDirXY.x;
+                        if(Communication.positionData.v2surf.magnitude < 10f){
+                            Vector3 localVector = Communication.droneRb.transform.InverseTransformDirection(Communication.positionData.v2surf).normalized;
                             Vector2 localVectorXY = new Vector2(localVector.x, localVector.z);
                             float angleOffset = Vector2.SignedAngle(-Vector2.up, localVectorXY);
                             while(angleOffset > 180f){

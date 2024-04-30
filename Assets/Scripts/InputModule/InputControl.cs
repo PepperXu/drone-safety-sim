@@ -53,14 +53,21 @@ public class InputControl : MonoBehaviour {
 			float yaw = 0f;
 			float height_diff = 0f;
 
+			
+
 			if(Mathf.Abs(yawAxis) > Mathf.Abs(throttleAxix)){
 				yaw = yawAxis * turning_sensitivity;
 			} else {
 				height_diff = throttleAxix * vertical_sensitivity;
 			}
 			
+			
 
-			if (Input.GetButtonDown("AutoPilot") || autopilot_toggled_on)
+			if(Input.GetButtonDown("AutoPilot")){
+				AutopilotTogglePressed(true);
+			}
+
+			if (autopilot_toggled_on)
             {
 				autopilot_toggled_on = false;
 				DroneManager.autopilot_flag = true;
@@ -69,19 +76,24 @@ public class InputControl : MonoBehaviour {
 			if(Mathf.Abs(pitchAxis) > 0.1f || Mathf.Abs(rollAxis) > 0.1f || Mathf.Abs(yawAxis) > 0.1f || Mathf.Abs(throttleAxix) > 0.1f){
 				DroneManager.autopilot_stop_flag = true;
 				autopilot_toggled_off = false;
-				DroneManager.desired_vx = vx;
-				DroneManager.desired_vy = vy;
-				DroneManager.desired_yaw = yaw;
-				DroneManager.desired_height += height_diff;
+				
 			//	
 			}
 
-			if (Input.GetButtonDown("AutoPilot") || autopilot_toggled_off)
+
+			if (autopilot_toggled_off)
             {
 				DroneManager.autopilot_stop_flag = true;
 				autopilot_toggled_off = false;	
 				//DroneManager.currentMissionState = DroneManager.MissionState.AutopilotInterupted;
             }
+
+			if(DroneManager.currentControlType == DroneManager.ControlType.Manual){
+				DroneManager.desired_vx = vy;
+				DroneManager.desired_vy = vx;
+				DroneManager.desired_yaw = yaw;
+				DroneManager.desired_height += height_diff;
+			}
 
 			if (Input.GetButtonDown("RTH") || rth_button_pressed)
             {

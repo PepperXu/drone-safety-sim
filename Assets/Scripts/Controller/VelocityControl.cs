@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class VelocityControl : MonoBehaviour {
 
-    //public Communicatio state;
 
     public GameObject propFL;
     public GameObject propFR;
@@ -45,14 +44,12 @@ public class VelocityControl : MonoBehaviour {
 
     private float landingHeightThreshold = 1.8f;
 
-    private Rigidbody rb;
-
     //public Vector3 vectorToGround;
     //public int collisionHitCount = 0;
     //public bool out_of_balance = false;
 
     [SerializeField] AudioClip take_off, flying, landing;
-    AudioSource audioSource;
+    [SerializeField] AudioSource audioSource;
 
     public enum FlightState{
         Landed,
@@ -73,11 +70,13 @@ public class VelocityControl : MonoBehaviour {
     void OnEnable () {
         DroneManager.setVelocityControlEvent.AddListener(SetVelocityParam);
         DroneManager.resetAllEvent.AddListener(ResetVelocityControl);
+        DroneManager.takeOffEvent.AddListener(TakeOff);
     }
 
     void OnDisable(){
         DroneManager.setVelocityControlEvent.RemoveListener(SetVelocityParam);
         DroneManager.resetAllEvent.RemoveListener(ResetVelocityControl);
+        DroneManager.takeOffEvent.RemoveListener(TakeOff);
     }
 
     //For both initialization and reset.
@@ -86,23 +85,25 @@ public class VelocityControl : MonoBehaviour {
         desired_vx = 0.0f;
         desired_vy = 0.0f;
         desired_yaw = 0.0f;
-        rb = GetComponent<Rigidbody>();
-        audioSource = GetComponent<AudioSource>();
-        rb.isKinematic = true;
-        rb.useGravity = false;
+        if (Communication.droneRb)
+        {
+            Communication.droneRb.isKinematic = true;
+            Communication.droneRb.useGravity = false;
+        }
+        
         landedHeight = transform.position.y;
         desired_height = landedHeight;
         Communication.ResetCollision();
         Communication.ResetConstProps(landedHeight);
-        //state.GetState();
-        audioSource.Stop();
+        if(audioSource)
+            audioSource.Stop();
     }
 
-    void SetVelocityParam(float vx, float vy, float yaw, float height_diff){
+    void SetVelocityParam(float vx, float vy, float yaw, float desired_height){
         this.desired_vx = vx;
         this.desired_vy = vy;
         this.desired_yaw = yaw;
-        this.height_diff = height_diff;
+        this.desired_height = desired_height;
     }
 
     void TakeOff()
@@ -111,10 +112,11 @@ public class VelocityControl : MonoBehaviour {
             return;
         
         desired_height = landedHeight + take_off_height;
-        rb.isKinematic = false;
-        rb.useGravity = true;
+        DroneManager.desired_height = desired_height;
+        Communication.droneRb.isKinematic = false;
+        Communication.droneRb.useGravity = true;
         Vector3 desiredForce = new Vector3(0.0f, gravity * Communication.constProps.Mass, 0.0f);
-        rb.AddForce(desiredForce, ForceMode.Acceleration);
+        Communication.droneRb.AddForce(desiredForce, ForceMode.Acceleration);
         currentFlightState = FlightState.TakingOff;
         StartCoroutine(PlayTakeOffAudio());
     }
@@ -153,6 +155,8 @@ public class VelocityControl : MonoBehaviour {
         //    take_off_flag = false;
         //    TakeOff();
         //}
+
+        Debug.Log("current state: "+ currentFlightState);
         if(currentFlightState == FlightState.TakingOff){
             if(Mathf.Abs(Communication.realPose.Altitude - desired_height) < 0.1f)
                 currentFlightState = FlightState.Hovering;
@@ -160,16 +164,17 @@ public class VelocityControl : MonoBehaviour {
         if (currentFlightState == FlightState.Navigating || currentFlightState == FlightState.Hovering || currentFlightState == FlightState.Landing)
         {
             float dis2ground = Communication.realPose.Altitude;
+            
             if (currentFlightState != FlightState.Landing)
             {
                 if (dis2ground < landingHeightThreshold)
                 {
                     currentFlightState = FlightState.Landing;
-                    ExperimentServer.RecordData("Landing at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
+                    ExperimentServer.RecordData("Landing at", Communication.realPose.WorldPosition.x + "|" + Communication.realPose.WorldPosition.y + "|" + Communication.realPose.WorldPosition.z, "");
                     DroneManager.autopilot_stop_flag = true;
                     //autopilotManager.StopAutopilot();
                     PlayLandingAudio();
-                    desired_height = transform.position.y - dis2ground;
+                    desired_height = Communication.realPose.WorldPosition.y - dis2ground;
                     desired_vx = 0f;
                     desired_vy = 0f;
                     desired_yaw = 0f;
@@ -179,11 +184,11 @@ public class VelocityControl : MonoBehaviour {
                 //Debug.Log("Landing");
                 if(dis2ground <= groundOffset)
                 {
-                    landedHeight = transform.position.y;
+                    landedHeight = Communication.realPose.WorldPosition.y;
                     desired_height = landedHeight;
                     currentFlightState = FlightState.Landed;
-                    rb.isKinematic = true;
-                    rb.useGravity = false;
+                    Communication.droneRb.isKinematic = true;
+                    Communication.droneRb.useGravity = false;
                 }
             }
         }
@@ -237,8 +242,8 @@ public class VelocityControl : MonoBehaviour {
         Vector3 desiredTorque = Vector3.Scale (desiredAlpha, Communication.constProps.Inertia * 2f);
         Vector3 desiredForce = new Vector3 (0.0f, desiredThrust * Communication.constProps.Mass, 0.0f);
 
-        rb.AddRelativeTorque (desiredTorque, ForceMode.Acceleration);
-        rb.AddRelativeForce (desiredForce , ForceMode.Acceleration);
+        Communication.droneRb.AddRelativeTorque (desiredTorque, ForceMode.Acceleration);
+        Communication.droneRb.AddRelativeForce (desiredForce , ForceMode.Acceleration);
 
         //prop transforms
 
@@ -260,12 +265,12 @@ public class VelocityControl : MonoBehaviour {
         {
             //DroneManager.currentSystemState = DroneManager.SystemState.Emergency;
             Communication.collisionData.collisionCount++;
-            if(transform.up.y < 0.6f)
+            if(Communication.droneRb.transform.up.y < 0.6f)
                 Communication.collisionData.out_of_balance = true;
             DroneManager.autopilot_stop_flag = true;
             currentFlightState = FlightState.Collided;
             //autopilotManager.StopAutopilot();
-            ExperimentServer.RecordData("Collides with an obstacle at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
+            ExperimentServer.RecordData("Collides with an obstacle at", Communication.realPose.WorldPosition.x + "|" + Communication.realPose.WorldPosition.y + "|" + Communication.realPose.WorldPosition.z, "");
         }
     }
 

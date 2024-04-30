@@ -11,35 +11,30 @@ public class Battery : MonoBehaviour
     private const float batteryCapacity = 1440f;
     private const float autopilotFlightSpeed = 3f;
     private const float normalDischargeRate = 8.754f;
-    //private const float normalWindStrength = 20f;
-    //private const float noWindDischargeRate = 7.66f;
-    //const float voltageDropDischargeRateCoeff = 1.5f;
-
-    private const float normalBatteryVoltage = 11.4f;
-    private const float criticalPercentage = 0.2f;
-    private const float batLowPercentage = 0.3f;
-    //private const float voltageDropPerLevel = 1f;
-
-    //float randomNoise;
     float currentBatteryPercentage;
     float currentBatteryCapacity;
     float currentDischargeRate;
-    //float dischargeRateWindCoeff;
     float remainingTimeInSeconds;
-    //float currentVoltage;
 
-    int batteryLevel = -1;
-
-    const float batteryLowThreshold = 0.3f;
-    const float batteryCriticalThreshold = 0.2f;
-    System.Random r;
+    const float batteryLowThreshold = 0.25f;
+    const float batteryCriticalThreshold = 0.1f;
+    //System.Random r;
 
     [SerializeField] Transform Homepoint;
 
+
+    void OnEnable(){
+        DroneManager.resetAllEvent.AddListener(ResetBattery);
+    }
+
+    void OnDisable(){
+        DroneManager.resetAllEvent.RemoveListener(ResetBattery);
+    }
+
+    void Start(){
+        //r = new System.Random();
+    }
     public void ResetBattery(){
-        //dischargeRateWindCoeff = (normalDischargeRate - noWindDischargeRate) / normalWindStrength;
-        r = new System.Random();
-        //currentVoltage = normalBatteryVoltage;
         currentBatteryCapacity = batteryCapacity;
         Communication.battery.rth = false;
         Communication.battery.batteryState = "Normal";
@@ -59,10 +54,13 @@ public class Battery : MonoBehaviour
         remainingTimeInSeconds = currentBatteryCapacity / currentDischargeRate * 3.6f;
         Communication.battery.batteryPercentage = currentBatteryPercentage;
         Communication.battery.batteryRemainingTime = remainingTimeInSeconds;
-        float rthTimeThreshold = (Communication.positionData.virtualPosition - Homepoint.position).magnitude/3f;
+
+        Vector3 vector2home = Communication.positionData.virtualPosition - Homepoint.position;
+        float rthTimeThreshold = (new Vector2(vector2home.x, vector2home.z).magnitude + Mathf.Abs(vector2home.y))/autopilotFlightSpeed + batteryCapacity*batteryCriticalThreshold/normalDischargeRate * 3.6f;
+        Communication.battery.rthThreshold = rthTimeThreshold * (normalDischargeRate / 3.6f) / batteryCapacity;
+        Debug.Log("current rth offset:"+ Communication.positionData.virtualPosition+ "::" +Homepoint.position);
 
         if(rthTimeThreshold < remainingTimeInSeconds + 20f){
-            
             if(!Communication.battery.rth){
                 Communication.battery.rth = true;
                 DroneManager.rth_flag = true;

@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 using UnityEngine.XR.Interaction.Toolkit;
+using System.Security.AccessControl;
 
 public class UIUpdater : MonoBehaviour
 {
@@ -18,6 +19,11 @@ public class UIUpdater : MonoBehaviour
     [SerializeField] TextMeshProUGUI batteryPercentage;
     [SerializeField] TextMeshProUGUI batteryRemainingTime;
 
+    [SerializeField] Slider batterySlider;
+
+    [SerializeField] RectTransform rthBar;
+    [SerializeField] RectTransform rthPoint;
+
     [SerializeField] Image GNSSIcon;
     [SerializeField] Sprite[] GNSSSprites;
 
@@ -26,6 +32,8 @@ public class UIUpdater : MonoBehaviour
     [SerializeField] TextMeshProUGUI distToHome;
     [SerializeField] TextMeshProUGUI altitude, horiSpeed, vertSpeed, vps;
     [SerializeField] Transform northIcon, headingIcon, attitudeIconAnchor;
+    [SerializeField]
+    Image[] col_detect;
 
 
     [Header("Mission States")]
@@ -71,50 +79,61 @@ public class UIUpdater : MonoBehaviour
             autoPilotToggle.isOn = false;
 
         batteryPercentage.text = ((int) (Communication.battery.batteryPercentage * 100f)) + "%";
+        if (Mathf.Abs(Communication.battery.batteryRemainingTime) > 999999f)
+        {
+            batteryRemainingTime.text = "--:--";
+        }
+        else
+        {
+            int remainingTimeMinutes = Mathf.FloorToInt(Communication.battery.batteryRemainingTime / 60);
+            batteryRemainingTime.text = remainingTimeMinutes + ":" + Mathf.FloorToInt(Communication.battery.batteryRemainingTime - remainingTimeMinutes * 60);
+        }
+
+        batterySlider.value = 1f - Communication.battery.batteryPercentage;
+        rthBar.offsetMax = new Vector2(-(1f-Communication.battery.rthThreshold) * 288f, rthBar.offsetMax.y);
         
-        int remainingTimeMinutes = Mathf.FloorToInt(Communication.battery.batteryRemainingTime/60);
-        batteryRemainingTime.text = remainingTimeMinutes + ":" + Mathf.FloorToInt(Communication.battery.batteryRemainingTime - remainingTimeMinutes * 60);
+        rthPoint.anchoredPosition = new Vector2(-(1f-Communication.battery.rthThreshold) * 288f, rthPoint.anchoredPosition.y);
 
         if(Communication.battery.batteryPercentage >= 1f){
             batteryIcon.sprite = batterySprites[0];
             batteryIcon.color = Color.green;
             batteryPercentage.color = Color.white;
-            batteryRemainingTime.color = Color.white;
+            //batteryRemainingTime.color = Color.white;
             //batteryPercentageCircular.color = Color.white;
         } else if (Communication.battery.batteryPercentage > 0.75f){
             batteryIcon.sprite = batterySprites[0];
             batteryIcon.color = Color.white;
             batteryPercentage.color = Color.white;
-            batteryRemainingTime.color = Color.green;
+            //batteryRemainingTime.color = Color.green;
             //batteryPercentageCircular.color = Color.white;
         } else if(Communication.battery.batteryPercentage > 0.5f) {
             batteryIcon.sprite = batterySprites[1];
             batteryIcon.color = Color.white;
             batteryPercentage.color = Color.white;
-            batteryRemainingTime.color = Color.green;
+            //batteryRemainingTime.color = Color.green;
             //batteryPercentageCircular.color = Color.white;
         } else if (Communication.battery.batteryPercentage > 0.3) {
             batteryIcon.sprite = batterySprites[2];
             batteryIcon.color = Color.white;
             batteryPercentage.color = Color.white;
-            batteryRemainingTime.color = Color.green;
+            //batteryRemainingTime.color = Color.green;
         }
         else if(Communication.battery.batteryPercentage > 0.25f){
             batteryIcon.sprite = batterySprites[2];
             batteryIcon.color = Color.yellow;
             batteryPercentage.color = Color.yellow;
-            batteryRemainingTime.color = Color.yellow;
+            //batteryRemainingTime.color = Color.yellow;
             //batteryPercentageCircular.color = Color.yellow;
         } else if(Communication.battery.batteryPercentage > 0.2f){
             batteryIcon.sprite = batterySprites[3];
             batteryIcon.color = Color.yellow;
             batteryPercentage.color = Color.yellow;
-            batteryRemainingTime.color = Color.yellow;
+            //batteryRemainingTime.color = Color.yellow;
         } else {
             batteryIcon.sprite = batterySprites[3];
             batteryIcon.color = Color.red;
             batteryPercentage.color = Color.red;
-            batteryRemainingTime.color = Color.red;
+            //batteryRemainingTime.color = Color.red;
         }
 
 
@@ -136,6 +155,8 @@ public class UIUpdater : MonoBehaviour
                 GNSSIcon.color = Color.red;
                 break;
         }
+
+
 
 
         distToHome.text = ((int)(transform.position-Communication.realPose.WorldPosition).magnitude).ToString();

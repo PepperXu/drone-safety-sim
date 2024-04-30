@@ -220,9 +220,6 @@ public class RandomPulseNoise : MonoBehaviour {
         }
 
         Communication.wind.direction = strength * transform.forward;
-        //controlVisUpdater.windStrength = strength;
-        //controlVisUpdater.windRotation = transform.rotation;
-        //Debug.DrawRay(drone.position, ray, Color.green);
 	}
 
     public float Sample(float mean, float var)

@@ -153,6 +153,11 @@ public class DroneManager : MonoBehaviour
         if(VelocityControl.currentFlightState == VelocityControl.FlightState.Hovering || VelocityControl.currentFlightState == VelocityControl.FlightState.Navigating){
 
             onFlightEvent.Invoke();
+
+
+            if(currentMissionState != MissionState.Inspecting && currentMissionState != MissionState.Returning)
+                currentMissionState = Communication.positionData.inBuffer?MissionState.InFlightZone:MissionState.MovingToFlightZone;
+
             if(rth_flag)
             {
                 //autopilotManager.EnableRTH();
@@ -169,6 +174,8 @@ public class DroneManager : MonoBehaviour
                 //worldVisUpdater.SpawnCoverageObject(true); 
             }
 
+
+
             if (currentMissionState == MissionState.InFlightZone)
             {
                 if (autopilot_flag)
@@ -182,7 +189,7 @@ public class DroneManager : MonoBehaviour
             } else if(currentMissionState == MissionState.Inspecting){
                 if(!Communication.positionData.inBuffer){
                     autopilot_stop_flag = true;
-                }
+                } 
                 if(take_photo_flag)
                 {
                     take_photo_flag = false;

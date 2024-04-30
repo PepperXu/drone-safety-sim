@@ -13,8 +13,7 @@ public class EventTriggerDetection : MonoBehaviour {
 
     float windStrength = 50f, strongWindStrength = 65f;
     float windDuration = 20f, windDurationLong = 30f;
-    int sigAbnormalLevel = 1;
-    int sigLostLevel = 0;
+    int signalNormalIndex = 1, signalLostIndex = 0;
 
     bool batteryDropped = false;
     bool isGPSDenied = false;
@@ -39,7 +38,7 @@ public class EventTriggerDetection : MonoBehaviour {
         if(batteryDropped)
             return;
         if(other.tag == "GPSWeakZone" && !isGPSDenied){
-            pss.SetSignalLevel(sigAbnormalLevel);
+            pss.SetSignalLevel(signalLostIndex);
             if(other.name.Contains("Weak")){
                 ExperimentServer.RecordData("Enters GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
             } else {
@@ -70,7 +69,7 @@ public class EventTriggerDetection : MonoBehaviour {
             other.gameObject.SetActive(false);
             battery.BatteryDropToCritical();
             if(other.name.Contains("Strong")){
-                pss.SetSignalLevel(sigAbnormalLevel);
+                pss.SetSignalLevel(signalLostIndex);
                 ExperimentServer.RecordData("Battery dropped and signal lost", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
             } else {
                 ExperimentServer.RecordData("Battery dropped", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
@@ -82,8 +81,8 @@ public class EventTriggerDetection : MonoBehaviour {
         if(batteryDropped)
             return;
         if(other.tag == "GPSWeakZone" && isGPSDenied){
-            pss.SetSignalLevel(3);
-            pss.switch_gps_normal = true;
+            pss.SetSignalLevel(signalNormalIndex);
+            //pss.switch_gps_normal = true;
             ExperimentServer.RecordData("Exits GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
             rpn.strength_mean = 0f;
             rpn.pulse_duration_mean = 1f;

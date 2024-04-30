@@ -7,7 +7,6 @@ public class InteractiveCamera : MonoBehaviour
 {
     [SerializeField] private Camera fpvCam;
     [SerializeField] private LayerMask buildingCollision;
-    [SerializeField] private DroneManager droneManager;
     //[SerializeField] private WorldVisUpdater worldVisUpdater;
     //[SerializeField] private UIUpdater uIUpdater;
     // Start is called before the first frame update

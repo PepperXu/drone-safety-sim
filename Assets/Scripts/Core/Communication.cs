@@ -73,6 +73,7 @@ public class Communication : MonoBehaviour
         public float batteryRemainingTime;
         public float voltageLevel;
         public string batteryState;
+        public float rthThreshold;
         public bool rth;
     }
 
