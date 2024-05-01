@@ -58,7 +58,7 @@ public class Battery : MonoBehaviour
         Vector3 vector2home = Communication.positionData.virtualPosition - Homepoint.position;
         float rthTimeThreshold = (new Vector2(vector2home.x, vector2home.z).magnitude + Mathf.Abs(vector2home.y))/autopilotFlightSpeed + batteryCapacity*batteryCriticalThreshold/normalDischargeRate * 3.6f;
         Communication.battery.rthThreshold = rthTimeThreshold * (normalDischargeRate / 3.6f) / batteryCapacity;
-        Debug.Log("current rth offset:"+ Communication.positionData.virtualPosition+ "::" +Homepoint.position);
+        //Debug.Log("current rth offset:"+ Communication.positionData.virtualPosition+ "::" +Homepoint.position);
 
         if(rthTimeThreshold < remainingTimeInSeconds + 20f){
             if(!Communication.battery.rth){

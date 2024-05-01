@@ -6,9 +6,10 @@ using UnityEngine;
 public class CollisionSensing : MonoBehaviour
 {
 
-    Vector3[] distances = new Vector3[8];
+    //Vector3[] distances = new Vector3[16];
     [SerializeField] LayerMask obstacleLayer;
-    public bool collisionSensingEnabled = false;   
+    //public bool collisionSensingEnabled = false;
+    const int steps = 16;
     // Start is called before the first frame update
     void Start()
     {
@@ -16,24 +17,40 @@ public class CollisionSensing : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
-        if(collisionSensingEnabled)
-            RaySpray();
+        RaySpray();
+        CheckTrueDistToGround();
     }
 
     void RaySpray(){
         int index = 0;
-        for(float angle = 22.5f; angle < 360f; angle += 45f){
+        for(float angle = 360f/(2*steps); angle < 360f; angle += (360f/steps)){
             RaycastHit hit;
-            if(Physics.Raycast(transform.position, Quaternion.AngleAxis(angle, Vector3.up) * transform.forward, out hit, 10f, obstacleLayer)){
-                distances[index] = hit.point - transform.position;
+            if(Physics.Raycast(Communication.droneRb.transform.position, Quaternion.AngleAxis(angle, Vector3.up) * Communication.droneRb.transform.forward, out hit, 20f, obstacleLayer)){
+                Communication.collisionData.distances[index] = hit.point - Communication.droneRb.transform.position;
             } else {
-                distances[index] = Vector3.positiveInfinity;
+                Communication.collisionData.distances[index] = Vector3.positiveInfinity;
             }
             index++;
         }
-        Communication.collisionData.distances = distances;
+    }
+
+
+    void CheckTrueDistToGround()
+    {
+        Ray rayDown = new Ray(Communication.droneRb.transform.position, Vector3.down);
+        RaycastHit hit;
+        if (Physics.Raycast(rayDown, out hit, float.MaxValue, obstacleLayer))
+        {
+            
+            Communication.collisionData.v2ground = hit.point - Communication.droneRb.transform.position;
+        }
+        else
+        {
+
+            Communication.collisionData.v2ground = Vector3.down * float.PositiveInfinity;
+        }
     }
 
 }

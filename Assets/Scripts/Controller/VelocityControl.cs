@@ -28,7 +28,7 @@ public class VelocityControl : MonoBehaviour {
     //must set this
     [SerializeField] private float take_off_height = 4.0f;
 
-    float groundOffset = 0.06f;
+    float groundOffset = 0.1f;
 
     private float previous_desired_height;
     
@@ -85,16 +85,17 @@ public class VelocityControl : MonoBehaviour {
         desired_vx = 0.0f;
         desired_vy = 0.0f;
         desired_yaw = 0.0f;
-        if (Communication.droneRb)
-        {
-            Communication.droneRb.isKinematic = true;
-            Communication.droneRb.useGravity = false;
-        }
+        //if (Communication.droneRb)
+        //{
+        //    Communication.droneRb.isKinematic = true;
+        //    Communication.droneRb.useGravity = false;
+        //}
         
-        landedHeight = transform.position.y;
-        desired_height = landedHeight;
-        Communication.ResetCollision();
-        Communication.ResetConstProps(landedHeight);
+        //landedHeight = transform.position.y;
+        //desired_height = landedHeight;
+        //Communication.constProps.landedHeight = landedHeight;
+        //Communication.ResetCollision();
+        //Communication.ResetConstProps(landedHeight);
         if(audioSource)
             audioSource.Stop();
     }
@@ -111,10 +112,10 @@ public class VelocityControl : MonoBehaviour {
         if (currentFlightState != FlightState.Landed)
             return;
         
-        desired_height = landedHeight + take_off_height;
+        desired_height = Communication.realPose.WorldPosition.y + take_off_height;
         DroneManager.desired_height = desired_height;
-        Communication.droneRb.isKinematic = false;
-        Communication.droneRb.useGravity = true;
+        //Communication.droneRb.isKinematic = false;
+        //Communication.droneRb.useGravity = true;
         Vector3 desiredForce = new Vector3(0.0f, gravity * Communication.constProps.Mass, 0.0f);
         Communication.droneRb.AddForce(desiredForce, ForceMode.Acceleration);
         currentFlightState = FlightState.TakingOff;
@@ -163,7 +164,7 @@ public class VelocityControl : MonoBehaviour {
         }
         if (currentFlightState == FlightState.Navigating || currentFlightState == FlightState.Hovering || currentFlightState == FlightState.Landing)
         {
-            float dis2ground = Communication.realPose.Altitude;
+            float dis2ground = Communication.collisionData.v2ground.magnitude;
             
             if (currentFlightState != FlightState.Landing)
             {
@@ -173,22 +174,24 @@ public class VelocityControl : MonoBehaviour {
                     ExperimentServer.RecordData("Landing at", Communication.realPose.WorldPosition.x + "|" + Communication.realPose.WorldPosition.y + "|" + Communication.realPose.WorldPosition.z, "");
                     DroneManager.autopilot_stop_flag = true;
                     //autopilotManager.StopAutopilot();
-                    PlayLandingAudio();
+                    PlayLandingAudio(); 
                     desired_height = Communication.realPose.WorldPosition.y - dis2ground;
                     desired_vx = 0f;
                     desired_vy = 0f;
                     desired_yaw = 0f;
                 }
             } else
-            {   
-                //Debug.Log("Landing");
-                if(dis2ground <= groundOffset)
+            {
+                Debug.Log(dis2ground);
+                if (dis2ground <= groundOffset)
                 {
-                    landedHeight = Communication.realPose.WorldPosition.y;
-                    desired_height = landedHeight;
+                    Debug.Log("Landed");
+                    //landedHeight = Communication.realPose.WorldPosition.y;
+                    //Communication.constProps.landedHeight = landedHeight;
+                    //desired_height = landedHeight;
                     currentFlightState = FlightState.Landed;
-                    Communication.droneRb.isKinematic = true;
-                    Communication.droneRb.useGravity = false;
+                    //Communication.droneRb.isKinematic = true;
+                    //Communication.droneRb.useGravity = true;
                 }
             }
         }
@@ -196,66 +199,67 @@ public class VelocityControl : MonoBehaviour {
 
     void FixedUpdate () {
         //state.GetState ();
-        
+
         // NOTE: I'm using stupid vector order (sideways, up, forward) at the end
-
-        Vector3 desiredTheta;
-        Vector3 desiredOmega;
-
-        height_diff = desired_height - previous_desired_height;
-
-        float heightError = Communication.realPose.Altitude - desired_height + 3.27f;
-        //Debug.Log(heightError);
-
-        Vector3 desiredVelocity = new Vector3 (desired_vy, -1.0f * heightError / time_constant_z_velocity, desired_vx);
-        Vector3 velocityError = Communication.realPose.LocalVelocityVector - desiredVelocity;
-
-        Vector3 desiredAcceleration = velocityError * -1.0f / time_constant_acceleration;
-
-        desiredTheta = new Vector3 (desiredAcceleration.z / gravity, 0.0f, -desiredAcceleration.x / gravity);
-        if (desiredTheta.x > max_pitch) {
-            desiredTheta.x = max_pitch;
-        } else if (desiredTheta.x < -1.0f * max_pitch) {
-            desiredTheta.x = -1.0f * max_pitch;
-        }
-        if (desiredTheta.z > max_roll) {
-            desiredTheta.z = max_roll;
-        } else if (desiredTheta.z < -1.0f * max_roll) {
-            desiredTheta.z = -1.0f * max_roll;
-        }
-
-        Vector3 thetaError = Communication.realPose.Angles - desiredTheta;
-
-        desiredOmega = thetaError * -1.0f / time_constant_omega_xy_rate;
-        desiredOmega.y = desired_yaw;
-
-        Vector3 omegaError = Communication.realPose.AngularVelocityVector - desiredOmega;
-
-        Vector3 desiredAlpha = Vector3.Scale(omegaError, new Vector3(-1.0f/time_constant_alpha_xy_rate, -1.0f/time_constant_alpha_z_rate, -1.0f/time_constant_alpha_xy_rate));
-        desiredAlpha = Vector3.Min (desiredAlpha, Vector3.one * max_alpha);
-        desiredAlpha = Vector3.Max (desiredAlpha, Vector3.one * max_alpha * -1.0f);
-
-        float desiredThrust = (gravity + desiredAcceleration.y) / (Mathf.Cos (Communication.realPose.Angles.z) * Mathf.Cos (Communication.realPose.Angles.x));
-        desiredThrust = Mathf.Min (desiredThrust, 2.0f * gravity);
-        desiredThrust = Mathf.Max (desiredThrust, 0.0f);
-
-        Vector3 desiredTorque = Vector3.Scale (desiredAlpha, Communication.constProps.Inertia * 2f);
-        Vector3 desiredForce = new Vector3 (0.0f, desiredThrust * Communication.constProps.Mass, 0.0f);
-
-        Communication.droneRb.AddRelativeTorque (desiredTorque, ForceMode.Acceleration);
-        Communication.droneRb.AddRelativeForce (desiredForce , ForceMode.Acceleration);
-
-        //prop transforms
-
         if (currentFlightState != FlightState.Landed)
         {
+            Vector3 desiredTheta;
+            Vector3 desiredOmega;
+
+            height_diff = desired_height - previous_desired_height;
+
+            float heightError = Communication.realPose.Altitude - desired_height + 3.27f;
+            //Debug.Log(heightError);
+
+            Vector3 desiredVelocity = new Vector3 (desired_vy, -1.0f * heightError / time_constant_z_velocity, desired_vx);
+            Vector3 velocityError = Communication.realPose.LocalVelocityVector - desiredVelocity;
+
+            Vector3 desiredAcceleration = velocityError * -1.0f / time_constant_acceleration;
+
+            desiredTheta = new Vector3 (desiredAcceleration.z / gravity, 0.0f, -desiredAcceleration.x / gravity);
+            if (desiredTheta.x > max_pitch) {
+                desiredTheta.x = max_pitch;
+            } else if (desiredTheta.x < -1.0f * max_pitch) {
+                desiredTheta.x = -1.0f * max_pitch;
+            }
+            if (desiredTheta.z > max_roll) {
+                desiredTheta.z = max_roll;
+            } else if (desiredTheta.z < -1.0f * max_roll) {
+                desiredTheta.z = -1.0f * max_roll;
+            }
+
+            Vector3 thetaError = Communication.realPose.Angles - desiredTheta;
+
+            desiredOmega = thetaError * -1.0f / time_constant_omega_xy_rate;
+            desiredOmega.y = desired_yaw;
+
+            Vector3 omegaError = Communication.realPose.AngularVelocityVector - desiredOmega;
+
+            Vector3 desiredAlpha = Vector3.Scale(omegaError, new Vector3(-1.0f/time_constant_alpha_xy_rate, -1.0f/time_constant_alpha_z_rate, -1.0f/time_constant_alpha_xy_rate));
+            desiredAlpha = Vector3.Min (desiredAlpha, Vector3.one * max_alpha);
+            desiredAlpha = Vector3.Max (desiredAlpha, Vector3.one * max_alpha * -1.0f);
+
+            float desiredThrust = (gravity + desiredAcceleration.y) / (Mathf.Cos (Communication.realPose.Angles.z) * Mathf.Cos (Communication.realPose.Angles.x));
+            desiredThrust = Mathf.Min (desiredThrust, 2.0f * gravity);
+            desiredThrust = Mathf.Max (desiredThrust, 0.0f);
+
+            Vector3 desiredTorque = Vector3.Scale (desiredAlpha, Communication.constProps.Inertia * 2f);
+            Vector3 desiredForce = new Vector3 (0.0f, desiredThrust * Communication.constProps.Mass, 0.0f);
+
+            Communication.droneRb.AddRelativeTorque (desiredTorque, ForceMode.Acceleration);
+            Communication.droneRb.AddRelativeForce (desiredForce , ForceMode.Acceleration);
+
+            //prop transforms
+
+        
             propFL.transform.Rotate(Vector3.forward * Time.deltaTime * desiredThrust * speedScale);
             propFR.transform.Rotate(Vector3.forward * Time.deltaTime * desiredThrust * speedScale);
             propRR.transform.Rotate(Vector3.forward * Time.deltaTime * desiredThrust * speedScale);
             propRL.transform.Rotate(Vector3.forward * Time.deltaTime * desiredThrust * speedScale);
-        }
+        
 
-        previous_desired_height = desired_height;
+            previous_desired_height = desired_height;
+        }
     }
 
 
@@ -271,7 +275,7 @@ public class VelocityControl : MonoBehaviour {
             currentFlightState = FlightState.Collided;
             //autopilotManager.StopAutopilot();
             ExperimentServer.RecordData("Collides with an obstacle at", Communication.realPose.WorldPosition.x + "|" + Communication.realPose.WorldPosition.y + "|" + Communication.realPose.WorldPosition.z, "");
-        }
+        } 
     }
 
 }

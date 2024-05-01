@@ -27,6 +27,7 @@ public class Communication : MonoBehaviour
         public int collisionCount;
 
         public bool out_of_balance;
+        public Vector3 v2ground;
 
         public int GetShortestDistanceIndex(){
             float minDist = float.MaxValue;
@@ -47,7 +48,7 @@ public class Communication : MonoBehaviour
         public int signalLevel; 
         public Vector3 v2surf;
         public Vector3 v2bound;
-        //public Vector3 v2ground;
+        
         public bool inBuffer;
     }
 
@@ -83,9 +84,7 @@ public class Communication : MonoBehaviour
 
 
     public static RealPose realPose;
-    public static CollisionData collisionData = new CollisionData(){
-        distances = new Vector3[8]
-    };
+    public static CollisionData collisionData;
     public static PositionData positionData;
 
     public static ConstantProperties constProps;
@@ -125,6 +124,14 @@ public class Communication : MonoBehaviour
 
     void OnEnable(){
         droneRb = droneTransform.GetComponent<Rigidbody> ();
+        DroneManager.resetAllEvent.AddListener(ResetCollision);
+        DroneManager.resetAllEvent.AddListener(ResetConstProps);
+    }
+
+    private void OnDisable()
+    {
+        DroneManager.resetAllEvent.RemoveListener(ResetCollision);
+        DroneManager.resetAllEvent.RemoveListener(ResetConstProps);
     }
     // Start is called before the first frame update
     void Start()
@@ -167,15 +174,16 @@ public class Communication : MonoBehaviour
 
     }
 
-    public static void ResetConstProps(float landedHeight){
+    void ResetConstProps(){
         constProps.Inertia = droneRb.inertiaTensor;
         constProps.Mass = droneRb.mass;
-        constProps.landedHeight = landedHeight;
+        constProps.landedHeight = droneRb.transform.position.y;
     }
 
-    public static void ResetCollision(){
+    void ResetCollision(){
         collisionData.collisionCount = 0;
         collisionData.out_of_balance = false;
+        collisionData.distances = new Vector3[16];
     }
 
     IEnumerator LaggedTransferInputCommand(){

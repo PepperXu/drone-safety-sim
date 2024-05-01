@@ -56,7 +56,9 @@ public class UIUpdater : MonoBehaviour
     string[] flightStateString = {"Landed", "Taking Off", "Hovering", "Navigating", "Landing"};
     string[] missionStateString = {"Planning", "Moving to Flight Zone", "In Flight Zone", "Inspecting", "Interrupted", "Returning"};
     string[] controlStateString = {"Auto", "Manual"};
-    
+
+    const float surfaceCautionThreshold = 5.0f, surfaceWarningThreshold = 3.0f;
+
     void OnEnable(){
         DroneManager.markDefectEvent.AddListener(MarkDefect);
     }
@@ -154,6 +156,27 @@ public class UIUpdater : MonoBehaviour
                 GNSSIcon.sprite = GNSSSprites[3];
                 GNSSIcon.color = Color.red;
                 break;
+        }
+
+        for(int i = 0; i < Communication.collisionData.distances.Length; i++)
+        {
+            if (Communication.collisionData.distances[i].magnitude < surfaceWarningThreshold)
+            {
+                Color c = Color.red;
+                c.a = 1f;
+                col_detect[i].color = c;
+
+            } else if (Communication.collisionData.distances[i].magnitude < surfaceCautionThreshold)
+            {
+                Color c = Color.yellow;
+                c.a = 1f;
+                col_detect[i].color = c;
+            } else
+            {
+                Color c = Color.white;
+                c.a = 0f;
+                col_detect[i].color = c;
+            }
         }
 
 
