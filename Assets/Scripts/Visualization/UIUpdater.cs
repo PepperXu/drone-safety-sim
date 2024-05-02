@@ -140,17 +140,17 @@ public class UIUpdater : MonoBehaviour
 
 
         switch(Communication.positionData.signalLevel){
-            case 3:
+            //case 3:
+            //    GNSSIcon.sprite = GNSSSprites[0];
+            //    GNSSIcon.color = Color.white;
+            //    break;
+            //case 2:
+            //    GNSSIcon.sprite = GNSSSprites[1];
+            //    GNSSIcon.color = Color.yellow;
+            //    break;
+            case 1:
                 GNSSIcon.sprite = GNSSSprites[0];
                 GNSSIcon.color = Color.white;
-                break;
-            case 2:
-                GNSSIcon.sprite = GNSSSprites[1];
-                GNSSIcon.color = Color.yellow;
-                break;
-            case 1:
-                GNSSIcon.sprite = GNSSSprites[2];
-                GNSSIcon.color = Color.yellow;
                 break;
             case 0:
                 GNSSIcon.sprite = GNSSSprites[3];

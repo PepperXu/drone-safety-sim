@@ -69,6 +69,8 @@ public class DroneManager : MonoBehaviour
     public static float desired_vy = 0.0f;
     public static float desired_yaw = 0.0f;
 
+    VelocityControl.FlightState previousFlightState;
+
     //[SerializeField] float predictStepLength = 1f;
     //[SerializeField] int predictSteps = 3;
 
@@ -107,6 +109,7 @@ public class DroneManager : MonoBehaviour
         currentControlType = ControlType.Manual;
         //currentSafetyState = SafetyState.Healthy;
         VisType.globalVisType = VisType.VisualizationType.None;
+        previousFlightState = VelocityControl.FlightState.Landed;
         
         //controlVisUpdater.SetControlVisActive(false);
         //autopilotManager.ResetAutopilot();
@@ -211,10 +214,14 @@ public class DroneManager : MonoBehaviour
             ResetAllFlags();
             if(VelocityControl.currentFlightState == VelocityControl.FlightState.Landing){
                 landingEvent.Invoke();
-            } else if(VelocityControl.currentFlightState == VelocityControl.FlightState.Landed){
+            } 
+            
+            if(previousFlightState != VelocityControl.FlightState.Landed && VelocityControl.currentFlightState == VelocityControl.FlightState.Landed){
                 landedEvent.Invoke();
             }
         }
+
+        previousFlightState = VelocityControl.currentFlightState;
 
 
 

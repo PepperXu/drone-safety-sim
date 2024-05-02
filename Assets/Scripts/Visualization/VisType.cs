@@ -41,7 +41,7 @@ public class VisType : MonoBehaviour
     private List<Color> initialColors = new List<Color>();
 
     float sigLostAlpha = 0.25f;
-    float sigAbnormalAlpha = 0.25f;
+    //float sigAbnormalAlpha = 0.25f;
     float normalAlpha = 1f;
     bool initialized = false;
 
@@ -105,31 +105,31 @@ public class VisType : MonoBehaviour
         int i = 0;
         foreach(SpriteRenderer sprite in sprites){
             Color c = initialColors[i];
-            c.a = initialColors[i].a * (level == 0 ? normalAlpha: (level == 1?sigAbnormalAlpha: sigLostAlpha));
+            c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
             sprite.color = c;
             i++;
         }
         foreach(Image image in images){
             Color c = initialColors[i];
-            c.a = initialColors[i].a * (level == 0 ? normalAlpha: (level == 1?sigAbnormalAlpha: sigLostAlpha));
+            c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
             image.color = c;
             i++;
         }
         foreach(TextMeshPro text in texts){
             Color c = initialColors[i];
-            c.a = initialColors[i].a * (level == 0 ? normalAlpha: (level == 1?sigAbnormalAlpha: sigLostAlpha));
+            c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
             text.color = c;
             i++;
         }
         foreach(TextMeshProUGUI textUI in textUIs){
             Color c = initialColors[i];
-            c.a = initialColors[i].a * (level == 0 ? normalAlpha: (level == 1?sigAbnormalAlpha: sigLostAlpha));
+            c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
             textUI.color = c;
             i++;
         }
         foreach(Renderer renderer in renderers){
             Color c = initialColors[i];
-            c.a = initialColors[i].a * (level == 0 ? normalAlpha: (level == 1?sigAbnormalAlpha: sigLostAlpha));
+            c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
             renderer.material.color = c;
             i++;
         }

@@ -8,7 +8,7 @@ public class CollisionSensing : MonoBehaviour
 
     //Vector3[] distances = new Vector3[16];
     [SerializeField] LayerMask obstacleLayer;
-    //public bool collisionSensingEnabled = false;
+    //bool collisionSensingEnabled = false;
     const int steps = 16;
     // Start is called before the first frame update
     void Start()

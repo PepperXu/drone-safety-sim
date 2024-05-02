@@ -44,7 +44,11 @@ public class ControlVisUpdater : MonoBehaviour
     [SerializeField] private GameObject flightStatusTakeOff;
     [SerializeField] private GameObject flightStatusInspecting, flightStatusLanding;
 
-    const float bufferCautionThreahold = 1f, surfaceCautionThreshold = 6.0f, surfaceWarningThreshold = 4.0f;
+    [Header("Collision Detection")]
+    [SerializeField] private VisType collisionDetectVis;
+    [SerializeField] private Image[] collisionDirections;
+
+    const float bufferCautionThreahold = 1f, surfaceCautionThreshold = 5.0f, surfaceWarningThreshold = 3.0f;
 
 
     //[Header("Other References")]
@@ -74,7 +78,7 @@ public class ControlVisUpdater : MonoBehaviour
     //[SerializeField] StateFinder droneState;
 
     //public float updateRate;
-    
+
     //public bool updating = true;
 
     void Start(){
@@ -84,13 +88,13 @@ public class ControlVisUpdater : MonoBehaviour
     }
 
     void OnEnable(){
-        DroneManager.landingEvent.AddListener(SetControlVisInactive);
-        DroneManager.onFlightEvent.AddListener(SetControlVisActive);
+        DroneManager.landedEvent.AddListener(SetControlVisInactive);
+        DroneManager.takeOffEvent.AddListener(SetControlVisActive);
     }
 
     void OnDisable(){
-        DroneManager.landingEvent.RemoveListener(SetControlVisInactive);
-        DroneManager.onFlightEvent.RemoveListener(SetControlVisActive);
+        DroneManager.landedEvent.RemoveListener(SetControlVisInactive);
+        DroneManager.takeOffEvent.RemoveListener(SetControlVisActive);
     }
 
     void SetControlVisActive()
@@ -125,6 +129,7 @@ public class ControlVisUpdater : MonoBehaviour
             UpdateBatteryRing();
             UpdatePositioningIndicator();
             UpdateFlightStatus();
+            UpdateCollisionDetection();
             yield return new WaitForEndOfFrame();
         }
     }
@@ -152,7 +157,7 @@ public class ControlVisUpdater : MonoBehaviour
         projectionDisc.position = hitPoint + (-Vector3.down * dis2ground).normalized * 0.01f;
         textLabel.localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
         textLabel.GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2ground * 10f) / 10f + " m";
-        dis2groundVis.SetTransparency(Mathf.Max(0, 2-Communication.positionData.signalLevel));
+        dis2groundVis.SetTransparency(Mathf.Max(0, 1-Communication.positionData.signalLevel));
     }
 
     //Deprecated. Fix it if re-using.
@@ -190,7 +195,7 @@ public class ControlVisUpdater : MonoBehaviour
         } else {
             dis2boundVis.SwitchHiddenVisTypeLocal(false);
         }
-        dis2boundVis.SetTransparency(Mathf.Max(0, 2-Communication.positionData.signalLevel));
+        dis2boundVis.SetTransparency(Mathf.Max(0, 1-Communication.positionData.signalLevel));
     }
 
     void UpdateDistance2Surface()
@@ -233,7 +238,7 @@ public class ControlVisUpdater : MonoBehaviour
             dis2SurfaceVis.SwitchHiddenVisTypeLocal(false);
         }
 
-        dis2SurfaceVis.SetTransparency(Mathf.Max(0, 2-Communication.positionData.signalLevel));
+        dis2SurfaceVis.SetTransparency(Mathf.Max(0, 1-Communication.positionData.signalLevel));
     }
 
 
@@ -312,7 +317,7 @@ public class ControlVisUpdater : MonoBehaviour
     }
 
     void UpdatePosCircle(){
-        posCircle.SetTransparency(Mathf.Max(0, 2-Communication.positionData.signalLevel));
+        posCircle.SetTransparency(Mathf.Max(0, 1-Communication.positionData.signalLevel));
     }
 
     void UpdateCameraFrustum(){
@@ -327,7 +332,7 @@ public class ControlVisUpdater : MonoBehaviour
             //camFrustum.showVisualization = true;
             camFrustum.transform.GetChild(0).GetChild(0).localScale = Vector3.one * dis2surf;
         }
-        camFrustum.SetTransparency(Mathf.Max(0, 2-Communication.positionData.signalLevel));
+        camFrustum.SetTransparency(Mathf.Max(0, 1-Communication.positionData.signalLevel));
     }
 
     void UpdateWindVis(){
@@ -382,13 +387,13 @@ public class ControlVisUpdater : MonoBehaviour
             batteryRing.SwitchHiddenVisTypeLocal(false);
             
         }
-        batteryRing.SetTransparency(Mathf.Max(0, 2-Communication.positionData.signalLevel));
+        batteryRing.SetTransparency(Mathf.Max(0, 1-Communication.positionData.signalLevel));
     }
 
     void UpdatePositioningIndicator(){
         if(!posUncertainty.gameObject.activeInHierarchy)
             return;
-        if(Communication.positionData.signalLevel == 3){
+        if(Communication.positionData.signalLevel == 1){
             posUncertainty.SwitchHiddenVisTypeLocal(false);
             posUncertainty.visRoot.localScale = Vector3.one * 1.5f;
             Color c = posUncertaintySprite.color;
@@ -422,6 +427,38 @@ public class ControlVisUpdater : MonoBehaviour
 
     }
 
+    void UpdateCollisionDetection()
+    {
+        if (!collisionDetectVis.gameObject.activeInHierarchy)
+            return;
+        for (int i = 0; i < Communication.collisionData.distances.Length; i++)
+        {
+            if (Communication.collisionData.distances[i].magnitude < surfaceWarningThreshold)
+            {
+                collisionDirections[i].gameObject.SetActive(true);
+                Color c = Color.red;
+                //c.a = 1f;
+                collisionDirections[i].color = c;
+
+            }
+            else if (Communication.collisionData.distances[i].magnitude < surfaceCautionThreshold)
+            {
+                collisionDirections[i].gameObject.SetActive(true);
+                Color c = Color.yellow;
+                //c.a = 1f;
+                collisionDirections[i].color = c;
+            }
+            else
+            {
+                collisionDirections[i].gameObject.SetActive(false);
+               // Color c = Color.white;
+                //c.a = 0f;
+                //collisionDirections[i].color = c;
+            }
+        }
+        collisionDetectVis.SetTransparency(1 - Communication.positionData.signalLevel);
+    }
+
     void UpdateFlightStatus(){
         if(VelocityControl.currentFlightState == VelocityControl.FlightState.TakingOff){
             flightStatusTakeOff.SetActive(true);
@@ -440,6 +477,6 @@ public class ControlVisUpdater : MonoBehaviour
             flightStatusInspecting.SetActive(false);
             flightStatusLanding.SetActive(false);
         }
-        flightStatusVis.SetTransparency(Mathf.Max(0, 2 - Communication.positionData.signalLevel));
+        flightStatusVis.SetTransparency(Mathf.Max(0, 1 - Communication.positionData.signalLevel));
     }
 }

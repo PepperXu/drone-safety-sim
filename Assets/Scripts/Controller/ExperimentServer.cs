@@ -231,17 +231,17 @@ public class ExperimentServer : MonoBehaviour
 					break;
 				case 2:
 					if(Input.GetKeyDown(KeyCode.F1)){
-						positionalSensorSimulator.SetSignalLevel(3);
+						positionalSensorSimulator.SetSignalLevel(1);
         			}
         			if(Input.GetKeyDown(KeyCode.F2)){
-        			    positionalSensorSimulator.SetSignalLevel(2);
-        			}
-        			if(Input.GetKeyDown(KeyCode.F3)){
-        			    positionalSensorSimulator.SetSignalLevel(1);
-        			}
-        			if(Input.GetKeyDown(KeyCode.F4)){
         			    positionalSensorSimulator.SetSignalLevel(0);
         			}
+        			//if(Input.GetKeyDown(KeyCode.F3)){
+        			//    positionalSensorSimulator.SetSignalLevel(1);
+        			//}
+        			//if(Input.GetKeyDown(KeyCode.F4)){
+        			//    positionalSensorSimulator.SetSignalLevel(0);
+        			//}
 					break;
 				case 3:
 					if(Input.GetKeyDown(KeyCode.F1)){

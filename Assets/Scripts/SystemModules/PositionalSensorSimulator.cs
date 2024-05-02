@@ -40,10 +40,12 @@ public class PositionalSensorSimulator : MonoBehaviour
     
     void OnEnable(){
         DroneManager.resetAllEvent.AddListener(ResetSignalLevel);
+        DroneManager.landedEvent.AddListener(ResetSignalLevel);
     }
 
     void OnDisable(){
         DroneManager.resetAllEvent.RemoveListener(ResetSignalLevel);
+        DroneManager.landedEvent.RemoveListener(ResetSignalLevel);
     }
     
     void Start()
@@ -53,7 +55,7 @@ public class PositionalSensorSimulator : MonoBehaviour
         StartCoroutine(UpdatePosition());
     }
 
-    public void ResetSignalLevel(){
+    void ResetSignalLevel(){
         SetSignalLevel(1);
         switch_gps_normal = true;
     }
@@ -202,18 +204,18 @@ public class PositionalSensorSimulator : MonoBehaviour
 
 
 
-    public float Sample(float mean, float var)
+     float Sample(float mean, float var)
     {
         float n = NextGaussianDouble();
 
         return n * Mathf.Sqrt(var) + mean;
     }
 
-    public float SamplePositive(float mean, float var) {
+     float SamplePositive(float mean, float var) {
         return Mathf.Abs(Sample(mean, var));
     }
 
-    public float NextGaussianDouble()
+     float NextGaussianDouble()
     {
         float u, v, S;
 

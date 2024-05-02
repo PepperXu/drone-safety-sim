@@ -29,8 +29,8 @@ public class EventTriggerDetection : MonoBehaviour {
     }
 
     void ResetEventSimulation(){
-        battery.ResetBattery();
-        pss.ResetSignalLevel();
+        //battery.ResetBattery();
+        //pss.ResetSignalLevel();
         batteryDropped = false;
     }
     

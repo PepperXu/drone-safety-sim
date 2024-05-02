@@ -25,16 +25,15 @@ public class Battery : MonoBehaviour
 
     void OnEnable(){
         DroneManager.resetAllEvent.AddListener(ResetBattery);
+        DroneManager.landedEvent.AddListener(ResetBattery);
     }
 
     void OnDisable(){
         DroneManager.resetAllEvent.RemoveListener(ResetBattery);
+        DroneManager.landedEvent.RemoveListener(ResetBattery);
     }
 
-    void Start(){
-        //r = new System.Random();
-    }
-    public void ResetBattery(){
+    void ResetBattery(){
         currentBatteryCapacity = batteryCapacity;
         Communication.battery.rth = false;
         Communication.battery.batteryState = "Normal";
