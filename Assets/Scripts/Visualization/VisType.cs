@@ -38,7 +38,7 @@ public class VisType : MonoBehaviour
     [SerializeField]
     private Renderer[] renderers;
 
-    private List<Color> initialColors = new List<Color>();
+    //private List<Color> initialColors = new List<Color>();
 
     float sigLostAlpha = 0.25f;
     //float sigAbnormalAlpha = 0.25f;
@@ -56,21 +56,21 @@ public class VisType : MonoBehaviour
             visRoot = transform.GetChild(0);
         originalVisType = visType;
         hiddenVisType = visType;
-        foreach(SpriteRenderer sprite in sprites){
-            initialColors.Add(sprite.color);
-        }
-        foreach(Image image in images){
-            initialColors.Add(image.color);
-        }
-        foreach(TextMeshPro text in texts){
-            initialColors.Add(text.color);
-        }
-        foreach(TextMeshProUGUI textUI in textUIs){
-            initialColors.Add(textUI.color);
-        }
-        foreach(Renderer renderer in renderers){
-            initialColors.Add(renderer.material.color);
-        }
+        //foreach(SpriteRenderer sprite in sprites){
+        //    initialColors.Add(sprite.color);
+        //}
+        //foreach(Image image in images){
+        //    initialColors.Add(image.color);
+        //}
+        //foreach(TextMeshPro text in texts){
+        //    initialColors.Add(text.color);
+        //}
+        //foreach(TextMeshProUGUI textUI in textUIs){
+        //    initialColors.Add(textUI.color);
+        //}
+        //foreach(Renderer renderer in renderers){
+        //    initialColors.Add(renderer.material.color);
+        //}
         initialized = true;
     }
 
@@ -104,32 +104,47 @@ public class VisType : MonoBehaviour
     public void SetTransparency(int level){
         int i = 0;
         foreach(SpriteRenderer sprite in sprites){
-            Color c = initialColors[i];
-            c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
+            //Color c = initialColors[i];
+            //c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
+            //sprite.color = c;
+            Color c = sprite.color;
+            c.a *= (level == 0 ? normalAlpha : sigLostAlpha);
             sprite.color = c;
             i++;
         }
         foreach(Image image in images){
-            Color c = initialColors[i];
-            c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
+            //Color c = initialColors[i];
+            //c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
+            //image.color = c;
+            Color c = image.color;
+            c.a *= (level == 0 ? normalAlpha : sigLostAlpha);
             image.color = c;
             i++;
         }
         foreach(TextMeshPro text in texts){
-            Color c = initialColors[i];
-            c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
+            //Color c = initialColors[i];
+            //c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
+            //text.color = c;
+            Color c = text.color;
+            c.a *= (level == 0 ? normalAlpha : sigLostAlpha);
             text.color = c;
             i++;
         }
         foreach(TextMeshProUGUI textUI in textUIs){
-            Color c = initialColors[i];
-            c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
+            //Color c = initialColors[i];
+            //c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
+            //textUI.color = c;
+            Color c = textUI.color;
+            c.a *= (level == 0 ? normalAlpha : sigLostAlpha);
             textUI.color = c;
             i++;
         }
         foreach(Renderer renderer in renderers){
-            Color c = initialColors[i];
-            c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
+            //Color c = initialColors[i];
+            //c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
+            //renderer.material.color = c;
+            Color c = renderer.material.color;
+            c.a *= (level == 0 ? normalAlpha : sigLostAlpha);
             renderer.material.color = c;
             i++;
         }
