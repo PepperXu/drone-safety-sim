@@ -46,7 +46,7 @@ public class UIUpdater : MonoBehaviour
 
     
     [Header("External Anchors")]
-    [SerializeField] Transform headAnchor, bodyAnchor;
+    [SerializeField] Transform headAnchor;
 
     [Header("Buttons")]
     [SerializeField] Toggle autoPilotToggle;

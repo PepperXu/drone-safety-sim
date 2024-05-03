@@ -45,7 +45,7 @@ public class WorldVisUpdater : MonoBehaviour
         DroneManager.takePhotoEvent.AddListener(SpawnCamCoverage);
     }
     // Start is called before the first frame update
-    void Start()
+    void OnDisable()
     {
         DroneManager.finishPlanningEvent.RemoveListener(ResetWorldVis);
         DroneManager.markDefectEvent.RemoveListener(SpawnCamCoverageWithMark);
@@ -177,9 +177,10 @@ public class WorldVisUpdater : MonoBehaviour
     //}
 //
     void SpawnCamCoverage(){
-        if(Communication.positionData.signalLevel != 3)
+        if(Communication.positionData.signalLevel == 0)
             return;
-
+        if (Communication.positionData.v2surf.magnitude > 9999f)
+            return;
 
         GameObject covObj = Instantiate(coverageObject);
         covObj.transform.position = Communication.positionData.virtualPosition + Communication.positionData.v2surf;
@@ -187,12 +188,14 @@ public class WorldVisUpdater : MonoBehaviour
         covObj.transform.localScale *=  Communication.positionData.v2surf.magnitude;
         covObj.transform.parent = coverage.visRoot;
         spawnedCoverageObjects.Add(covObj);
+        Debug.Log("Coverage Spawned");
     }
 
     void SpawnCamCoverageWithMark(){
-        if(Communication.positionData.signalLevel != 3)
+        if(Communication.positionData.signalLevel == 0)
             return;
-
+        if (Communication.positionData.v2surf.magnitude > 9999f)
+            return;
 
         GameObject covObj = Instantiate(coverageObject);
         covObj.transform.position = Communication.positionData.virtualPosition + Communication.positionData.v2surf;
@@ -202,10 +205,13 @@ public class WorldVisUpdater : MonoBehaviour
         spawnedCoverageObjects.Add(covObj);
         if(Communication.markDefectHit != null){
             RaycastHit hit = (RaycastHit)Communication.markDefectHit;
-            GameObject markObj = Instantiate(markedObject, covObj.transform);
+            GameObject markObj = Instantiate(markedObject);
             markObj.transform.position = hit.point + hit.normal.normalized * 0.01f;
             markObj.transform.rotation = Quaternion.LookRotation(Vector3.up, hit.normal);
+            markObj.transform.parent = covObj.transform;
+            Debug.Log("Coverage Spawned with Mark");
         }
+
     }
 
     void RemoveAllCoverageObject(){

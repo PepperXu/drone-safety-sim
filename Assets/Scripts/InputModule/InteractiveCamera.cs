@@ -28,7 +28,7 @@ public class InteractiveCamera : MonoBehaviour
         Ray ray = fpvCam.ViewportPointToRay(viewportPoint);
 
         RaycastHit buildingHit;
-        if(Physics.Raycast(ray, out buildingHit, float.PositiveInfinity, buildingCollision)){
+        if(Physics.Raycast(ray, out buildingHit, 10f, buildingCollision)){
             DroneManager.mark_defect_flag = true;
             Communication.markDefectHit = buildingHit;
             //worldVisUpdater.currentHit = buildingHit;

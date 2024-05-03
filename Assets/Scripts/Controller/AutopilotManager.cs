@@ -115,7 +115,7 @@ public class AutopilotManager : MonoBehaviour
                     //Debug.LogWarning("Moving to waypoint " + currentWaypointIndex);
                     Vector3 offset = target - sensedPosition;
 
-                    Debug.Log("current target offset" + offset);
+                    //Debug.Log("current target offset" + offset);
                     if (offset.magnitude < 0.5f)
                     {
                         waitTimer += Time.deltaTime;
