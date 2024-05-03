@@ -15,21 +15,20 @@ public class PositionalSensorSimulator : MonoBehaviour
     [SerializeField] Transform contingencyBuffer;
 
     int positional_signal_level = 3;
-    float offsetRefreshIntervalMean = 3f, offsetRefreshIntervalVar = 1.5f;
+    float offsetRefreshIntervalMean = 2f, offsetRefreshIntervalVar = 1.5f;
     float offsetRefreshTimer = 0f;
 
-    //float signalUpdateRateMean = 5f, signalUpdateRateVar = 5f;
+    float signalUpdateRateMean = 1f, signalUpdateRateVar = 1f;
     float maxPositionUncertaintyAbnormal = 10f;
     float maxPositionUncertaintyNormal = 0.5f;
 
     float currentMaxPosUncertainty;
 
-    float gpsDriftSpeedNormal = 0.002f;
-    float gpsDriftSpeedAbnormal = 0.01f;
+    float gpsDriftSpeed = 0.7f;
     System.Random r;
     Vector3 lastDronePos;
 
-    Vector3 positionOffset = new Vector3(0f, 0f, 0f);
+    Vector3 targetOffset = new Vector3(0f, 0f, 0f);
     float updateRate = 0f;
 
     //private Vector3 virtualDronePosition;
@@ -73,8 +72,10 @@ public class PositionalSensorSimulator : MonoBehaviour
         }
 
         if(offsetRefreshTimer <= 0f){
-            Vector3 newOffset = Random.onUnitSphere * Random.Range (0f, currentMaxPosUncertainty);
-            positionOffset = (positionOffset + newOffset)/2f;
+            Vector2 randomOffset = Random.insideUnitCircle * currentMaxPosUncertainty;
+            Vector3 newOffset = new Vector3(randomOffset.x, 0f, randomOffset.y);
+            targetOffset = (targetOffset + newOffset)/2f;
+            Communication.positionData.currentTargetOffset = new Vector3(targetOffset.x, 0f, targetOffset.z); 
             offsetRefreshTimer = SamplePositive(offsetRefreshIntervalMean, offsetRefreshIntervalVar);
             //updateRate = SamplePositive(signalUpdateRateMean, signalUpdateRateVar);
         } 
@@ -87,7 +88,8 @@ public class PositionalSensorSimulator : MonoBehaviour
     IEnumerator UpdatePosition(){
         while(true){
             Vector3 currentOffset;
-            Vector3 targetOffset;
+            currentOffset = Communication.positionData.virtualPosition - lastDronePos;
+            Vector3 newOffset;
             switch(positional_signal_level){
                 //case 3:
                 //    //dronePositionVirtual = vc.transform.position;
@@ -122,28 +124,31 @@ public class PositionalSensorSimulator : MonoBehaviour
                 //    break;
                 case 1:
                     //dronePositionVirtual = vc.transform.position;
+                    updateRate = Time.deltaTime;
                     currentMaxPosUncertainty = maxPositionUncertaintyNormal;
-                    currentOffset = Communication.positionData.virtualPosition - lastDronePos;
-                    targetOffset = Vector3.MoveTowards(currentOffset, new Vector3(positionOffset.x, 0f, positionOffset.z), gpsDriftSpeedNormal);
+                    
+                    newOffset = Vector3.MoveTowards(currentOffset, new Vector3(targetOffset.x, 0f, targetOffset.z), gpsDriftSpeed * updateRate);
 
-                    Vector3 virtualDronePosCurrent = Communication.realPose.WorldPosition + targetOffset;
+                    Vector3 virtualDronePosCurrent = Communication.realPose.WorldPosition + newOffset;
 
                     Communication.positionData.virtualPosition = virtualDronePosCurrent;
                     Communication.positionData.v2bound = CheckPositionInContingencyBuffer(out Communication.positionData.inBuffer, virtualDronePosCurrent);
                     Communication.positionData.v2surf = CheckDistanceToBuildingSurface(virtualDronePosCurrent);
-                    updateRate = Time.deltaTime;
+                    
                     break;
                 case 0:
+                    //updateRate = SamplePositive(signalUpdateRateMean, signalUpdateRateVar);
+                    updateRate = Time.deltaTime;
                     currentMaxPosUncertainty = maxPositionUncertaintyAbnormal;
-                    currentOffset = Communication.positionData.virtualPosition - lastDronePos;
-                    targetOffset = Vector3.MoveTowards(currentOffset, new Vector3(positionOffset.x, 0f, positionOffset.z), gpsDriftSpeedAbnormal);
-                    Vector3 vdronePos = Communication.realPose.WorldPosition + targetOffset;
+
+                    newOffset = Vector3.MoveTowards(currentOffset, new Vector3(targetOffset.x, 0f, targetOffset.z), gpsDriftSpeed * updateRate);
+                    Vector3 vdronePos = Communication.realPose.WorldPosition + newOffset;
 
                     Communication.positionData.virtualPosition = vdronePos;
                     Communication.positionData.v2bound = CheckPositionInContingencyBuffer(out Communication.positionData.inBuffer, vdronePos);
                     Communication.positionData.v2surf = CheckDistanceToBuildingSurface(vdronePos);
-                    updateRate = Time.deltaTime;
-                    //updateRate = SamplePositive(signalUpdateRateMean, signalUpdateRateVar);
+                    //updateRate = Time.deltaTime;
+                    
                     break;
             }
             lastDronePos = Communication.realPose.WorldPosition;

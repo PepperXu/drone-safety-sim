@@ -186,10 +186,6 @@ public class RandomPulseNoise : MonoBehaviour {
 
                 }
             } 
-
-
-
-
             if (motion_mode == 0) 
             {
                 motion_timer = 0.0f;

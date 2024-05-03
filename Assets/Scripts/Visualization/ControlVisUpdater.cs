@@ -118,7 +118,7 @@ public class ControlVisUpdater : MonoBehaviour
         while(true){
             transform.position = Communication.positionData.virtualPosition;
             transform.eulerAngles = new Vector3(0f, Communication.realPose.Angles.y, 0f);
-            UpdatePosCircle();
+            //UpdatePosCircle();
             UpdateDistance2Ground();
             UpdateDistance2Bound();
             UpdateDistance2Surface();
@@ -157,7 +157,6 @@ public class ControlVisUpdater : MonoBehaviour
         projectionDisc.position = hitPoint + (-Vector3.down * dis2ground).normalized * 0.01f;
         textLabel.localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
         textLabel.GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2ground * 10f) / 10f + " m";
-        dis2groundVis.SetTransparency(Mathf.Max(0, 1-Communication.positionData.signalLevel));
     }
 
     //Deprecated. Fix it if re-using.
@@ -195,7 +194,6 @@ public class ControlVisUpdater : MonoBehaviour
         } else {
             dis2boundVis.SwitchHiddenVisTypeLocal(false);
         }
-        dis2boundVis.SetTransparency(Mathf.Max(0, 1-Communication.positionData.signalLevel));
     }
 
     void UpdateDistance2Surface()
@@ -238,7 +236,7 @@ public class ControlVisUpdater : MonoBehaviour
             dis2SurfaceVis.SwitchHiddenVisTypeLocal(false);
         }
 
-        dis2SurfaceVis.SetTransparency(Mathf.Max(0, 1-Communication.positionData.signalLevel));
+        
     }
 
 
@@ -316,9 +314,9 @@ public class ControlVisUpdater : MonoBehaviour
 
     }
 
-    void UpdatePosCircle(){
-        posCircle.SetTransparency(Mathf.Max(0, 1-Communication.positionData.signalLevel));
-    }
+    //void UpdatePosCircle(){
+    //    posCircle.SetTransparency(Mathf.Max(0, 1-Communication.positionData.signalLevel));
+    //}
 
     void UpdateCameraFrustum(){
         if(!camFrustum.gameObject.activeInHierarchy)
@@ -332,7 +330,7 @@ public class ControlVisUpdater : MonoBehaviour
             //camFrustum.showVisualization = true;
             camFrustum.transform.GetChild(0).GetChild(0).localScale = Vector3.one * dis2surf;
         }
-        camFrustum.SetTransparency(Mathf.Max(0, 1-Communication.positionData.signalLevel));
+        //camFrustum.SetTransparency(Mathf.Max(0, 1-Communication.positionData.signalLevel));
     }
 
     void UpdateWindVis(){
@@ -387,24 +385,48 @@ public class ControlVisUpdater : MonoBehaviour
             batteryRing.SwitchHiddenVisTypeLocal(false);
             
         }
-        batteryRing.SetTransparency(Mathf.Max(0, 1-Communication.positionData.signalLevel));
+        //batteryRing.SetTransparency(Mathf.Max(0, 1-Communication.positionData.signalLevel));
     }
 
     void UpdatePositioningIndicator(){
         if(!posUncertainty.gameObject.activeInHierarchy)
             return;
+        float currentPosUncertaintyScale = posUncertainty.visRoot.localScale.x;
+        Vector3 offset = Communication.positionData.virtualPosition - Communication.realPose.WorldPosition;
         if(Communication.positionData.signalLevel == 1){
             posUncertainty.SwitchHiddenVisTypeLocal(false);
-            posUncertainty.visRoot.localScale = Vector3.one * 1.5f;
-            Color c = posUncertaintySprite.color;
-            c.a = 0.5f;
-            posUncertaintySprite.color = c;
+            posUncertainty.visRoot.localScale = Vector3.one * offset.magnitude * 2f;
+            
         } else {
             posUncertainty.SwitchHiddenVisTypeLocal(true);
-            posUncertainty.visRoot.localScale = Vector3.one * 10f;
+            posUncertainty.visRoot.localScale = Vector3.one * Mathf.Max(currentPosUncertaintyScale, offset.magnitude * 2f);
+        }
+        if (posUncertainty.visRoot.localScale.x > 3.5f)
+        {
             Color c = posUncertaintySprite.color;
             c.a = 0.2f;
             posUncertaintySprite.color = c;
+            //batteryRing.SetTransparency(1);
+            //camFrustum.SetTransparency(1);
+            posCircle.SetTransparency(1);
+            //dis2SurfaceVis.SetTransparency(1);
+            //dis2boundVis.SetTransparency(1);
+            dis2groundVis.SetTransparency(1);
+            collisionDetectVis.SetTransparency(1);
+            flightStatusVis.SetTransparency(1);
+        } else
+        {
+            Color c = posUncertaintySprite.color;
+            c.a = 0.5f;
+            posUncertaintySprite.color = c;
+            //batteryRing.SetTransparency(0);
+            //camFrustum.SetTransparency(0);
+            posCircle.SetTransparency(0);
+            //dis2SurfaceVis.SetTransparency(0);
+            //dis2boundVis.SetTransparency(0);
+            dis2groundVis.SetTransparency(0);
+            collisionDetectVis.SetTransparency(0);
+            flightStatusVis.SetTransparency(0);
         }
         //if(!positioning.gameObject.activeInHierarchy)
         //    return;
@@ -426,6 +448,8 @@ public class ControlVisUpdater : MonoBehaviour
         //}
 
     }
+
+
 
     void UpdateCollisionDetection()
     {
@@ -456,7 +480,7 @@ public class ControlVisUpdater : MonoBehaviour
                 //collisionDirections[i].color = c;
             }
         }
-        collisionDetectVis.SetTransparency(1 - Communication.positionData.signalLevel);
+       
     }
 
     void UpdateFlightStatus(){
@@ -477,6 +501,6 @@ public class ControlVisUpdater : MonoBehaviour
             flightStatusInspecting.SetActive(false);
             flightStatusLanding.SetActive(false);
         }
-        flightStatusVis.SetTransparency(Mathf.Max(0, 1 - Communication.positionData.signalLevel));
+        
     }
 }

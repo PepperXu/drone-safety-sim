@@ -214,6 +214,11 @@ public class WorldVisUpdater : MonoBehaviour
 
     }
 
+    void UpdateRTHBatterySufficiency()
+    {
+
+    }
+
     void RemoveAllCoverageObject(){
         foreach(GameObject obj in spawnedCoverageObjects){
             Destroy(obj);

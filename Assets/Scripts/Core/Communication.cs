@@ -50,6 +50,7 @@ public class Communication : MonoBehaviour
         public Vector3 v2bound;
         
         public bool inBuffer;
+        public Vector3 currentTargetOffset;
     }
 
     public struct RealPose{
