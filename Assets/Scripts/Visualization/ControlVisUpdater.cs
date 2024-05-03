@@ -48,7 +48,7 @@ public class ControlVisUpdater : MonoBehaviour
     [SerializeField] private VisType collisionDetectVis;
     [SerializeField] private Image[] collisionDirections;
 
-    const float bufferCautionThreahold = 1f, surfaceCautionThreshold = 5.0f, surfaceWarningThreshold = 3.0f;
+    
 
 
     //[Header("Other References")]
@@ -189,7 +189,7 @@ public class ControlVisUpdater : MonoBehaviour
         textLabel.localPosition = transform.InverseTransformPoint(hitPoint) / 2f;
         textLabel.GetComponentInChildren<TextMeshPro>().text = (Communication.positionData.inBuffer?"-":"") + Mathf.Round(dis2bound * 10f) / 10f + " m";
 
-        if(dis2bound < bufferCautionThreahold){
+        if(dis2bound < PositionalSensorSimulator.bufferCautionThreahold){
             dis2boundVis.SwitchHiddenVisTypeLocal(true);
         } else {
             dis2boundVis.SwitchHiddenVisTypeLocal(false);
@@ -230,7 +230,7 @@ public class ControlVisUpdater : MonoBehaviour
         textLabel.GetComponentInChildren<TextMeshPro>().text = "" + Mathf.Round(dis2surf * 10f) / 10f + " m";
 
         
-        if(dis2surf < surfaceCautionThreshold){
+        if(dis2surf < CollisionSensing.surfaceCautionThreshold){
             dis2SurfaceVis.SwitchHiddenVisTypeLocal(true);
         } else {
             dis2SurfaceVis.SwitchHiddenVisTypeLocal(false);
@@ -393,7 +393,7 @@ public class ControlVisUpdater : MonoBehaviour
             return;
         float currentPosUncertaintyScale = posUncertainty.visRoot.localScale.x;
         Vector3 offset = Communication.positionData.virtualPosition - Communication.realPose.WorldPosition;
-        if(Communication.positionData.signalLevel == 1){
+        if(!Communication.positionData.gpsLost){
             posUncertainty.SwitchHiddenVisTypeLocal(false);
             posUncertainty.visRoot.localScale = Vector3.one * offset.magnitude * 2f;
             
@@ -457,7 +457,7 @@ public class ControlVisUpdater : MonoBehaviour
             return;
         for (int i = 0; i < Communication.collisionData.distances.Length; i++)
         {
-            if (Communication.collisionData.distances[i].magnitude < surfaceWarningThreshold)
+            if (Communication.collisionData.distances[i].magnitude < CollisionSensing.surfaceWarningThreshold)
             {
                 collisionDirections[i].gameObject.SetActive(true);
                 Color c = Color.red;
@@ -465,7 +465,7 @@ public class ControlVisUpdater : MonoBehaviour
                 collisionDirections[i].color = c;
 
             }
-            else if (Communication.collisionData.distances[i].magnitude < surfaceCautionThreshold)
+            else if (Communication.collisionData.distances[i].magnitude < CollisionSensing.surfaceCautionThreshold)
             {
                 collisionDirections[i].gameObject.SetActive(true);
                 Color c = Color.yellow;

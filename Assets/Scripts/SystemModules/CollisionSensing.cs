@@ -8,6 +8,8 @@ public class CollisionSensing : MonoBehaviour
 
     //Vector3[] distances = new Vector3[16];
     [SerializeField] LayerMask obstacleLayer;
+
+    public static float surfaceCautionThreshold = 5.0f, surfaceWarningThreshold = 3.0f;
     //bool collisionSensingEnabled = false;
     const int steps = 16;
     // Start is called before the first frame update
@@ -29,6 +31,10 @@ public class CollisionSensing : MonoBehaviour
             RaycastHit hit;
             if(Physics.Raycast(Communication.droneRb.transform.position, Quaternion.AngleAxis(angle, Vector3.up) * Communication.droneRb.transform.forward, out hit, 20f, obstacleLayer)){
                 Communication.collisionData.distances[index] = hit.point - Communication.droneRb.transform.position;
+                if(Communication.collisionData.distances[index].magnitude < surfaceWarningThreshold && DroneManager.currentControlType == DroneManager.ControlType.Autonomous){
+                    DroneManager.autopilot_stop_flag = true;
+                }
+                
             } else {
                 Communication.collisionData.distances[index] = Vector3.positiveInfinity;
             }

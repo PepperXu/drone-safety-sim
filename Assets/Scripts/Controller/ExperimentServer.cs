@@ -231,10 +231,10 @@ public class ExperimentServer : MonoBehaviour
 					break;
 				case 2:
 					if(Input.GetKeyDown(KeyCode.F1)){
-						positionalSensorSimulator.SetSignalLevel(1);
+						positionalSensorSimulator.SetGPSLost(false);
         			}
         			if(Input.GetKeyDown(KeyCode.F2)){
-        			    positionalSensorSimulator.SetSignalLevel(0);
+        			    positionalSensorSimulator.SetGPSLost(true);
         			}
         			//if(Input.GetKeyDown(KeyCode.F3)){
         			//    positionalSensorSimulator.SetSignalLevel(1);
@@ -320,9 +320,6 @@ public class ExperimentServer : MonoBehaviour
 				case "reduce-battery-capacity":
 					battery.ReduceBatteryCap(float.Parse(splitMsg[1]));
 					break;
-				case "positional-signal-level":
-					positionalSensorSimulator.SetSignalLevel(int.Parse(splitMsg[1]));
-					break;
 				case "reset-all-states":
 					droneManager.ResetAllStates();
 					SendServerMessage("state-reset-confirmed;");
@@ -376,7 +373,6 @@ public class ExperimentServer : MonoBehaviour
 			(int)DroneManager.currentMissionState + ";" + 
 			(int)DroneManager.currentControlType + ";" + 
 			(int)currentVisCondition + ";" + 
-			positionalSensorSimulator.GetSignalLevel() + ";" + 
 			(switching_flag ? 3:(int)VisType.globalVisType) + "\n";
 		//msgQueue.Enqueue(currentState);
 		msgString += currentState;

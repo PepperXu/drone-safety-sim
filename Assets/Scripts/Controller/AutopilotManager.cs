@@ -154,9 +154,9 @@ public class AutopilotManager : MonoBehaviour
                         DroneManager.desired_vy = localDirXY.y;
                         DroneManager.desired_vx = localDirXY.x;
                         if(Communication.positionData.v2surf.magnitude < 10f){
-                            Vector3 localVector = Communication.droneRb.transform.InverseTransformDirection(Communication.positionData.v2surf).normalized;
-                            Vector2 localVectorXY = new Vector2(localVector.x, localVector.z);
-                            float angleOffset = Vector2.SignedAngle(-Vector2.up, localVectorXY);
+                            Vector3 localVector = Communication.positionData.v2surf.normalized;
+                            //Vector2 localVectorXY = new Vector2(localVector.x, localVector.z);
+                            float angleOffset = Vector3.SignedAngle(Communication.droneRb.transform.forward, localVector, Vector3.up);
                             while(angleOffset > 180f){
                                 angleOffset -= 360f;
                             }

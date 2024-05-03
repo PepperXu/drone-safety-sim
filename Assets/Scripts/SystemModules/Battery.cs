@@ -8,16 +8,16 @@ using UnityEngine.XR.Interaction.Toolkit.Utilities.Tweenables.SmartTweenableVari
 public class Battery : MonoBehaviour
 {
     //private float hoveringDischargeRate = 7.66f;
-    private const float batteryCapacity = 1440f;
-    private const float autopilotFlightSpeed = 3f;
+    public static float batteryCapacity = 1440f;
+    public static float autopilotFlightSpeed = 3f;
     private const float normalDischargeRate = 8.754f;
     float currentBatteryPercentage;
     float currentBatteryCapacity;
     float currentDischargeRate;
     float remainingTimeInSeconds;
 
-    const float batteryLowThreshold = 0.25f;
-    const float batteryCriticalThreshold = 0.1f;
+    public static float batteryLowThreshold = 0.25f;
+    public static float batteryCriticalThreshold = 0.1f;
     //System.Random r;
 
     [SerializeField] Transform Homepoint;
@@ -51,13 +51,30 @@ public class Battery : MonoBehaviour
         currentBatteryPercentage = currentBatteryCapacity / batteryCapacity;
         //float predictedDischargeRate = randomPulseNoise.strength_mean * dischargeRateWindCoeff + noWindDischargeRate + abnormalDischargeRate;
         remainingTimeInSeconds = currentBatteryCapacity / currentDischargeRate * 3.6f;
-        Communication.battery.batteryPercentage = currentBatteryPercentage;
-        Communication.battery.batteryRemainingTime = remainingTimeInSeconds;
+        
 
         Vector3 vector2home = Communication.positionData.virtualPosition - Homepoint.position;
+        
         float rthTimeThreshold = (new Vector2(vector2home.x, vector2home.z).magnitude + Mathf.Abs(vector2home.y))/autopilotFlightSpeed + batteryCapacity*batteryCriticalThreshold/normalDischargeRate * 3.6f;
-        Communication.battery.rthThreshold = rthTimeThreshold * (normalDischargeRate / 3.6f) / batteryCapacity;
+        float rthThreshold = rthTimeThreshold * (normalDischargeRate / 3.6f) / batteryCapacity;
+        float rthDistance = rthTimeThreshold * autopilotFlightSpeed;
+        float lowBatDistance = batteryLowThreshold/rthThreshold * rthDistance;
+        float criticalBatDistance = batteryCriticalThreshold/rthThreshold * rthDistance;
+
+        Communication.battery.batteryPercentage = currentBatteryPercentage;
+        Communication.battery.batteryRemainingTime = remainingTimeInSeconds;
+        Communication.battery.vector2Home = vector2home;
+        Communication.battery.rthThreshold = rthThreshold;
+        
+        Communication.battery.totalRemainingDistance = remainingTimeInSeconds * autopilotFlightSpeed;
+        Communication.battery.distanceUntilCritical = remainingTimeInSeconds * autopilotFlightSpeed - criticalBatDistance;
+        Communication.battery.distanceUntilRTH = remainingTimeInSeconds * autopilotFlightSpeed - rthDistance;
+        Communication.battery.distanceUntilLowBat = remainingTimeInSeconds * autopilotFlightSpeed - lowBatDistance;
+
+
         //Debug.Log("current rth offset:"+ Communication.positionData.virtualPosition+ "::" +Homepoint.position);
+        
+        
 
         if(rthTimeThreshold < remainingTimeInSeconds + 20f){
             if(!Communication.battery.rth){
@@ -65,6 +82,8 @@ public class Battery : MonoBehaviour
                 DroneManager.rth_flag = true;
             }
         } 
+
+        
 
         if(currentBatteryPercentage < batteryCriticalThreshold){
             Communication.battery.batteryState = "Critical";

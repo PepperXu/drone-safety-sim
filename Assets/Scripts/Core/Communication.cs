@@ -45,7 +45,8 @@ public class Communication : MonoBehaviour
 
     public struct PositionData{
         public Vector3 virtualPosition;
-        public int signalLevel; 
+        public bool gpsLost;
+        public int sigLevel; 
         public Vector3 v2surf;
         public Vector3 v2bound;
         
@@ -77,6 +78,13 @@ public class Communication : MonoBehaviour
         public string batteryState;
         public float rthThreshold;
         public bool rth;
+
+        public float distanceUntilRTH;
+        public float distanceUntilLowBat;
+        public float distanceUntilCritical;
+        public float totalRemainingDistance;
+
+        public Vector3 vector2Home;
     }
 
     public struct Wind{

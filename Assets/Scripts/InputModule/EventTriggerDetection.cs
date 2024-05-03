@@ -43,7 +43,7 @@ public class EventTriggerDetection : MonoBehaviour {
 
         if (other.tag == "GPSWeakZone" && !isGPSDenied)
         {
-            pss.SetSignalLevel(signalLostIndex);
+            pss.SetGPSLost(true);
             ExperimentServer.RecordData("Enters GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
             //if (other.name.Contains("Weak"))
             //{
@@ -119,7 +119,7 @@ public class EventTriggerDetection : MonoBehaviour {
     IEnumerator SignalLostFixedDuration()
     {
         yield return new WaitForSeconds(signalLostDuration);
-        pss.SetSignalLevel(signalNormalIndex);
+        pss.SetGPSLost(false);
         isGPSDenied = false;
     }
 

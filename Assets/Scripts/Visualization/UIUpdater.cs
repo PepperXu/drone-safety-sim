@@ -98,7 +98,7 @@ public class UIUpdater : MonoBehaviour
 
         if(Communication.battery.batteryPercentage >= 1f){
             batteryIcon.sprite = batterySprites[0];
-            batteryIcon.color = Color.green;
+            batteryIcon.color = Color.white;
             batteryPercentage.color = Color.white;
             //batteryRemainingTime.color = Color.white;
             //batteryPercentageCircular.color = Color.white;
@@ -114,20 +114,15 @@ public class UIUpdater : MonoBehaviour
             batteryPercentage.color = Color.white;
             //batteryRemainingTime.color = Color.green;
             //batteryPercentageCircular.color = Color.white;
-        } else if (Communication.battery.batteryPercentage > 0.3) {
+        } 
+        else if(Communication.battery.batteryPercentage > 0.25f){
             batteryIcon.sprite = batterySprites[2];
             batteryIcon.color = Color.white;
             batteryPercentage.color = Color.white;
-            //batteryRemainingTime.color = Color.green;
-        }
-        else if(Communication.battery.batteryPercentage > 0.25f){
-            batteryIcon.sprite = batterySprites[2];
-            batteryIcon.color = Color.yellow;
-            batteryPercentage.color = Color.yellow;
             //batteryRemainingTime.color = Color.yellow;
             //batteryPercentageCircular.color = Color.yellow;
-        } else if(Communication.battery.batteryPercentage > 0.2f){
-            batteryIcon.sprite = batterySprites[3];
+        } else if(Communication.battery.batteryPercentage > 0.1f){
+            batteryIcon.sprite = batterySprites[2];
             batteryIcon.color = Color.yellow;
             batteryPercentage.color = Color.yellow;
             //batteryRemainingTime.color = Color.yellow;
@@ -139,18 +134,20 @@ public class UIUpdater : MonoBehaviour
         }
 
 
-        switch(Communication.positionData.signalLevel){
-            //case 3:
-            //    GNSSIcon.sprite = GNSSSprites[0];
-            //    GNSSIcon.color = Color.white;
-            //    break;
-            //case 2:
-            //    GNSSIcon.sprite = GNSSSprites[1];
-            //    GNSSIcon.color = Color.yellow;
-            //    break;
-            case 1:
+
+
+        switch(Communication.positionData.sigLevel){
+            case 3:
                 GNSSIcon.sprite = GNSSSprites[0];
                 GNSSIcon.color = Color.white;
+                break;
+            case 2:
+                GNSSIcon.sprite = GNSSSprites[1];
+                GNSSIcon.color = Color.yellow;
+                break;
+            case 1:
+                GNSSIcon.sprite = GNSSSprites[2];
+                GNSSIcon.color = Color.red;
                 break;
             case 0:
                 GNSSIcon.sprite = GNSSSprites[3];
