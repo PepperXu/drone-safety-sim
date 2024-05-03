@@ -38,7 +38,7 @@ public class VisType : MonoBehaviour
     [SerializeField]
     private Renderer[] renderers;
 
-    //private List<Color> initialColors = new List<Color>();
+    private List<float> initialAlphas = new List<float>();
 
     float sigLostAlpha = 0.25f;
     //float sigAbnormalAlpha = 0.25f;
@@ -56,21 +56,21 @@ public class VisType : MonoBehaviour
             visRoot = transform.GetChild(0);
         originalVisType = visType;
         hiddenVisType = visType;
-        //foreach(SpriteRenderer sprite in sprites){
-        //    initialColors.Add(sprite.color);
-        //}
-        //foreach(Image image in images){
-        //    initialColors.Add(image.color);
-        //}
-        //foreach(TextMeshPro text in texts){
-        //    initialColors.Add(text.color);
-        //}
-        //foreach(TextMeshProUGUI textUI in textUIs){
-        //    initialColors.Add(textUI.color);
-        //}
-        //foreach(Renderer renderer in renderers){
-        //    initialColors.Add(renderer.material.color);
-        //}
+        foreach(SpriteRenderer sprite in sprites){
+            initialAlphas.Add(sprite.color.a);
+        }
+        foreach(Image image in images){
+            initialAlphas.Add(image.color.a);
+        }
+        foreach(TextMeshPro text in texts){
+            initialAlphas.Add(text.color.a);
+        }
+        foreach(TextMeshProUGUI textUI in textUIs){
+            initialAlphas.Add(textUI.color.a);
+        }
+        foreach(Renderer renderer in renderers){
+            initialAlphas.Add(renderer.material.color.a);
+        }
         initialized = true;
     }
 
@@ -108,7 +108,7 @@ public class VisType : MonoBehaviour
             //c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
             //sprite.color = c;
             Color c = sprite.color;
-            c.a *= (level == 0 ? normalAlpha : sigLostAlpha);
+            c.a = initialAlphas[i]*(level == 0 ? normalAlpha : sigLostAlpha);
             sprite.color = c;
             i++;
         }
@@ -117,7 +117,7 @@ public class VisType : MonoBehaviour
             //c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
             //image.color = c;
             Color c = image.color;
-            c.a *= (level == 0 ? normalAlpha : sigLostAlpha);
+            c.a = initialAlphas[i] * (level == 0 ? normalAlpha : sigLostAlpha);
             image.color = c;
             i++;
         }
@@ -126,7 +126,7 @@ public class VisType : MonoBehaviour
             //c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
             //text.color = c;
             Color c = text.color;
-            c.a *= (level == 0 ? normalAlpha : sigLostAlpha);
+            c.a = initialAlphas[i] * (level == 0 ? normalAlpha : sigLostAlpha);
             text.color = c;
             i++;
         }
@@ -135,7 +135,7 @@ public class VisType : MonoBehaviour
             //c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
             //textUI.color = c;
             Color c = textUI.color;
-            c.a *= (level == 0 ? normalAlpha : sigLostAlpha);
+            c.a = initialAlphas[i] * (level == 0 ? normalAlpha : sigLostAlpha);
             textUI.color = c;
             i++;
         }
@@ -144,7 +144,7 @@ public class VisType : MonoBehaviour
             //c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
             //renderer.material.color = c;
             Color c = renderer.material.color;
-            c.a *= (level == 0 ? normalAlpha : sigLostAlpha);
+            c.a = initialAlphas[i] * (level == 0 ? normalAlpha : sigLostAlpha);
             renderer.material.color = c;
             i++;
         }
