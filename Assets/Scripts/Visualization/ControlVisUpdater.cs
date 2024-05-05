@@ -43,6 +43,11 @@ public class ControlVisUpdater : MonoBehaviour
     [SerializeField] private VisType flightStatusVis;
     [SerializeField] private GameObject flightStatusTakeOff;
     [SerializeField] private GameObject flightStatusInspecting, flightStatusLanding;
+    [SerializeField] private GameObject[] warningVis;
+    private string previousBatteryState = "Normal";
+    private bool isRTH = false;
+    private float previousCollisionDistance;
+    private int previousGPSLevel = 3;
 
     [Header("Collision Detection")]
     [SerializeField] private VisType collisionDetectVis;
@@ -90,11 +95,13 @@ public class ControlVisUpdater : MonoBehaviour
     void OnEnable(){
         DroneManager.landedEvent.AddListener(SetControlVisInactive);
         DroneManager.takeOffEvent.AddListener(SetControlVisActive);
+        DroneManager.resetAllEvent.AddListener(SetControlVisInactive);
     }
 
     void OnDisable(){
         DroneManager.landedEvent.RemoveListener(SetControlVisInactive);
         DroneManager.takeOffEvent.RemoveListener(SetControlVisActive);
+        DroneManager.resetAllEvent.RemoveListener(SetControlVisInactive);
     }
 
     void SetControlVisActive()
@@ -130,6 +137,7 @@ public class ControlVisUpdater : MonoBehaviour
             UpdatePositioningIndicator();
             UpdateFlightStatus();
             UpdateCollisionDetection();
+            UpdateWarningVis();
             yield return new WaitForEndOfFrame();
         }
     }
@@ -200,7 +208,7 @@ public class ControlVisUpdater : MonoBehaviour
     {
         if(!dis2SurfaceVis.gameObject.activeInHierarchy)
             return;
-        Vector3 v2surf = Communication.collisionData.distances[Communication.collisionData.GetShortestDistanceIndex()];
+        Vector3 v2surf = Communication.collisionData.GetShortestDistance();
         float dis2surf = v2surf.magnitude;
         if (dis2surf > 12f)
         {
@@ -388,20 +396,62 @@ public class ControlVisUpdater : MonoBehaviour
         //batteryRing.SetTransparency(Mathf.Max(0, 1-Communication.positionData.signalLevel));
     }
 
+    void UpdateWarningVis()
+    {
+        
+        if (Communication.battery.batteryState != previousBatteryState)
+        {
+            if (Communication.battery.batteryState == "Low")
+                warningVis[2].SetActive(true);
+            if (Communication.battery.batteryState == "Critical")
+                warningVis[4].SetActive(true);
+            previousBatteryState = Communication.battery.batteryState;
+        }
+
+        if (Communication.battery.rth && !isRTH)
+        {
+            warningVis[3].SetActive(true);
+            isRTH = true;
+        }
+
+        if(Communication.positionData.sigLevel != previousGPSLevel)
+        {
+            if (Communication.positionData.sigLevel < previousGPSLevel)
+            {
+                if (Communication.positionData.sigLevel == 2)
+                    warningVis[0].SetActive(true);
+                else
+                    warningVis[1].SetActive(true);
+            }
+            previousGPSLevel = Communication.positionData.sigLevel; 
+        }
+
+
+
+        if(previousCollisionDistance > CollisionSensing.surfaceCautionThreshold && Communication.collisionData.GetShortestDistance().magnitude < CollisionSensing.surfaceCautionThreshold)
+            warningVis[5].SetActive(true);
+
+        if (previousCollisionDistance > CollisionSensing.surfaceWarningThreshold && Communication.collisionData.GetShortestDistance().magnitude < CollisionSensing.surfaceWarningThreshold)
+            warningVis[6].SetActive(true);
+
+        previousCollisionDistance = Communication.collisionData.GetShortestDistance().magnitude;
+
+    }
+
     void UpdatePositioningIndicator(){
         if(!posUncertainty.gameObject.activeInHierarchy)
             return;
         float currentPosUncertaintyScale = posUncertainty.visRoot.localScale.x;
         Vector3 offset = Communication.positionData.virtualPosition - Communication.realPose.WorldPosition;
         if(!Communication.positionData.gpsLost){
-            posUncertainty.SwitchHiddenVisTypeLocal(false);
+            //posUncertainty.SwitchHiddenVisTypeLocal(false);
             posUncertainty.visRoot.localScale = Vector3.one * offset.magnitude * 2f;
             
         } else {
-            posUncertainty.SwitchHiddenVisTypeLocal(true);
+            //posUncertainty.SwitchHiddenVisTypeLocal(true);
             posUncertainty.visRoot.localScale = Vector3.one * Mathf.Max(currentPosUncertaintyScale, offset.magnitude * 2f);
         }
-        if (posUncertainty.visRoot.localScale.x > 3f)
+        if (posUncertainty.visRoot.localScale.x > 2f)
         {
             Color c = posUncertaintySprite.color;
             c.a = 0.2f;
@@ -414,6 +464,9 @@ public class ControlVisUpdater : MonoBehaviour
             dis2groundVis.SetTransparency(1);
             collisionDetectVis.SetTransparency(1);
             flightStatusVis.SetTransparency(1);
+            posUncertainty.SwitchHiddenVisTypeLocal(true);
+
+
         } else
         {
             Color c = posUncertaintySprite.color;
@@ -427,6 +480,13 @@ public class ControlVisUpdater : MonoBehaviour
             dis2groundVis.SetTransparency(0);
             collisionDetectVis.SetTransparency(0);
             flightStatusVis.SetTransparency(0);
+            if(Communication.positionData.sigLevel < 3)
+            {
+                posUncertainty.SwitchHiddenVisTypeLocal(true);
+            } else
+            {
+                posUncertainty.SwitchHiddenVisTypeLocal(false);
+            }
         }
         //if(!positioning.gameObject.activeInHierarchy)
         //    return;

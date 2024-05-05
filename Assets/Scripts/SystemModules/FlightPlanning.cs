@@ -365,26 +365,6 @@ public class FlightPlanning : MonoBehaviour
 
 
 
-    //public Vector3 GetCurrentWaypoint(int index, out bool out_of_bound){
-    //    if(index >= flightTrajectory.Length)
-    //    {
-    //        out_of_bound = true;
-    //        return Vector3.zero;
-    //    } else {
-    //        out_of_bound = false;
-    //        return flightTrajectory[index];
-    //    }
-    //}
-//
-    ////public int GetCurrentStartingPointIndex(){
-    ////    return currentStartingPoint;
-    ////}
-//
-    //public int GetTotalWaypointCount()
-    //{
-    //    return flightTrajectory.Length;
-    //}
-
     public void SetVerticalGap(Slider slider){
         verticalSteps = (int)slider.value;
     }

@@ -174,7 +174,7 @@ public class WorldVisUpdater : MonoBehaviour
             } else {
                 contingencyBuffer.showVisualization = false;
             }
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(Time.deltaTime*2f);
         }
     }
 
@@ -222,95 +222,123 @@ public class WorldVisUpdater : MonoBehaviour
 
     void UpdateRTHBatterySufficiency()
     {
-        if(!rth_path.gameObject.activeInHierarchy)
+        if (!rth_path.gameObject.activeInHierarchy)
             return;
-        
+
         float horizontalDistance = new Vector3(Communication.battery.vector2Home.x, 0f, Communication.battery.vector2Home.z).magnitude;
         float verticalDistance = Mathf.Abs(Communication.battery.vector2Home.y);
-        if(VelocityControl.currentFlightState == VelocityControl.FlightState.Hovering || VelocityControl.currentFlightState == VelocityControl.FlightState.Navigating){
-            if(Communication.battery.distanceUntilRTH > horizontalDistance + verticalDistance){
+        if (VelocityControl.currentFlightState == VelocityControl.FlightState.Hovering || VelocityControl.currentFlightState == VelocityControl.FlightState.Navigating)
+        {
+            if (Communication.battery.distanceUntilRTH > horizontalDistance + verticalDistance)
+            {
                 path_critical.positionCount = 0;
                 path_warning.positionCount = 0;
                 path_safe.positionCount = 3;
-                path_safe.SetPositions(new Vector3[]{landing_zones.visRoot.GetChild(0).position, landing_zones.visRoot.GetChild(0).position+Vector3.up*verticalDistance, Communication.positionData.virtualPosition});
-            } else if(Communication.battery.distanceUntilCritical > horizontalDistance + verticalDistance){
+                path_safe.SetPositions(new Vector3[] { landing_zones.visRoot.GetChild(0).position, landing_zones.visRoot.GetChild(0).position + Vector3.up * verticalDistance, Communication.positionData.virtualPosition });
+            }
+            else if (Communication.battery.distanceUntilCritical > horizontalDistance + verticalDistance)
+            {
                 path_critical.positionCount = 0;
                 float warningDistance = horizontalDistance + verticalDistance - Communication.battery.distanceUntilRTH;
-                if(warningDistance > verticalDistance){
-                    Vector3 midPoint = landing_zones.visRoot.GetChild(0).position + Vector3.up*verticalDistance + new Vector3(Communication.battery.vector2Home.x, 0f, Communication.battery.vector2Home.z).normalized*(warningDistance - verticalDistance);
+                if (warningDistance > verticalDistance)
+                {
+                    Vector3 midPoint = landing_zones.visRoot.GetChild(0).position + Vector3.up * verticalDistance + new Vector3(Communication.battery.vector2Home.x, 0f, Communication.battery.vector2Home.z).normalized * (warningDistance - verticalDistance);
                     path_warning.positionCount = 3;
                     path_safe.positionCount = 2;
-                    path_warning.SetPositions(new Vector3[]{landing_zones.visRoot.GetChild(0).position, landing_zones.visRoot.GetChild(0).position+Vector3.up*verticalDistance, midPoint});
-                    path_safe.SetPositions(new Vector3[]{midPoint, Communication.positionData.virtualPosition});
-                } else {
-                    Vector3 midPoint = landing_zones.visRoot.GetChild(0).position + Vector3.up*warningDistance;
+                    path_warning.SetPositions(new Vector3[] { landing_zones.visRoot.GetChild(0).position, landing_zones.visRoot.GetChild(0).position + Vector3.up * verticalDistance, midPoint });
+                    path_safe.SetPositions(new Vector3[] { midPoint, Communication.positionData.virtualPosition });
+                }
+                else
+                {
+                    Vector3 midPoint = landing_zones.visRoot.GetChild(0).position + Vector3.up * warningDistance;
                     path_warning.positionCount = 2;
                     path_safe.positionCount = 3;
-                    path_warning.SetPositions(new Vector3[]{landing_zones.visRoot.GetChild(0).position, midPoint});
-                    path_safe.SetPositions(new Vector3[]{midPoint, landing_zones.visRoot.GetChild(0).position+Vector3.up*verticalDistance, Communication.positionData.virtualPosition});
+                    path_warning.SetPositions(new Vector3[] { landing_zones.visRoot.GetChild(0).position, midPoint });
+                    path_safe.SetPositions(new Vector3[] { midPoint, landing_zones.visRoot.GetChild(0).position + Vector3.up * verticalDistance, Communication.positionData.virtualPosition });
                 }
-            } else if(Communication.battery.distanceUntilRTH > 0){
+            }
+            else if (Communication.battery.distanceUntilRTH > 0)
+            {
                 float warningDistance = Communication.battery.distanceUntilCritical - Communication.battery.distanceUntilRTH;
                 float criticalDistance = horizontalDistance + verticalDistance - Communication.battery.distanceUntilCritical;
-                if(criticalDistance > verticalDistance){
-                    Vector3 midPoint = landing_zones.visRoot.GetChild(0).position + Vector3.up*verticalDistance + new Vector3(Communication.battery.vector2Home.x, 0f, Communication.battery.vector2Home.z).normalized*(criticalDistance - verticalDistance);
+                if (criticalDistance > verticalDistance)
+                {
+                    Vector3 midPoint = landing_zones.visRoot.GetChild(0).position + Vector3.up * verticalDistance + new Vector3(Communication.battery.vector2Home.x, 0f, Communication.battery.vector2Home.z).normalized * (criticalDistance - verticalDistance);
                     Vector3 midPoint2 = midPoint + new Vector3(Communication.battery.vector2Home.x, 0f, Communication.battery.vector2Home.z).normalized * warningDistance;
                     path_critical.positionCount = 3;
                     path_warning.positionCount = 2;
                     path_safe.positionCount = 2;
-                    path_critical.SetPositions(new Vector3[]{landing_zones.visRoot.GetChild(0).position, landing_zones.visRoot.GetChild(0).position+Vector3.up*verticalDistance, midPoint});
-                    path_warning.SetPositions(new Vector3[]{midPoint, midPoint2});
-                    path_safe.SetPositions(new Vector3[]{midPoint2, Communication.positionData.virtualPosition});
-                } else if(criticalDistance + warningDistance > verticalDistance){
-                    Vector3 midPoint = landing_zones.visRoot.GetChild(0).position + Vector3.up*criticalDistance;
-                    Vector3 midPoint2 = landing_zones.visRoot.GetChild(0).position + Vector3.up*verticalDistance + new Vector3(Communication.battery.vector2Home.x, 0f, Communication.battery.vector2Home.z).normalized*(criticalDistance + warningDistance - verticalDistance);
+                    path_critical.SetPositions(new Vector3[] { landing_zones.visRoot.GetChild(0).position, landing_zones.visRoot.GetChild(0).position + Vector3.up * verticalDistance, midPoint });
+                    path_warning.SetPositions(new Vector3[] { midPoint, midPoint2 });
+                    path_safe.SetPositions(new Vector3[] { midPoint2, Communication.positionData.virtualPosition });
+                }
+                else if (criticalDistance + warningDistance > verticalDistance)
+                {
+                    Vector3 midPoint = landing_zones.visRoot.GetChild(0).position + Vector3.up * criticalDistance;
+                    Vector3 midPoint2 = landing_zones.visRoot.GetChild(0).position + Vector3.up * verticalDistance + new Vector3(Communication.battery.vector2Home.x, 0f, Communication.battery.vector2Home.z).normalized * (criticalDistance + warningDistance - verticalDistance);
                     path_critical.positionCount = 2;
                     path_warning.positionCount = 3;
                     path_safe.positionCount = 2;
-                    path_critical.SetPositions(new Vector3[]{landing_zones.visRoot.GetChild(0).position, midPoint});
-                    path_warning.SetPositions(new Vector3[]{midPoint, landing_zones.visRoot.GetChild(0).position+Vector3.up*verticalDistance, midPoint2});
-                    path_safe.SetPositions(new Vector3[]{midPoint2, Communication.positionData.virtualPosition});
-                } else {
-                    Vector3 midPoint = landing_zones.visRoot.GetChild(0).position + Vector3.up*criticalDistance;
-                    Vector3 midPoint2 = landing_zones.visRoot.GetChild(0).position + Vector3.up*(criticalDistance+warningDistance);
+                    path_critical.SetPositions(new Vector3[] { landing_zones.visRoot.GetChild(0).position, midPoint });
+                    path_warning.SetPositions(new Vector3[] { midPoint, landing_zones.visRoot.GetChild(0).position + Vector3.up * verticalDistance, midPoint2 });
+                    path_safe.SetPositions(new Vector3[] { midPoint2, Communication.positionData.virtualPosition });
+                }
+                else
+                {
+                    Vector3 midPoint = landing_zones.visRoot.GetChild(0).position + Vector3.up * criticalDistance;
+                    Vector3 midPoint2 = landing_zones.visRoot.GetChild(0).position + Vector3.up * (criticalDistance + warningDistance);
                     path_critical.positionCount = 2;
                     path_warning.positionCount = 2;
                     path_safe.positionCount = 3;
-                    path_critical.SetPositions(new Vector3[]{landing_zones.visRoot.GetChild(0).position, midPoint});
-                    path_warning.SetPositions(new Vector3[]{midPoint, midPoint2});
-                    path_safe.SetPositions(new Vector3[]{midPoint2, landing_zones.visRoot.GetChild(0).position+Vector3.up*verticalDistance, Communication.positionData.virtualPosition});
+                    path_critical.SetPositions(new Vector3[] { landing_zones.visRoot.GetChild(0).position, midPoint });
+                    path_warning.SetPositions(new Vector3[] { midPoint, midPoint2 });
+                    path_safe.SetPositions(new Vector3[] { midPoint2, landing_zones.visRoot.GetChild(0).position + Vector3.up * verticalDistance, Communication.positionData.virtualPosition });
                 }
-            } else if(Communication.battery.distanceUntilCritical > 0){
+            }
+            else if (Communication.battery.distanceUntilCritical > 0)
+            {
                 path_safe.positionCount = 0;
                 float criticalDistance = horizontalDistance + verticalDistance - Communication.battery.distanceUntilCritical;
-                if(criticalDistance > verticalDistance){
-                    Vector3 midPoint = landing_zones.visRoot.GetChild(0).position + Vector3.up*verticalDistance + new Vector3(Communication.battery.vector2Home.x, 0f, Communication.battery.vector2Home.z).normalized*(criticalDistance - verticalDistance);
-                    
+                if (criticalDistance > verticalDistance)
+                {
+                    Vector3 midPoint = landing_zones.visRoot.GetChild(0).position + Vector3.up * verticalDistance + new Vector3(Communication.battery.vector2Home.x, 0f, Communication.battery.vector2Home.z).normalized * (criticalDistance - verticalDistance);
+
                     path_critical.positionCount = 3;
                     path_warning.positionCount = 2;
-                    path_critical.SetPositions(new Vector3[]{landing_zones.visRoot.GetChild(0).position, landing_zones.visRoot.GetChild(0).position+Vector3.up*verticalDistance, midPoint});
-                    path_warning.SetPositions(new Vector3[]{midPoint, Communication.positionData.virtualPosition});
-                } else {
-                    Vector3 midPoint = landing_zones.visRoot.GetChild(0).position + Vector3.up*criticalDistance;
+                    path_critical.SetPositions(new Vector3[] { landing_zones.visRoot.GetChild(0).position, landing_zones.visRoot.GetChild(0).position + Vector3.up * verticalDistance, midPoint });
+                    path_warning.SetPositions(new Vector3[] { midPoint, Communication.positionData.virtualPosition });
+                }
+                else
+                {
+                    Vector3 midPoint = landing_zones.visRoot.GetChild(0).position + Vector3.up * criticalDistance;
                     path_critical.positionCount = 2;
                     path_warning.positionCount = 3;
-                    path_critical.SetPositions(new Vector3[]{landing_zones.visRoot.GetChild(0).position, midPoint});
-                    path_warning.SetPositions(new Vector3[]{midPoint, landing_zones.visRoot.GetChild(0).position+Vector3.up*verticalDistance, Communication.positionData.virtualPosition});
+                    path_critical.SetPositions(new Vector3[] { landing_zones.visRoot.GetChild(0).position, midPoint });
+                    path_warning.SetPositions(new Vector3[] { midPoint, landing_zones.visRoot.GetChild(0).position + Vector3.up * verticalDistance, Communication.positionData.virtualPosition });
                 }
-            } else {
+            }
+            else
+            {
                 path_safe.positionCount = 0;
                 path_warning.positionCount = 0;
                 path_critical.positionCount = 3;
-                path_critical.SetPositions(new Vector3[]{landing_zones.visRoot.GetChild(0).position, landing_zones.visRoot.GetChild(0).position+Vector3.up*verticalDistance, Communication.positionData.virtualPosition});
+                path_critical.SetPositions(new Vector3[] { landing_zones.visRoot.GetChild(0).position, landing_zones.visRoot.GetChild(0).position + Vector3.up * verticalDistance, Communication.positionData.virtualPosition });
             }
-        } else {
+        }
+        else
+        {
             path_safe.positionCount = 0;
             path_warning.positionCount = 0;
             path_critical.positionCount = 0;
         }
 
-
-
+        if (Communication.battery.batteryState != "Normal")
+        {
+            rth_path.SwitchHiddenVisTypeLocal(true);
+        } else
+        {
+            rth_path.SwitchHiddenVisTypeLocal(false);
+        }
     }
 
     void RemoveAllCoverageObject(){

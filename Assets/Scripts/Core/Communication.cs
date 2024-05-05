@@ -29,7 +29,7 @@ public class Communication : MonoBehaviour
         public bool out_of_balance;
         public Vector3 v2ground;
 
-        public int GetShortestDistanceIndex(){
+        public Vector3 GetShortestDistance(){
             float minDist = float.MaxValue;
             int indx = 0;
             for(int i = 0; i < distances.Length; i++){
@@ -38,7 +38,7 @@ public class Communication : MonoBehaviour
                     indx = i;
                 }
             }
-            return indx;
+            return distances[indx];
         }
 
     }
@@ -133,15 +133,8 @@ public class Communication : MonoBehaviour
 
     void OnEnable(){
         droneRb = droneTransform.GetComponent<Rigidbody> ();
-        DroneManager.resetAllEvent.AddListener(ResetCollision);
-        DroneManager.resetAllEvent.AddListener(ResetConstProps);
     }
 
-    private void OnDisable()
-    {
-        DroneManager.resetAllEvent.RemoveListener(ResetCollision);
-        DroneManager.resetAllEvent.RemoveListener(ResetConstProps);
-    }
     // Start is called before the first frame update
     void Start()
     {
@@ -183,13 +176,13 @@ public class Communication : MonoBehaviour
 
     }
 
-    void ResetConstProps(){
+    public static void ResetConstProps(){
         constProps.Inertia = droneRb.inertiaTensor;
         constProps.Mass = droneRb.mass;
         constProps.landedHeight = droneRb.transform.position.y;
     }
 
-    void ResetCollision(){
+    public static void ResetCollision(){
         collisionData.collisionCount = 0;
         collisionData.out_of_balance = false;
         collisionData.distances = new Vector3[16];

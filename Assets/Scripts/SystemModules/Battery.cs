@@ -76,7 +76,7 @@ public class Battery : MonoBehaviour
         
         
 
-        if(rthTimeThreshold < remainingTimeInSeconds + 20f){
+        if(remainingTimeInSeconds < rthTimeThreshold){
             if(!Communication.battery.rth){
                 Communication.battery.rth = true;
                 DroneManager.rth_flag = true;
@@ -87,6 +87,10 @@ public class Battery : MonoBehaviour
 
         if(currentBatteryPercentage < batteryCriticalThreshold){
             Communication.battery.batteryState = "Critical";
+            if(DroneManager.currentControlType == DroneManager.ControlType.Autonomous && DroneManager.currentMissionState != DroneManager.MissionState.Returning)
+            {
+                DroneManager.autopilot_stop_flag = true;
+            }
         } else if (currentBatteryPercentage < batteryLowThreshold){
             Communication.battery.batteryState = "Low";
         } else {

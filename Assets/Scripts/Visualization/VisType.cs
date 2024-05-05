@@ -12,10 +12,12 @@ public class VisType : MonoBehaviour
         MissionOnly,
         SafetyOnly,
         Both,
-        None
+        TwoDOnly
     }
 
     [SerializeField] private VisualizationType visType;
+
+    [SerializeField] private bool is2D;
 
     public Transform visRoot;
 
@@ -77,8 +79,8 @@ public class VisType : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(globalVisType == VisualizationType.None){
-            visRoot.gameObject.SetActive(false);
+        if(globalVisType == VisualizationType.TwoDOnly){
+            visRoot.gameObject.SetActive(is2D);
             return;
         }
         if(isRevealing) visType = hiddenVisType; else visType = originalVisType;

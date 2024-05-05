@@ -108,7 +108,7 @@ public class DroneManager : MonoBehaviour
         currentMissionState = MissionState.Planning;
         currentControlType = ControlType.Manual;
         //currentSafetyState = SafetyState.Healthy;
-        VisType.globalVisType = VisType.VisualizationType.None;
+        VisType.globalVisType = VisType.VisualizationType.Both;
         previousFlightState = VelocityControl.FlightState.Landed;
         
         //controlVisUpdater.SetControlVisActive(false);
@@ -141,8 +141,14 @@ public class DroneManager : MonoBehaviour
     //Mainly for controlling model activation and state update. Not for passing data [TODO]
     void Update()
     {
-        
-        if(currentMissionState == MissionState.Planning && finish_planning_flag){
+        //if (reset_all_flag)
+        //{
+        //    ResetAllStates();
+        //    return;
+        //}
+
+
+        if (currentMissionState == MissionState.Planning && finish_planning_flag){
             finish_planning_flag = false;
             currentMissionState = MissionState.MovingToFlightZone;
             finishPlanningEvent.Invoke();

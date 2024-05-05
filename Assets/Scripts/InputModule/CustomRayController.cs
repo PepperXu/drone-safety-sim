@@ -59,4 +59,9 @@ public class CustomRayController : MonoBehaviour
             }
         }
     }
+
+    public InputDevice GetController()
+    {
+        return controller;
+    }
 }

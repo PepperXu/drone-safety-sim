@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System;
-using UnityEngine.XR.Interaction.Toolkit;
-using System.Security.AccessControl;
 
 public class UIUpdater : MonoBehaviour
 {
     [Header("System and States")]
     [SerializeField] TextMeshProUGUI flightState;
-    [SerializeField] TextMeshProUGUI controlState;
+    [SerializeField] TextMeshProUGUI positioningState;
     [SerializeField] Image systemState;
     [SerializeField] Color normalColor, cautiousColor, warningColor, emergencyColor;
     [SerializeField] Image batteryIcon;
@@ -25,7 +22,10 @@ public class UIUpdater : MonoBehaviour
     [SerializeField] RectTransform rthPoint;
 
     [SerializeField] Image GNSSIcon;
+    [SerializeField] TextMeshProUGUI GNSSNumber;
     [SerializeField] Sprite[] GNSSSprites;
+    [SerializeField]
+    GameObject[] statusText;
 
 
     [Header("Flight Telemetry")]
@@ -57,7 +57,9 @@ public class UIUpdater : MonoBehaviour
     string[] missionStateString = {"Planning", "Moving to Flight Zone", "In Flight Zone", "Inspecting", "Interrupted", "Returning"};
     string[] controlStateString = {"Auto", "Manual"};
 
-    const float surfaceCautionThreshold = 5.0f, surfaceWarningThreshold = 3.0f;
+    //const float surfaceCautionThreshold = 5.0f, surfaceWarningThreshold = 3.0f;
+
+    private int previousSigLevel = -1;
 
     void OnEnable(){
         DroneManager.markDefectEvent.AddListener(MarkDefect);
@@ -74,7 +76,7 @@ public class UIUpdater : MonoBehaviour
         flightState.text = flightStateString[(int)VelocityControl.currentFlightState];
         missionState.text = missionStateString[(int)DroneManager.currentMissionState];
         //systemState.text = Enum.GetName(typeof(DroneManager.SystemState), DroneManager.currentSystemState);
-        controlState.text = controlStateString[(int)DroneManager.currentControlType];
+        //controlState.text = controlStateString[(int)DroneManager.currentControlType];
         if(DroneManager.currentControlType == DroneManager.ControlType.Autonomous)
             autoPilotToggle.isOn = true;
         else   
@@ -135,35 +137,45 @@ public class UIUpdater : MonoBehaviour
 
 
 
-
         switch(Communication.positionData.sigLevel){
             case 3:
                 GNSSIcon.sprite = GNSSSprites[0];
                 GNSSIcon.color = Color.white;
+                positioningState.text = "GPS";
                 break;
             case 2:
                 GNSSIcon.sprite = GNSSSprites[1];
                 GNSSIcon.color = Color.yellow;
+                positioningState.text = "GPS";
                 break;
             case 1:
                 GNSSIcon.sprite = GNSSSprites[2];
                 GNSSIcon.color = Color.red;
+                positioningState.text = "ATTI";
                 break;
             case 0:
                 GNSSIcon.sprite = GNSSSprites[3];
                 GNSSIcon.color = Color.red;
+                positioningState.text = "ATTI";
                 break;
         }
 
+        if(Communication.positionData.sigLevel != previousSigLevel)
+        {
+            GNSSNumber.text = "" + Random.Range(Communication.positionData.sigLevel*5, Communication.positionData.sigLevel*5+5);
+            previousSigLevel = Communication.positionData.sigLevel;
+        }
+
+
         for(int i = 0; i < Communication.collisionData.distances.Length; i++)
         {
-            if (Communication.collisionData.distances[i].magnitude < surfaceWarningThreshold)
+            if (Communication.collisionData.distances[i].magnitude < CollisionSensing.surfaceWarningThreshold)
             {
                 Color c = Color.red;
                 c.a = 1f;
                 col_detect[i].color = c;
 
-            } else if (Communication.collisionData.distances[i].magnitude < surfaceCautionThreshold)
+            } else if (Communication.collisionData.distances[i].magnitude < CollisionSensing.surfaceCautionThreshold)
             {
                 Color c = Color.yellow;
                 c.a = 1f;
@@ -185,9 +197,58 @@ public class UIUpdater : MonoBehaviour
         vertSpeed.text = ((int)Mathf.Abs(Communication.realPose.WorldVelocity.y)).ToString();
 
         UpdateCompassUI();
+        UpdateUIStatusText();
     }
 
+    void UpdateUIStatusText()
+    {
+        int currentTextIndex = 0;
 
+        if(VelocityControl.currentFlightState != VelocityControl.FlightState.Landed)
+            currentTextIndex = 1;
+
+        if(DroneManager.currentMissionState == DroneManager.MissionState.Returning)
+            currentTextIndex = 2;
+
+        if (VelocityControl.currentFlightState == VelocityControl.FlightState.Landing)
+            currentTextIndex = 3;
+
+        if (Communication.battery.batteryState == "Low") {
+            currentTextIndex = 4;
+            if (DroneManager.currentMissionState == DroneManager.MissionState.Returning)
+                currentTextIndex = 5;
+        }
+
+
+
+
+        if (Communication.battery.batteryState == "Critical")
+        {
+            currentTextIndex = 6;
+            if (DroneManager.currentMissionState == DroneManager.MissionState.Returning)
+                currentTextIndex = 7;
+        }
+
+        if (Communication.positionData.sigLevel == 2)
+            currentTextIndex = 8;
+
+        if (Communication.positionData.sigLevel < 2)
+            currentTextIndex = 9;
+
+
+        if (Communication.collisionData.GetShortestDistance().magnitude < CollisionSensing.surfaceCautionThreshold)
+            currentTextIndex = 10;
+
+        if (Communication.collisionData.GetShortestDistance().magnitude < CollisionSensing.surfaceWarningThreshold)
+            currentTextIndex = 11;
+
+        for(int i = 0; i < statusText.Length; i++)
+        {
+            statusText[i].SetActive(i==currentTextIndex);
+
+        }
+
+    }
 
     //public void MarkDefect(ActivateEventArgs args)
     //{

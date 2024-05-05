@@ -8,6 +8,7 @@ using System.Threading;
 using UnityEngine;  
 using Unity.XR.CoreUtils;
 using System.IO;
+using UnityEngine.UI;
 
 public class ExperimentServer : MonoBehaviour
 {
@@ -29,11 +30,11 @@ public class ExperimentServer : MonoBehaviour
 
 	public enum VisualizationCondition
     {
+        TwoDimensionOnly,
         All,
-		ControlFirst,
-        Mixed,
-		SafetyFirst,
-		TwoDimensionOnly,
+		//ControlFirst,
+        Adaptive,
+		//SafetyFirst,
     }
 
 	public VisualizationCondition currentVisCondition = VisualizationCondition.TwoDimensionOnly;
@@ -67,6 +68,8 @@ public class ExperimentServer : MonoBehaviour
 
 	[SerializeField] private Camera vrCamera;
 	[SerializeField] private LayerMask excludeMark, includeMark;
+	[SerializeField] private GameObject MonitorUI, EXPUI;
+	[SerializeField] private Toggle[] visConditionToggles, configToggles;
 
 	int currentDebugMode = 0; //0: wind control (strength only), 1: battery control, 2: position control
     // Start is called before the first frame update
@@ -91,11 +94,10 @@ public class ExperimentServer : MonoBehaviour
     {
 		if(isRecording)
 			expTimer += Time.deltaTime;
-
-
+		
 		
 
-		if(VelocityControl.currentFlightState == VelocityControl.FlightState.TakingOff && !isRecording){
+        if (VelocityControl.currentFlightState == VelocityControl.FlightState.TakingOff && !isRecording){
 			StartRecording();
 			RecordData("Visualization Condition", visConditionString[(int)currentVisCondition] , "");
 		}
@@ -115,7 +117,7 @@ public class ExperimentServer : MonoBehaviour
 		//For Debugging
 		ProcessKeyboardInput();
 		if(currentVisCondition == VisualizationCondition.TwoDimensionOnly){
-			VisType.globalVisType = VisType.VisualizationType.None;
+			VisType.globalVisType = VisType.VisualizationType.TwoDOnly;
 			vrCamera.cullingMask = excludeMark;
 		} else {
 			vrCamera.cullingMask = includeMark;
@@ -123,20 +125,18 @@ public class ExperimentServer : MonoBehaviour
 				VisType.RevealHiddenVisType(false);
 				VisType.globalVisType = VisType.VisualizationType.Both;
 			}else {
-				if(currentVisCondition == VisualizationCondition.Mixed){
-					VisType.RevealHiddenVisType(true);
-				} else {
-					VisType.RevealHiddenVisType(false);
-				}
+
+				VisType.RevealHiddenVisType(true);
 				if(DroneManager.currentControlType == DroneManager.ControlType.Manual || DroneManager.currentMissionState == DroneManager.MissionState.Returning){
 					VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
 				} else {
-					if(currentVisCondition == VisualizationCondition.SafetyFirst){
-						VisType.globalVisType = VisType.VisualizationType.Both;
-					} else {
-						VisType.globalVisType = VisType.VisualizationType.MissionOnly;
-					}
-				}
+                    VisType.globalVisType = VisType.VisualizationType.MissionOnly;
+                    //if(currentVisCondition == VisualizationCondition.SafetyFirst){
+                    //	VisType.globalVisType = VisType.VisualizationType.Both;
+                    //} else {
+                    //	VisType.globalVisType = VisType.VisualizationType.MissionOnly;
+                    //}
+                }
 			}
 		}
 		
@@ -166,13 +166,14 @@ public class ExperimentServer : MonoBehaviour
         	//}
 		} else {
 			if(Input.GetKeyDown(KeyCode.Alpha1)){
-        	    currentVisCondition = VisualizationCondition.TwoDimensionOnly;
+				UpdateVisCondition(0);
         	}
         	if(Input.GetKeyDown(KeyCode.Alpha2)){
-        	    currentVisCondition = VisualizationCondition.All;
-        	}
+				UpdateVisCondition(1);
+
+            }
         	if(Input.GetKeyDown(KeyCode.Alpha3)){
-        	    currentVisCondition = VisualizationCondition.Mixed;
+        	    UpdateVisCondition(2);
         	}
 			if(Input.GetKeyDown(KeyCode.Tab)){
 				currentDebugMode = (currentDebugMode + 1) % 4;
@@ -245,23 +246,23 @@ public class ExperimentServer : MonoBehaviour
 					break;
 				case 3:
 					if(Input.GetKeyDown(KeyCode.F1)){
-						flightPlanning.ConfigIndex = 0;
-        			}
+						UpdateConfig(0);
+                    }
         			if(Input.GetKeyDown(KeyCode.F2)){
-        			    flightPlanning.ConfigIndex = 1;
-        			}
+                        UpdateConfig(1);
+                    }
         			if(Input.GetKeyDown(KeyCode.F3)){
-        			   flightPlanning.ConfigIndex = 2;
-        			}
+                        UpdateConfig(2);
+                    }
         			if(Input.GetKeyDown(KeyCode.F4)){
-        			    flightPlanning.ConfigIndex = 3;
+        			    UpdateConfig(3);
         			}
 					break;
 				default:
 					break;
 			}
 			if(Input.GetKeyDown(KeyCode.X)){
-				droneManager.ResetAllStates();
+				ResetExperiment();
 			}
 			//if(Input.GetKeyDown(KeyCode.V)){
 			//	flightPlanning.SetIsFromTop(1);
@@ -275,6 +276,38 @@ public class ExperimentServer : MonoBehaviour
 		}
 	}
 
+
+	public void ResetExperiment()
+	{
+        droneManager.ResetAllStates();
+		MonitorUI.SetActive(false);
+		EXPUI.SetActive(true);
+    }
+
+	public void StartExperiment()
+	{
+        droneManager.ResetAllStates();
+        MonitorUI.SetActive(true);
+        EXPUI.SetActive(false);
+    }
+
+	public void UpdateVisCondition(int index)
+	{
+		currentVisCondition = (VisualizationCondition)index;
+		for(int i = 0; i < visConditionToggles.Length; i++)
+		{
+            visConditionToggles[i].SetIsOnWithoutNotify(index == i);
+        }
+    }
+
+    public void UpdateConfig(int index)
+    {
+        flightPlanning.ConfigIndex = index;
+        for (int i = 0; i < configToggles.Length; i++)
+        {
+			configToggles[i].SetIsOnWithoutNotify(index == i);
+        }
+    }
 
 
     private void ListenForIncommingRequests () { 		

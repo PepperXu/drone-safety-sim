@@ -40,9 +40,11 @@ public class VelocityControl : MonoBehaviour {
 
     private float speedScale = 500.0f;
 
-    private float landedHeight = 0f;
 
     private float landingHeightThreshold = 1.8f;
+
+    private Vector3 starting_position, starting_angles;
+    private Transform droneTransform;
 
     //public Vector3 vectorToGround;
     //public int collisionHitCount = 0;
@@ -65,7 +67,15 @@ public class VelocityControl : MonoBehaviour {
 
     //[SerializeField] AutopilotManager autopilotManager;
 
-
+    private void Start()
+    {
+        if (droneTransform == null)
+        {
+            droneTransform = Communication.droneRb.transform;
+            starting_position = droneTransform.position;
+            starting_angles = droneTransform.eulerAngles;
+        }
+    }
     // Use this for initialization
     void OnEnable () {
         DroneManager.setVelocityControlEvent.AddListener(SetVelocityParam);
@@ -79,12 +89,22 @@ public class VelocityControl : MonoBehaviour {
         DroneManager.takeOffEvent.RemoveListener(TakeOff);
     }
 
+
     //For both initialization and reset.
     void ResetVelocityControl(){
         currentFlightState = FlightState.Landed;
         desired_vx = 0.0f;
         desired_vy = 0.0f;
         desired_yaw = 0.0f;
+        
+        if (droneTransform)
+        {
+            Communication.droneRb.isKinematic = true;
+            droneTransform.position = starting_position;
+            droneTransform.eulerAngles = starting_angles;
+            Communication.droneRb.isKinematic = false;
+        }
+
         //if (Communication.droneRb)
         //{
         //    Communication.droneRb.isKinematic = true;
@@ -94,8 +114,8 @@ public class VelocityControl : MonoBehaviour {
         //landedHeight = transform.position.y;
         //desired_height = landedHeight;
         //Communication.constProps.landedHeight = landedHeight;
-        //Communication.ResetCollision();
-        //Communication.ResetConstProps(landedHeight);
+        Communication.ResetCollision();
+        Communication.ResetConstProps();
         if(audioSource)
             audioSource.Stop();
     }
@@ -175,7 +195,7 @@ public class VelocityControl : MonoBehaviour {
                     DroneManager.autopilot_stop_flag = true;
                     //autopilotManager.StopAutopilot();
                     PlayLandingAudio(); 
-                    desired_height = Communication.realPose.WorldPosition.y - dis2ground - groundOffset/2f;
+                    desired_height = Communication.realPose.WorldPosition.y - dis2ground - groundOffset;
                     desired_vx = 0f;
                     desired_vy = 0f;
                     desired_yaw = 0f;
@@ -183,7 +203,7 @@ public class VelocityControl : MonoBehaviour {
             } else
             {
                 Debug.Log(dis2ground);
-                if (dis2ground <= groundOffset/2f)
+                if (dis2ground <= groundOffset)
                 {
                     Debug.Log("Landed");
                     //landedHeight = Communication.realPose.WorldPosition.y;
