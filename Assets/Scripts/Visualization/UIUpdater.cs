@@ -57,16 +57,24 @@ public class UIUpdater : MonoBehaviour
     string[] missionStateString = {"Planning", "Moving to Flight Zone", "In Flight Zone", "Inspecting", "Interrupted", "Returning"};
     string[] controlStateString = {"Auto", "Manual"};
 
+    [SerializeField] Transform uiAnchor;
+
+    [SerializeField] Vector3 posLOS, posLow, angLOS, angLow;
+
+    Vector3 targetPos, targetAng;
+
     //const float surfaceCautionThreshold = 5.0f, surfaceWarningThreshold = 3.0f;
 
     private int previousSigLevel = -1;
 
     void OnEnable(){
         DroneManager.markDefectEvent.AddListener(MarkDefect);
+        StartCoroutine(AnimateUIReposition());
     }
 
     void OnDisable(){
         DroneManager.markDefectEvent.RemoveListener(MarkDefect);
+        StopAllCoroutines();
     }
 
 
@@ -198,25 +206,53 @@ public class UIUpdater : MonoBehaviour
 
         UpdateCompassUI();
         UpdateUIStatusText();
+
+        if(VisType.globalVisType == VisType.VisualizationType.MissionOnly)
+        {
+            targetPos = posLOS;
+            targetAng = angLOS;
+        } else
+        {
+            targetPos = posLow;
+            targetAng = angLow;
+        }
+    }
+
+    IEnumerator AnimateUIReposition()
+    {
+        while (true)
+        {
+            if((uiAnchor.localPosition - targetPos).magnitude > 0.05f)
+            {
+                uiAnchor.localPosition = Vector3.MoveTowards(uiAnchor.localPosition, targetPos, 0.5f * Time.deltaTime);
+            }
+            if ((uiAnchor.localEulerAngles - targetAng).magnitude > 0.5f)
+            {
+                uiAnchor.localEulerAngles = Vector3.MoveTowards(uiAnchor.localEulerAngles, targetAng, 33f * Time.deltaTime);
+            }
+            yield return new WaitForEndOfFrame();
+        }
     }
 
     void UpdateUIStatusText()
     {
-        int currentTextIndex = 0;
+        int currentTextIndex = 1;
 
-        if(VelocityControl.currentFlightState != VelocityControl.FlightState.Landed)
-            currentTextIndex = 1;
-
-        if(DroneManager.currentMissionState == DroneManager.MissionState.Returning)
+        if (Communication.battery.batteryDropped)
             currentTextIndex = 2;
 
-        if (VelocityControl.currentFlightState == VelocityControl.FlightState.Landing)
+        if(DroneManager.currentMissionState == DroneManager.MissionState.Returning)
             currentTextIndex = 3;
 
-        if (Communication.battery.batteryState == "Low") {
+        if (VelocityControl.currentFlightState == VelocityControl.FlightState.Landing)
             currentTextIndex = 4;
+
+        
+
+        if (Communication.battery.batteryState == "Low") {
+            currentTextIndex = 5;
             if (DroneManager.currentMissionState == DroneManager.MissionState.Returning)
-                currentTextIndex = 5;
+                currentTextIndex = 6;
         }
 
 
@@ -224,29 +260,31 @@ public class UIUpdater : MonoBehaviour
 
         if (Communication.battery.batteryState == "Critical")
         {
-            currentTextIndex = 6;
+            currentTextIndex = 7;
             if (DroneManager.currentMissionState == DroneManager.MissionState.Returning)
-                currentTextIndex = 7;
+                currentTextIndex = 8;
         }
 
         if (Communication.positionData.sigLevel == 2)
-            currentTextIndex = 8;
+            currentTextIndex = 9;
 
         if (Communication.positionData.sigLevel < 2)
-            currentTextIndex = 9;
+            currentTextIndex = 10;
+
+        
 
 
         if (Communication.collisionData.GetShortestDistance().magnitude < CollisionSensing.surfaceCautionThreshold)
-            currentTextIndex = 10;
-
-        if (Communication.collisionData.GetShortestDistance().magnitude < CollisionSensing.surfaceWarningThreshold)
             currentTextIndex = 11;
 
-        for(int i = 0; i < statusText.Length; i++)
-        {
-            statusText[i].SetActive(i==currentTextIndex);
+        if (Communication.collisionData.GetShortestDistance().magnitude < CollisionSensing.surfaceWarningThreshold)
+            currentTextIndex = 12;
 
-        }
+        if (VelocityControl.currentFlightState == VelocityControl.FlightState.Landed)
+            currentTextIndex = 0;
+
+        for (int i = 0; i < statusText.Length; i++)
+            statusText[i].SetActive(i==currentTextIndex);
 
     }
 
@@ -260,7 +298,7 @@ public class UIUpdater : MonoBehaviour
 //
     void MarkDefect()
     {
-        if(Communication.positionData.v2surf.magnitude > 8f)
+        if(Communication.positionData.v2surf.magnitude > 12f)
             return;
 
        // defectCount++;

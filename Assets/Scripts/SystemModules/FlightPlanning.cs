@@ -160,7 +160,6 @@ public class FlightPlanning : MonoBehaviour
         pathVisualization.positionCount = flightTrajectory.Length;
         pathVisualization.SetPositions(flightTrajectory);
         pathPlanned = true;
-        Communication.flightTrajectory = flightTrajectory;
     }
 
     void GenerateTrajectoryOnSurface(ref List<Vector3> path, Transform wpParent, int surfaceIndex, bool fromTop, bool reverse){
@@ -253,6 +252,7 @@ public class FlightPlanning : MonoBehaviour
             DroneManager.finish_planning_flag = true;
             planningUI.SetActive(false);
             monitoringUI.SetActive(true);
+            Communication.waypoints = wpList.ToArray(); 
             //Communication.pathPlanned = true;
             //worldVis.UpdateWaypontList(wpList.ToArray());
             VisType.globalVisType = VisType.VisualizationType.SafetyOnly;

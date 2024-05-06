@@ -10,6 +10,7 @@ public class AutopilotManager : MonoBehaviour
     bool isRTH = false;
     //For Autopiloting
     int currentWaypointIndex = 0;
+    int stopWaypointIndex = 0;
 
     //[SerializeField] FlightPlanning flightPlanning;
     //[SerializeField] VelocityControl vc;
@@ -60,6 +61,7 @@ public class AutopilotManager : MonoBehaviour
         isAutopiloting = false;
         isRTH = false;
         currentWaypointIndex = 0;
+        stopWaypointIndex = 0;
     }
 
     // Update is called once per frame
@@ -107,8 +109,8 @@ public class AutopilotManager : MonoBehaviour
             {
                 Vector3 target;
 
-                if(currentWaypointIndex < Communication.flightTrajectory.Length){
-                    target= Communication.flightTrajectory[currentWaypointIndex];
+                if(currentWaypointIndex < Communication.waypoints.Length){
+                    target= Communication.waypoints[currentWaypointIndex].transform.position;
 
                     
                     Vector3 sensedPosition = Communication.positionData.virtualPosition;
@@ -116,7 +118,7 @@ public class AutopilotManager : MonoBehaviour
                     Vector3 offset = target - sensedPosition;
 
                     //Debug.Log("current target offset" + offset);
-                    if (offset.magnitude < 0.5f)
+                    if (offset.magnitude < 0.8f)
                     {
                         waitTimer += Time.deltaTime;
                         if(waitTimer >= waitTime/2f & !photoTaken){
@@ -156,7 +158,7 @@ public class AutopilotManager : MonoBehaviour
                         if(Communication.positionData.v2surf.magnitude < 10f){
                             Vector3 localVector = Communication.positionData.v2surf.normalized;
                             //Vector2 localVectorXY = new Vector2(localVector.x, localVector.z);
-                            float angleOffset = Vector3.SignedAngle(Communication.droneRb.transform.forward, localVector, Vector3.up);
+                            float angleOffset = Vector3.SignedAngle(new Vector3(Communication.droneRb.transform.forward.x, 0f, Communication.droneRb.transform.forward.z), localVector, Vector3.up);
                             while(angleOffset > 180f){
                                 angleOffset -= 360f;
                             }
@@ -174,6 +176,30 @@ public class AutopilotManager : MonoBehaviour
                     }
                 }
             }
+        } else
+        {
+            if (!autopilot_initialized)
+            {
+                currentWaypointIndex = 0;
+                Communication.currentWaypointIndex = currentWaypointIndex;
+            }
+            else
+            {
+
+                int currentIndex = stopWaypointIndex;
+                float shortestDistance = float.MaxValue;
+                for (int i = 0; i < Communication.waypoints.Length; i++)
+                {
+                    Vector3 target = Communication.waypoints[i].transform.position;
+                    if ((Communication.positionData.virtualPosition - target).magnitude < shortestDistance)
+                    {
+                        currentIndex = i;
+                        shortestDistance = (Communication.positionData.virtualPosition - target).magnitude;
+                    }
+                }
+                currentWaypointIndex = currentIndex;
+                Communication.currentWaypointIndex = currentIndex;
+            }
         }
     }
 
@@ -187,24 +213,9 @@ public class AutopilotManager : MonoBehaviour
         if(!autopilot_initialized){
             autopilot_initialized = true;
             
-        } else {
-            int i = this.currentWaypointIndex;
-            Vector3 target = Communication.flightTrajectory[i];
-            float shortestDistance = (Communication.positionData.virtualPosition - target).magnitude;
-            while(i < Communication.flightTrajectory.Length - 1){
-                i++;
-                target = Communication.flightTrajectory[i];
-                if((Communication.positionData.virtualPosition - target).magnitude > shortestDistance){
-                    this.currentWaypointIndex = i-1;
-                    break;
-                } else {
-                    shortestDistance = (Communication.positionData.virtualPosition - target).magnitude;
-                    i++;
-                }
-            }
-        }
+        } 
         //wordVis.currentWaypointIndex = this.currentWaypointIndex;
-        ExperimentServer.RecordData("Autopilot From Waypoint", this.currentWaypointIndex +"", "");
+        ExperimentServer.RecordData("Autopilot From Waypoint", currentWaypointIndex +"", "");
     }
 
 
@@ -216,6 +227,7 @@ public class AutopilotManager : MonoBehaviour
     }   
 
     void StopAutopilot(){
+        stopWaypointIndex = currentWaypointIndex; 
         isAutopiloting = false;
         isRTH = false;
     }

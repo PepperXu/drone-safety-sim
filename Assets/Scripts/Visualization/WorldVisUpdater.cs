@@ -31,7 +31,7 @@ public class WorldVisUpdater : MonoBehaviour
     //public Transform currentHomepoint;
     //[SerializeField] Transform currentEnabledHomepoint;
 
-    List<Waypoint> waypoints = new List<Waypoint>();
+    //List<Waypoint> waypoints = new List<Waypoint>();
     //public float currentBatteryPercentage;
 
     //public int pos_sig_lvl;
@@ -69,9 +69,10 @@ public class WorldVisUpdater : MonoBehaviour
 
     void ResetTrajectoryVis(){
         LineRenderer traj = flightPlan.visRoot.GetChild(0).GetComponent<LineRenderer>();
-        foreach(Transform t in traj.transform.GetChild(0)){
-            Waypoint wp = t.GetComponent<Waypoint>();
-            waypoints.Add(wp);
+        //waypoints.Clear();
+        foreach(Waypoint wp in Communication.waypoints){
+            //Waypoint wp = t.GetComponent<Waypoint>();
+            //waypoints.Add(wp);
             wp.currentWaypointState = Waypoint.WaypointState.Neutral;
         }
         Gradient g = traj.colorGradient;
@@ -118,20 +119,20 @@ public class WorldVisUpdater : MonoBehaviour
         if(!flightPlan.gameObject.activeInHierarchy)
             return;
 
-        if(waypoints == null || waypoints.Count <= 0)
+        if(Communication.waypoints == null || Communication.waypoints.Length <= 0)
             return;
         
         //LineRenderer traj = flightPlan.visRoot.GetChild(0).GetComponent<LineRenderer>();
-        if(DroneManager.currentMissionState == DroneManager.MissionState.Inspecting){
-            for(int i = 0; i < waypoints.Count; i++){
+        if(DroneManager.currentMissionState == DroneManager.MissionState.InFlightZone || DroneManager.currentMissionState == DroneManager.MissionState.Inspecting){
+            for(int i = 0; i < Communication.waypoints.Length; i++){
                 if(i == Communication.currentWaypointIndex) {
-                    waypoints[i].currentWaypointState = Waypoint.WaypointState.Next;
-                    waypoints[i].missionProgress = (float)Communication.currentWaypointIndex/waypoints.Count;
+                    Communication.waypoints[i].currentWaypointState = Waypoint.WaypointState.Next;
+                    Communication.waypoints[i].missionProgress = (float)Communication.currentWaypointIndex/ Communication.waypoints.Length;
                 }
                 else if(i == Communication.currentWaypointIndex + 1)
-                    waypoints[i].currentWaypointState = Waypoint.WaypointState.NextNext;
+                    Communication.waypoints[i].currentWaypointState = Waypoint.WaypointState.NextNext;
                 else
-                    waypoints[i].currentWaypointState = Waypoint.WaypointState.Hidden;
+                    Communication.waypoints[i].currentWaypointState = Waypoint.WaypointState.Hidden;
             }
             //Gradient g = traj.colorGradient;
             //GradientColorKey[] ck = g.colorKeys;
@@ -185,7 +186,7 @@ public class WorldVisUpdater : MonoBehaviour
     void SpawnCamCoverage(){
         if(Communication.positionData.gpsLost)
             return;
-        if (Communication.positionData.v2surf.magnitude > 9999f)
+        if (Communication.positionData.v2surf.magnitude > 12f)
             return;
 
         GameObject covObj = Instantiate(coverageObject);
@@ -200,7 +201,7 @@ public class WorldVisUpdater : MonoBehaviour
     void SpawnCamCoverageWithMark(){
         if(Communication.positionData.gpsLost)
             return;
-        if (Communication.positionData.v2surf.magnitude > 9999f)
+        if (Communication.positionData.v2surf.magnitude > 12f)
             return;
 
         GameObject covObj = Instantiate(coverageObject);
@@ -235,6 +236,7 @@ public class WorldVisUpdater : MonoBehaviour
                 path_warning.positionCount = 0;
                 path_safe.positionCount = 3;
                 path_safe.SetPositions(new Vector3[] { landing_zones.visRoot.GetChild(0).position, landing_zones.visRoot.GetChild(0).position + Vector3.up * verticalDistance, Communication.positionData.virtualPosition });
+
             }
             else if (Communication.battery.distanceUntilCritical > horizontalDistance + verticalDistance)
             {
@@ -324,12 +326,21 @@ public class WorldVisUpdater : MonoBehaviour
                 path_critical.positionCount = 3;
                 path_critical.SetPositions(new Vector3[] { landing_zones.visRoot.GetChild(0).position, landing_zones.visRoot.GetChild(0).position + Vector3.up * verticalDistance, Communication.positionData.virtualPosition });
             }
+
+            SetPointsOnRTHPath(point_warning, Communication.battery.distanceUntilLowBat);
+            SetPointsOnRTHPath(point_rth, Communication.battery.distanceUntilRTH);
+            SetPointsOnRTHPath(point_critical, Communication.battery.distanceUntilCritical);
+
         }
         else
         {
             path_safe.positionCount = 0;
             path_warning.positionCount = 0;
             path_critical.positionCount = 0;
+
+            point_critical.SetActive(false);
+            point_rth.SetActive(false);
+            point_warning.SetActive(false);
         }
 
         if (Communication.battery.batteryState != "Normal")
@@ -344,6 +355,29 @@ public class WorldVisUpdater : MonoBehaviour
     void RemoveAllCoverageObject(){
         foreach(GameObject obj in spawnedCoverageObjects){
             Destroy(obj);
+        }
+    }
+
+    void SetPointsOnRTHPath(GameObject point, float distanceUntilPoint)
+    {
+        float horizontalDistance = new Vector3(Communication.battery.vector2Home.x, 0f, Communication.battery.vector2Home.z).magnitude;
+        float verticalDistance = Mathf.Abs(Communication.battery.vector2Home.y);
+        if (distanceUntilPoint > 0 && distanceUntilPoint < verticalDistance + horizontalDistance)
+        {
+            point.SetActive(true);
+            float distanceFromLandingPoint = verticalDistance + horizontalDistance - distanceUntilPoint;
+            if (distanceFromLandingPoint < verticalDistance)
+            {
+                point.transform.position = landing_zones.visRoot.GetChild(0).position + Vector3.up * distanceFromLandingPoint;
+            }
+            else
+            {
+                point.transform.position = landing_zones.visRoot.GetChild(0).position + Vector3.up * verticalDistance + new Vector3(Communication.battery.vector2Home.x, 0f, Communication.battery.vector2Home.z).normalized * (distanceFromLandingPoint - verticalDistance);
+            }
+        }
+        else
+        {
+            point.SetActive(false);
         }
     }
 

@@ -85,6 +85,8 @@ public class Communication : MonoBehaviour
         public float totalRemainingDistance;
 
         public Vector3 vector2Home;
+
+        public bool batteryDropped;
     }
 
     public struct Wind{
@@ -101,7 +103,9 @@ public class Communication : MonoBehaviour
 
     public static Wind wind;
 
-    public static Vector3[] flightTrajectory;
+    //public static Vector3[] flightTrajectory;
+
+    public static Waypoint[] waypoints;
     
     public static int currentWaypointIndex = -1;
 

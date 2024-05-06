@@ -6,6 +6,7 @@ public class FaceCamera : MonoBehaviour
 {
     [SerializeField] Transform mainCamera;
     public bool fixZ_alignX, fixX_alighZ;
+    public bool alignZ;
     // Start is called before the first frame update
     void Start()
     {
@@ -29,6 +30,9 @@ public class FaceCamera : MonoBehaviour
             //float angleOffset = Vector3.SignedAngle(Vector3.forward, camDirLocalYZ.normalized, Vector3.right);
             //transform.rotation = Quaternion.AngleAxis(angleOffset, transform.right);
             transform.rotation = Quaternion.LookRotation(camDirYZ, Vector3.Cross(camDirYZ, transform.right));
+        } else if (alignZ)
+        {
+            transform.LookAt(mainCamera.position);
         }
         else{
             Vector3 objectCameraDirectionXZ = new Vector3(objectCameraDirection.x, 0, objectCameraDirection.z);

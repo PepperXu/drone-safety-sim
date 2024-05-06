@@ -1,15 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Search;
 using UnityEngine;
 
 public class CollisionSensing : MonoBehaviour
 {
 
     //Vector3[] distances = new Vector3[16];
-    [SerializeField] LayerMask obstacleLayer;
+    [SerializeField] LayerMask obstacleLayer, groundLayer;
 
-    public static float surfaceCautionThreshold = 5.0f, surfaceWarningThreshold = 3.0f;
+    public static float surfaceCautionThreshold = 7.0f, surfaceWarningThreshold = 4.0f;
     //bool collisionSensingEnabled = false;
     const int steps = 16;
     // Start is called before the first frame update
@@ -47,7 +46,7 @@ public class CollisionSensing : MonoBehaviour
     {
         Ray rayDown = new Ray(Communication.droneRb.transform.position, Vector3.down);
         RaycastHit hit;
-        if (Physics.Raycast(rayDown, out hit, float.MaxValue, obstacleLayer))
+        if (Physics.Raycast(rayDown, out hit, float.MaxValue, groundLayer))
         {
             
             Communication.collisionData.v2ground = hit.point - Communication.droneRb.transform.position;

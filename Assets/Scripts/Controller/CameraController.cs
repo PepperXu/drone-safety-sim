@@ -47,7 +47,7 @@ public class CameraController : MonoBehaviour
         photoTaken++;
         defectMaked++;
         if(ExperimentServer.isRecording)
-            SaveRenderTextureToFile(true);
+            SaveRenderTextureToFile(false);
     }
 
     IEnumerator FreezeFrame(){

@@ -37,6 +37,7 @@ public class Battery : MonoBehaviour
         currentBatteryCapacity = batteryCapacity;
         Communication.battery.rth = false;
         Communication.battery.batteryState = "Normal";
+        Communication.battery.batteryDropped = false;
     }
 
     // Update is called once per frame
@@ -114,10 +115,12 @@ public class Battery : MonoBehaviour
 
     public void ReduceBatteryCap(float percentage){
         currentBatteryCapacity = Mathf.Max(0f, currentBatteryCapacity-batteryCapacity*percentage);
+        
     }
 
     public void BatteryDropToCritical(){
         currentBatteryCapacity = batteryCapacity * 0.3f;
+        Communication.battery.batteryDropped = true;
     }
 
     //public float GetBatteryPercentage(){

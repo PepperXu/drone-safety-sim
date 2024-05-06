@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PositionalSensorSimulator : MonoBehaviour
@@ -25,7 +24,7 @@ public class PositionalSensorSimulator : MonoBehaviour
 
     public static float bufferCautionThreahold = 1f;
 
-    float currentMaxPosUncertainty;
+    //float currentMaxPosUncertainty;
 
     float gpsDriftSpeed = 0.7f;
     System.Random r;
@@ -84,13 +83,48 @@ public class PositionalSensorSimulator : MonoBehaviour
             switch_gps_normal = false;
             Communication.positionData.virtualPosition = Communication.realPose.WorldPosition;
             lastDronePos = Communication.realPose.WorldPosition;
+            targetOffset = Vector3.zero;
             //updateRate = Time.deltaTime;
         }
 
         if(offsetRefreshTimer <= 0f){
-            Vector2 randomOffset = Random.insideUnitCircle * currentMaxPosUncertainty;
-            Vector3 newOffset = new Vector3(randomOffset.x, 0f, randomOffset.y);
-            targetOffset = (targetOffset + newOffset)/2f;
+            Vector2 randomOffset;
+            if (!gps_lost)
+            {
+                randomOffset = Random.insideUnitCircle * maxPositionUncertaintyNormal;
+            } else
+            {
+                Vector2 randomVector = Random.insideUnitCircle;
+                if(targetOffset.magnitude < 2f)
+                    randomOffset = randomVector.normalized * (randomVector.magnitude * (3f - targetOffset.magnitude) + targetOffset.magnitude);
+                else if(targetOffset.magnitude < 4f)
+                    randomOffset = randomVector.normalized * (randomVector.magnitude * (5f - targetOffset.magnitude) + targetOffset.magnitude);
+                else
+                    randomOffset = randomVector.normalized * (randomVector.magnitude * (maxPositionUncertaintyAbnormal - targetOffset.magnitude) + targetOffset.magnitude);
+            }
+            targetOffset = new Vector3(randomOffset.x, 0f, randomOffset.y);
+            if (targetOffset.magnitude < 1f)
+            {
+                sig_level = 3;
+            }
+            else if (targetOffset.magnitude < 3f)
+            {
+                sig_level = 2;
+            }
+            else if (targetOffset.magnitude < 5f)
+            {
+                sig_level = 1;
+                if (DroneManager.currentControlType == DroneManager.ControlType.Autonomous)
+                    DroneManager.autopilot_stop_flag = true;
+            }
+            else
+            {
+                if (DroneManager.currentControlType == DroneManager.ControlType.Autonomous)
+                    DroneManager.autopilot_stop_flag = true;
+                sig_level = 0;
+            }
+            //targetOffset = (targetOffset + newOffset)/2f;
+            //targetOffset = newOffset;
             Communication.positionData.currentTargetOffset = new Vector3(targetOffset.x, 0f, targetOffset.z); 
             offsetRefreshTimer = SamplePositive(offsetRefreshIntervalMean, offsetRefreshIntervalVar);
             //updateRate = SamplePositive(signalUpdateRateMean, signalUpdateRateVar);
@@ -106,33 +140,24 @@ public class PositionalSensorSimulator : MonoBehaviour
             Vector3 previousOffset;
             previousOffset = Communication.positionData.virtualPosition - lastDronePos;
             Vector3 newOffset;
-            if(gps_lost){
-                    
-                    currentMaxPosUncertainty = maxPositionUncertaintyAbnormal;
+            newOffset = Vector3.MoveTowards(previousOffset, new Vector3(targetOffset.x, 0f, targetOffset.z), gpsDriftSpeed * Time.deltaTime); ;
+            //if (gps_lost){
+            //        
+            //        currentMaxPosUncertainty = maxPositionUncertaintyAbnormal;
+            //
+            //        newOffset = Vector3.MoveTowards(previousOffset, new Vector3(targetOffset.x, 0f, targetOffset.z), gpsDriftSpeed * Time.deltaTime);
+            //
+            //} else {
+            //
+            //        currentMaxPosUncertainty = maxPositionUncertaintyNormal;
+            //        
+            //        
+            //
+            //}
 
-                    newOffset = Vector3.MoveTowards(previousOffset, new Vector3(targetOffset.x, 0f, targetOffset.z), gpsDriftSpeed * Time.deltaTime);
 
-            } else {
 
-                    currentMaxPosUncertainty = maxPositionUncertaintyNormal;
-                    
-                    newOffset = Vector3.MoveTowards(previousOffset, new Vector3(targetOffset.x, 0f, targetOffset.z), gpsDriftSpeed * Time.deltaTime);;
             
-            }
-
-
-
-            if(newOffset.magnitude < 1f){
-                sig_level = 3;
-            } else if(newOffset.magnitude < 2f){
-                sig_level = 2;
-            } else if(newOffset.magnitude < 3.5f){
-                sig_level = 1;
-                if (DroneManager.currentControlType == DroneManager.ControlType.Autonomous)
-                    DroneManager.autopilot_stop_flag = true;
-            } else {
-                sig_level = 0;
-            }
 
             Vector3 vdronePos = Communication.realPose.WorldPosition + newOffset;
             Communication.positionData.virtualPosition = vdronePos;

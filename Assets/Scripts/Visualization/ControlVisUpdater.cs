@@ -43,7 +43,8 @@ public class ControlVisUpdater : MonoBehaviour
     [SerializeField] private VisType flightStatusVis;
     [SerializeField] private GameObject flightStatusTakeOff;
     [SerializeField] private GameObject flightStatusInspecting, flightStatusLanding;
-    [SerializeField] private GameObject[] warningVis;
+    [SerializeField] private VisType warningVis;
+    [SerializeField] private GameObject[] warnings;
     private string previousBatteryState = "Normal";
     private bool isRTH = false;
     private float previousCollisionDistance;
@@ -398,19 +399,22 @@ public class ControlVisUpdater : MonoBehaviour
 
     void UpdateWarningVis()
     {
-        
+        if (!warningVis.gameObject.activeInHierarchy)
+        {
+            return;
+        }
         if (Communication.battery.batteryState != previousBatteryState)
         {
             if (Communication.battery.batteryState == "Low")
-                warningVis[2].SetActive(true);
+                warnings[2].SetActive(true);
             if (Communication.battery.batteryState == "Critical")
-                warningVis[4].SetActive(true);
+                warnings[4].SetActive(true);
             previousBatteryState = Communication.battery.batteryState;
         }
 
         if (Communication.battery.rth && !isRTH)
         {
-            warningVis[3].SetActive(true);
+            warnings[3].SetActive(true);
             isRTH = true;
         }
 
@@ -419,9 +423,9 @@ public class ControlVisUpdater : MonoBehaviour
             if (Communication.positionData.sigLevel < previousGPSLevel)
             {
                 if (Communication.positionData.sigLevel == 2)
-                    warningVis[0].SetActive(true);
+                    warnings[0].SetActive(true);
                 else
-                    warningVis[1].SetActive(true);
+                    warnings[1].SetActive(true);
             }
             previousGPSLevel = Communication.positionData.sigLevel; 
         }
@@ -429,10 +433,13 @@ public class ControlVisUpdater : MonoBehaviour
 
 
         if(previousCollisionDistance > CollisionSensing.surfaceCautionThreshold && Communication.collisionData.GetShortestDistance().magnitude < CollisionSensing.surfaceCautionThreshold)
-            warningVis[5].SetActive(true);
+            warnings[5].SetActive(true);
 
         if (previousCollisionDistance > CollisionSensing.surfaceWarningThreshold && Communication.collisionData.GetShortestDistance().magnitude < CollisionSensing.surfaceWarningThreshold)
-            warningVis[6].SetActive(true);
+        {
+            warnings[5].SetActive(false);
+            warnings[6].SetActive(true);
+        }
 
         previousCollisionDistance = Communication.collisionData.GetShortestDistance().magnitude;
 
@@ -451,16 +458,12 @@ public class ControlVisUpdater : MonoBehaviour
             //posUncertainty.SwitchHiddenVisTypeLocal(true);
             posUncertainty.visRoot.localScale = Vector3.one * Mathf.Max(currentPosUncertaintyScale, offset.magnitude * 2f);
         }
-        if (posUncertainty.visRoot.localScale.x > 2f)
+        if (posUncertainty.visRoot.localScale.x > 3f)
         {
             Color c = posUncertaintySprite.color;
             c.a = 0.2f;
             posUncertaintySprite.color = c;
-            //batteryRing.SetTransparency(1);
-            //camFrustum.SetTransparency(1);
             posCircle.SetTransparency(1);
-            //dis2SurfaceVis.SetTransparency(1);
-            //dis2boundVis.SetTransparency(1);
             dis2groundVis.SetTransparency(1);
             collisionDetectVis.SetTransparency(1);
             flightStatusVis.SetTransparency(1);
@@ -472,11 +475,7 @@ public class ControlVisUpdater : MonoBehaviour
             Color c = posUncertaintySprite.color;
             c.a = 0.5f;
             posUncertaintySprite.color = c;
-            //batteryRing.SetTransparency(0);
-            //camFrustum.SetTransparency(0);
             posCircle.SetTransparency(0);
-            //dis2SurfaceVis.SetTransparency(0);
-            //dis2boundVis.SetTransparency(0);
             dis2groundVis.SetTransparency(0);
             collisionDetectVis.SetTransparency(0);
             flightStatusVis.SetTransparency(0);
