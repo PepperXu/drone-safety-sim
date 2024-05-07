@@ -170,7 +170,7 @@ public class WorldVisUpdater : MonoBehaviour
             UpdateFlightPlanVis();
             UpdateHomepointVis();
             UpdateRTHBatterySufficiency();
-            if(!Communication.positionData.inBuffer || Communication.positionData.v2bound.magnitude < 1f){
+            if(!Communication.positionData.inBuffer && !Communication.positionData.gpsLost){
                 contingencyBuffer.showVisualization = true;
             } else {
                 contingencyBuffer.showVisualization = false;
@@ -186,8 +186,6 @@ public class WorldVisUpdater : MonoBehaviour
     void SpawnCamCoverage(){
         if(Communication.positionData.sigLevel <= 1)
             return;
-        if (Communication.positionData.v2surf.magnitude > 12f)
-            return;
 
         GameObject covObj = Instantiate(coverageObject);
         covObj.transform.position = Communication.positionData.virtualPosition + Communication.positionData.v2surf;
@@ -200,8 +198,6 @@ public class WorldVisUpdater : MonoBehaviour
 
     void SpawnCamCoverageWithMark(){
         if(Communication.positionData.sigLevel <= 1)
-            return;
-        if (Communication.positionData.v2surf.magnitude > 12f)
             return;
 
         GameObject covObj = Instantiate(coverageObject);

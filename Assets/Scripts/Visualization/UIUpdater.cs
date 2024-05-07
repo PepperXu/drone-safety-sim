@@ -298,8 +298,6 @@ public class UIUpdater : MonoBehaviour
 //
     void MarkDefect()
     {
-        if(Communication.positionData.v2surf.magnitude > 12f)
-            return;
 
        // defectCount++;
         Color c = cameraBorderUI.color;

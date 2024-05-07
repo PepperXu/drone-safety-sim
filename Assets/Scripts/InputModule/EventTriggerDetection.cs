@@ -40,9 +40,9 @@ public class EventTriggerDetection : MonoBehaviour {
     }
     
     private void OnTriggerEnter(Collider other) {
-        if(batteryDropped)
-            return;
-
+        //if(batteryDropped)
+        //    return;
+        
         if (other.tag == "GPSWeakZone" && !GPSDeniedZoneEntered)
         {
             StopAllCoroutines();
@@ -53,7 +53,7 @@ public class EventTriggerDetection : MonoBehaviour {
             }
         }
 
-        if(other.tag == "BatteryDrop"){
+        if(other.tag == "BatteryDrop" && !batteryDropped){
             batteryDropped = true;
             other.gameObject.SetActive(false);
             battery.BatteryDropToCritical();

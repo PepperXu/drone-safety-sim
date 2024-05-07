@@ -8,6 +8,8 @@ public class InteractiveCamera : MonoBehaviour
     [SerializeField] private Camera fpvCam;
     [SerializeField] private LayerMask buildingCollision;
     [SerializeField] private LayerMask correctMarkTrigger;
+
+    public static float raycastLengthThreshold = 20f;
     //[SerializeField] private WorldVisUpdater worldVisUpdater;
     //[SerializeField] private UIUpdater uIUpdater;
     // Start is called before the first frame update
@@ -29,13 +31,13 @@ public class InteractiveCamera : MonoBehaviour
         Ray ray = fpvCam.ViewportPointToRay(viewportPoint);
 
         RaycastHit buildingHit;
-        if(Physics.Raycast(ray, out buildingHit, 12f, buildingCollision)){
+        if(Physics.Raycast(ray, out buildingHit, raycastLengthThreshold, buildingCollision)){
             DroneManager.mark_defect_flag = true;
             Communication.markDefectHit = buildingHit;
         }
         
         RaycastHit correctMarkHit;
-        if(Physics.Raycast(ray, out correctMarkHit, 12f, correctMarkTrigger)){
+        if(Physics.Raycast(ray, out correctMarkHit, raycastLengthThreshold, correctMarkTrigger)){
             ExperimentServer.RecordData("Defect marked at", correctMarkHit.transform.gameObject.name, "correct mark?true");
         } else {
             ExperimentServer.RecordData("Defect marked at", buildingHit.point.x + "|" + buildingHit.point.y + "|" + buildingHit.point.z, "correct mark?false");

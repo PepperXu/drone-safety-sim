@@ -119,7 +119,7 @@ public class Battery : MonoBehaviour
     }
 
     public void BatteryDropToCritical(){
-        currentBatteryCapacity = batteryCapacity * 0.3f;
+        currentBatteryCapacity = batteryCapacity * 0.27f;
         Communication.battery.batteryDropped = true;
     }
 
