@@ -38,9 +38,9 @@ public class ExperimentServer : MonoBehaviour
     }
 
 	public VisualizationCondition currentVisCondition = VisualizationCondition.TwoDimensionOnly;
-	private VisualizationCondition currentBufferedVisCondition;
+	//private VisualizationCondition currentBufferedVisCondition;
 
-	string[] visConditionString = {"All", "Control First", "Mixed", "Safety First", "2D Only"};
+	string[] visConditionString = {"2D Only", "All", "Adaptive" };
 
 	public static bool switching_flag = false;
 
@@ -75,10 +75,13 @@ public class ExperimentServer : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+		//Networking: to be removed...
 		tcpListenerThread = new Thread (new ThreadStart(ListenForIncommingRequests)); 		
 		tcpListenerThread.IsBackground = true; 		
 		tcpListenerThread.Start(); 
-		currentBufferedVisCondition = currentVisCondition;
+
+
+		//currentBufferedVisCondition = currentVisCondition;
 		isRecording = false;
 		StartCoroutine(UpdateCurrentState());
 		StartCoroutine(DelayedInitializeTrackingOriginMode());
@@ -97,19 +100,19 @@ public class ExperimentServer : MonoBehaviour
 		
 		
 
-        if (VelocityControl.currentFlightState == VelocityControl.FlightState.TakingOff && !isRecording){
-			StartRecording();
-			RecordData("Visualization Condition", visConditionString[(int)currentVisCondition] , "");
-		}
+        //if (VelocityControl.currentFlightState == VelocityControl.FlightState.TakingOff && !isRecording){
+		//	//StartRecording();
+		//	
+		//}
 
-		if(VelocityControl.currentFlightState == VelocityControl.FlightState.Landed && isRecording){
-			StopRecording();
-		}
-
-		if(currentVisCondition != currentBufferedVisCondition){
-			RecordData("Switch Visualization Condition to", visConditionString[(int)currentVisCondition] , "");
-			currentBufferedVisCondition = currentVisCondition;
-		}
+		//if(VelocityControl.currentFlightState == VelocityControl.FlightState.Landed && isRecording){
+		//	StopRecording();
+		//}
+//
+		//if(currentVisCondition != currentBufferedVisCondition){
+		//	RecordData("Switch Visualization Condition to", visConditionString[(int)currentVisCondition] , "");
+		//	currentBufferedVisCondition = currentVisCondition;
+		//}
 
 		if(incomingMsgList.Count > 0)
 			ProcessClientMessage();
@@ -131,11 +134,6 @@ public class ExperimentServer : MonoBehaviour
 					VisType.globalVisType = VisType.VisualizationType.SafetyOnly;
 				} else {
                     VisType.globalVisType = VisType.VisualizationType.MissionOnly;
-                    //if(currentVisCondition == VisualizationCondition.SafetyFirst){
-                    //	VisType.globalVisType = VisType.VisualizationType.Both;
-                    //} else {
-                    //	VisType.globalVisType = VisType.VisualizationType.MissionOnly;
-                    //}
                 }
 			}
 		}
@@ -279,6 +277,7 @@ public class ExperimentServer : MonoBehaviour
 
 	public void ResetExperiment()
 	{
+		StopRecording();
         droneManager.ResetAllStates();
 		MonitorUI.SetActive(false);
 		EXPUI.SetActive(true);
@@ -289,6 +288,7 @@ public class ExperimentServer : MonoBehaviour
         droneManager.ResetAllStates();
         MonitorUI.SetActive(true);
         EXPUI.SetActive(false);
+		StartRecording();
     }
 
 	public void UpdateVisCondition(int index)
@@ -308,8 +308,8 @@ public class ExperimentServer : MonoBehaviour
 			configToggles[i].SetIsOnWithoutNotify(index == i);
         }
     }
-
-
+#region Networking
+	//Network Connection Deprecated: Will be removed
     private void ListenForIncommingRequests () { 		
 		try { 			
 			// Create listener on localhost port 8052. 			
@@ -373,9 +373,7 @@ public class ExperimentServer : MonoBehaviour
 		}
 		incomingMsgList.Clear();
 	}
-	/// <summary> 	
-	/// Send message to client using socket connection. 	
-	/// </summary> 	
+
 	private void SendServerMessage(string msg) { 	
 		try {
 			if(connectedTcpClient != null){
@@ -411,11 +409,7 @@ public class ExperimentServer : MonoBehaviour
 		msgString += currentState;
 	}
 
-	//private void SendFlightPlanningInfo(){
-	//	string msg = "flight-planning;" + flightPlanning.GetCurrentStartingPointIndex() + "\n";
-	//	//msgQueue.Enqueue(msg);
-	//	msgString += msg;
-	//}
+
 	private void SendDroneFlightStatus(){
 		string msg = "drone-status;" + (int)VelocityControl.currentFlightState + "\n";
 		//msgQueue.Enqueue(msg);
@@ -439,17 +433,7 @@ public class ExperimentServer : MonoBehaviour
 		msgString += msg;
 	}
 
-	//private void SendIsTestRun(){
-	//	string msg = "test-run;" + flightPlanning.GetIsTestRun() + "\n";
-	//	//msgQueue.Enqueue(msg);
-	//	msgString += msg;
-	//}
-//
-	//private void SendIsFromTop(){
-	//	string msg = "is-from-top;" + flightPlanning.GetIsFromTop() + "\n";
-	//	//msgQueue.Enqueue(msg);
-	//	msgString += msg;
-	//}
+
 
 	private void SendConfiguration(){
 		string msg = "current-config;" + flightPlanning.ConfigIndex + "\n";
@@ -480,28 +464,29 @@ public class ExperimentServer : MonoBehaviour
 			Debug.Log(e.Message);
 		}
 	}
-
+#endregion
 	void StartRecording(){
 		string folderName = baseFileName + "_" + (flightPlanning.ConfigIndex == 0?"training":"full") + "_config_" + flightPlanning.ConfigIndex + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
         folderPath = Application.persistentDataPath + "/" + folderName;
 		Directory.CreateDirectory(folderPath);
 		filePath = Application.persistentDataPath + "/"  + folderName + "/log.csv";
 		using (StreamWriter writer = new StreamWriter(filePath, true)) {
-			writer.WriteLine("Timestamp, Msg, Param, Param2");
+			writer.WriteLine("Timestamp, Msg, DronePos, Param1, Param2");
 		};
 		expTimer = 0f;
         isRecording = true;
+		RecordData("Visualization Condition", visConditionString[(int)currentVisCondition] , "");
 	}
 
 	void StopRecording(){
 		isRecording = false;
 	}
 
-	public static void RecordData(string logMsg, string param, string param2){
+	public static void RecordData(string logMsg, string param1, string param2){
 		if (isRecording)
         {
             using (StreamWriter writer = new StreamWriter(filePath, true)) {
-				 writer.WriteLine(expTimer + "," + logMsg + "," + param + "," + param2);
+				 writer.WriteLine(expTimer + "," + logMsg + "," + Communication.realPose.WorldPosition.x + "|" + Communication.realPose.WorldPosition.y + "|" + Communication.realPose.WorldPosition.z + "," + param1 + "," + param2 );
 				 Debug.Log("log entry generated: " + logMsg);
 			};
 		}

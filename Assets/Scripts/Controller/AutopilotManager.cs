@@ -215,7 +215,7 @@ public class AutopilotManager : MonoBehaviour
             
         } 
         //wordVis.currentWaypointIndex = this.currentWaypointIndex;
-        ExperimentServer.RecordData("Autopilot From Waypoint", currentWaypointIndex +"", "");
+        ExperimentServer.RecordData("Autopilot Start from", "waypoint index: " + currentWaypointIndex, "");
     }
 
 
@@ -223,13 +223,16 @@ public class AutopilotManager : MonoBehaviour
         isAutopiloting = true;
         isRTH = true;
         //int idx = GetCurrentHomepoint();
-        ExperimentServer.RecordData("Returning To Homepoint", "", "");
+        ExperimentServer.RecordData("Returning To Homepoint from",  "battery: " + Communication.battery.batteryPercentage, "");
     }   
 
     void StopAutopilot(){
-        stopWaypointIndex = currentWaypointIndex; 
-        isAutopiloting = false;
-        isRTH = false;
+        if(isAutopiloting){
+            stopWaypointIndex = currentWaypointIndex; 
+            isAutopiloting = false;
+            isRTH = false;
+            ExperimentServer.RecordData("Autopilot stop at",  "battery: " + Communication.battery.batteryPercentage, "GPS level: " + Communication.positionData.sigLevel);
+        }
     }
 
     

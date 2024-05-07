@@ -140,6 +140,7 @@ public class VelocityControl : MonoBehaviour {
         Communication.droneRb.AddForce(desiredForce, ForceMode.Acceleration);
         currentFlightState = FlightState.TakingOff;
         StartCoroutine(PlayTakeOffAudio());
+        ExperimentServer.RecordData("Taking off from", "", "");
     }
 
     IEnumerator PlayTakeOffAudio()
@@ -191,7 +192,7 @@ public class VelocityControl : MonoBehaviour {
                 if (dis2ground < landingHeightThreshold)
                 {
                     currentFlightState = FlightState.Landing;
-                    ExperimentServer.RecordData("Landing at", Communication.realPose.WorldPosition.x + "|" + Communication.realPose.WorldPosition.y + "|" + Communication.realPose.WorldPosition.z, "");
+                    ExperimentServer.RecordData("Landing start from", "battery: " + Communication.battery.batteryPercentage, "");
                     DroneManager.autopilot_stop_flag = true;
                     //autopilotManager.StopAutopilot();
                     PlayLandingAudio(); 
@@ -206,6 +207,7 @@ public class VelocityControl : MonoBehaviour {
                 if (dis2ground <= groundOffset)
                 {
                     Debug.Log("Landed");
+                    ExperimentServer.RecordData("Landed at", "battery: " + Communication.battery.batteryPercentage, "");
                     //landedHeight = Communication.realPose.WorldPosition.y;
                     //Communication.constProps.landedHeight = landedHeight;
                     //desired_height = landedHeight;
@@ -294,8 +296,8 @@ public class VelocityControl : MonoBehaviour {
             DroneManager.autopilot_stop_flag = true;
             currentFlightState = FlightState.Collided;
             //autopilotManager.StopAutopilot();
-            ExperimentServer.RecordData("Collides with an obstacle at", Communication.realPose.WorldPosition.x + "|" + Communication.realPose.WorldPosition.y + "|" + Communication.realPose.WorldPosition.z, "");
-        } 
+            ExperimentServer.RecordData("Collides with an obstacle at", "out of balance?" + (Communication.collisionData.out_of_balance?"true":"false"), "GPS level: " + Communication.positionData.sigLevel);
+        }
     }
 
 }

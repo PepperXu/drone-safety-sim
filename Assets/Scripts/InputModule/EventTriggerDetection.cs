@@ -13,11 +13,13 @@ public class EventTriggerDetection : MonoBehaviour {
 
     float windStrength = 50f, strongWindStrength = 65f;
     float windDuration = 20f, windDurationLong = 30f;
-    float signalLostDuration = 30f;
+    float signalLostRecoverDuration = 20f;
     int signalNormalIndex = 1, signalLostIndex = 0;
 
     bool batteryDropped = false;
-    bool isGPSDenied = false;
+    bool GPSDeniedZoneEntered = false;
+    //bool isGPSDenied = false;
+
     
     void OnEnable(){
         DroneManager.resetAllEvent.AddListener(ResetEventSimulation);
@@ -33,7 +35,7 @@ public class EventTriggerDetection : MonoBehaviour {
         //battery.ResetBattery();
         //pss.ResetSignalLevel();
         batteryDropped = false;
-        isGPSDenied = false;
+        GPSDeniedZoneEntered = false;
         StopAllCoroutines();
     }
     
@@ -41,32 +43,21 @@ public class EventTriggerDetection : MonoBehaviour {
         if(batteryDropped)
             return;
 
-        if (other.tag == "GPSWeakZone" && !isGPSDenied)
+        if (other.tag == "GPSWeakZone" && !GPSDeniedZoneEntered)
         {
-            pss.SetGPSLost(true);
-            ExperimentServer.RecordData("Enters GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
-            //if (other.name.Contains("Weak"))
-            //{
-            //    
-            //}
-            //else
-            //{
-            //    rpn.yawCenter = other.transform.eulerAngles.y;
-            //    rpn.strength_mean = strongWindStrength;
-            //    rpn.pulse_duration_mean = 1000f;
-            //    rpn.wind_change_flag = true;
-            //    ExperimentServer.RecordData("Enters GPS Denied Area with wind at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "strength:" + strongWindStrength);
-            //}
-            isGPSDenied = true;
-            other.gameObject.SetActive(false);
-            StartCoroutine(SignalLostFixedDuration());
+            StopAllCoroutines();
+            GPSDeniedZoneEntered = true;
+            if(!Communication.positionData.gpsLost){
+                pss.SetGPSLost(true);
+                ExperimentServer.RecordData("Enters GPS Denied Area at", "zone id: " + other.gameObject.name, "");
+            }
         }
 
         if(other.tag == "BatteryDrop"){
             batteryDropped = true;
             other.gameObject.SetActive(false);
             battery.BatteryDropToCritical();
-            ExperimentServer.RecordData("Battery dropped", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
+            ExperimentServer.RecordData("Battery dropped", "zone id: " + other.gameObject.name, "");
             //if (other.name.Contains("Strong")){
             //    pss.SetSignalLevel(signalLostIndex);
             //    ExperimentServer.RecordData("Battery dropped and signal lost", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
@@ -116,26 +107,21 @@ public class EventTriggerDetection : MonoBehaviour {
             //}
      }
 
-    IEnumerator SignalLostFixedDuration()
+    IEnumerator SignalLostRecoverFixedDuration()
     {
-        yield return new WaitForSeconds(signalLostDuration);
+        yield return new WaitForSeconds(signalLostRecoverDuration);
         pss.SetGPSLost(false);
-        isGPSDenied = false;
+        ExperimentServer.RecordData("GPS Recovered at", "", "");
     }
 
-    //private void OnTriggerExit(Collider other) {
-    //    if(batteryDropped)
-    //        return;
-    //    if(other.tag == "GPSWeakZone" && isGPSDenied){
-    //        pss.SetSignalLevel(signalNormalIndex);
-    //        //pss.switch_gps_normal = true;
-    //        ExperimentServer.RecordData("Exits GPS Denied Area at", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
-    //        rpn.strength_mean = 0f;
-    //        rpn.pulse_duration_mean = 1f;
-    //        rpn.wind_change_flag = true;
-    //        isGPSDenied = false;
-    //    } 
-    //}
+    private void OnTriggerExit(Collider other) {
+        //if(batteryDropped)
+        //    return;
+        if(other.tag == "GPSWeakZone" && GPSDeniedZoneEntered){
+            StartCoroutine(SignalLostRecoverFixedDuration());
+            GPSDeniedZoneEntered = false;
+        } 
+    }
 
 
     //IEnumerator WindTurbulenceFixedDuration(float yawCenter){

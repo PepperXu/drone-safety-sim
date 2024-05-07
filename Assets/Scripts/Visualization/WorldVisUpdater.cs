@@ -184,7 +184,7 @@ public class WorldVisUpdater : MonoBehaviour
     //}
 //
     void SpawnCamCoverage(){
-        if(Communication.positionData.gpsLost)
+        if(Communication.positionData.sigLevel <= 1)
             return;
         if (Communication.positionData.v2surf.magnitude > 12f)
             return;
@@ -199,7 +199,7 @@ public class WorldVisUpdater : MonoBehaviour
     }
 
     void SpawnCamCoverageWithMark(){
-        if(Communication.positionData.gpsLost)
+        if(Communication.positionData.sigLevel <= 1)
             return;
         if (Communication.positionData.v2surf.magnitude > 12f)
             return;

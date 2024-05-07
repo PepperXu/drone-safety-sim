@@ -79,8 +79,8 @@ public class Battery : MonoBehaviour
 
         if(remainingTimeInSeconds < rthTimeThreshold){
             if(!Communication.battery.rth){
+                ExperimentServer.RecordData("Battery RTH point reached", "battery: " + currentBatteryPercentage, "");
                 Communication.battery.rth = true;
-                DroneManager.rth_flag = true;
             }
         } 
 
