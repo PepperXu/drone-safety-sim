@@ -47,6 +47,7 @@ public class UIUpdater : MonoBehaviour
     
     [Header("External Anchors")]
     [SerializeField] Transform headAnchor;
+    [SerializeField] Transform handAnchor;
 
     [Header("Buttons")]
     [SerializeField] Toggle autoPilotToggle;
@@ -59,9 +60,9 @@ public class UIUpdater : MonoBehaviour
 
     [SerializeField] Transform uiAnchor;
 
-    [SerializeField] Vector3 posLOS, posLow, angLOS, angLow;
+    [SerializeField] Vector3 posLOS, posLow, angLOS, angLow, posHand, angHand, scaleHead, scaleHand;
 
-    Vector3 targetPos, targetAng;
+    //Vector3 targetPos, targetAng;
 
     //const float surfaceCautionThreshold = 5.0f, surfaceWarningThreshold = 3.0f;
 
@@ -207,29 +208,49 @@ public class UIUpdater : MonoBehaviour
         UpdateCompassUI();
         UpdateUIStatusText();
 
-        if(VisType.globalVisType == VisType.VisualizationType.MissionOnly)
-        {
-            targetPos = posLOS;
-            targetAng = angLOS;
-        } else
-        {
-            targetPos = posLow;
-            targetAng = angLow;
-        }
+        
     }
+
 
     IEnumerator AnimateUIReposition()
     {
         while (true)
         {
-            if((uiAnchor.localPosition - targetPos).magnitude > 0.05f)
-            {
-                uiAnchor.localPosition = Vector3.MoveTowards(uiAnchor.localPosition, targetPos, 0.5f * Time.deltaTime);
+            if(VisType.globalVisType == VisType.VisualizationType.TwoDOnly){
+                if(uiAnchor.parent != handAnchor){
+                    uiAnchor.parent = handAnchor;
+                    uiAnchor.localPosition = posHand;
+                    uiAnchor.localEulerAngles = angHand;
+                    uiAnchor.localScale = scaleHand;
+                }
+            } else {
+                if(uiAnchor.parent != headAnchor){
+                    uiAnchor.parent = headAnchor;
+                    uiAnchor.localPosition = posLow;
+                    uiAnchor.localEulerAngles = angLow;
+                    uiAnchor.localScale = scaleHead;
+                }
+                Vector3 targetPos, targetAng;
+                if(VisType.globalVisType == VisType.VisualizationType.MissionOnly)
+                {
+                    targetPos = posLOS;
+                    targetAng = angLOS;
+                } else
+                {
+                    targetPos = posLow;
+                    targetAng = angLow;
+                }
+
+                if((uiAnchor.localPosition - targetPos).magnitude > 0.05f)
+                {
+                    uiAnchor.localPosition = Vector3.MoveTowards(uiAnchor.localPosition, targetPos, 0.5f * Time.deltaTime);
+                }
+                if ((uiAnchor.localEulerAngles - targetAng).magnitude > 0.5f)
+                {
+                    uiAnchor.localEulerAngles = Vector3.MoveTowards(uiAnchor.localEulerAngles, targetAng, 33f * Time.deltaTime);
+                }
             }
-            if ((uiAnchor.localEulerAngles - targetAng).magnitude > 0.5f)
-            {
-                uiAnchor.localEulerAngles = Vector3.MoveTowards(uiAnchor.localEulerAngles, targetAng, 33f * Time.deltaTime);
-            }
+            
             yield return new WaitForEndOfFrame();
         }
     }

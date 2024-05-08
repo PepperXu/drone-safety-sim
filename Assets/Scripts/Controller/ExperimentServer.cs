@@ -37,7 +37,7 @@ public class ExperimentServer : MonoBehaviour
 		//SafetyFirst,
     }
 
-	public VisualizationCondition currentVisCondition = VisualizationCondition.TwoDimensionOnly;
+	private VisualizationCondition currentVisCondition = VisualizationCondition.TwoDimensionOnly;
 	//private VisualizationCondition currentBufferedVisCondition;
 
 	string[] visConditionString = {"2D Only", "All", "Adaptive" };
@@ -45,7 +45,7 @@ public class ExperimentServer : MonoBehaviour
 	public static bool switching_flag = false;
 
     [SerializeField] private FlightPlanning flightPlanning;
-	[SerializeField] private UIUpdater uIUpdater;
+	//[SerializeField] private UIUpdater uIUpdater;
 	[SerializeField] private RandomPulseNoise randomPulseNoise;
 	[SerializeField] private Battery battery;
 	[SerializeField] private PositionalSensorSimulator positionalSensorSimulator;

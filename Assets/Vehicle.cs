@@ -27,10 +27,13 @@ public class Vehicle : MonoBehaviour
         if(currentWaypointIndex < currentLane.childCount)
         {
             float distanceBetweenNowAndWp = Vector3.Distance(transform.position, currentLane.GetChild(currentWaypointIndex).position);
-            if (distanceBetweenNowAndWp < 0.2f)
+            if (distanceBetweenNowAndWp < 0.4f)
             {
                 currentWaypointIndex++;
-            } else
+            } else if(Vector3.Dot(transform.position - currentLane.GetChild(currentWaypointIndex).position, currentLane.GetChild(currentWaypointIndex).forward) > 0f){
+                currentWaypointIndex++;
+            }
+            else
             {
                 float anglesBetweenNowAndWP = Vector3.SignedAngle(transform.forward, currentLane.GetChild(currentWaypointIndex).position - transform.position, Vector3.up);
                 float angularTurnSpeed = anglesBetweenNowAndWP * (speed/5f);

@@ -66,7 +66,7 @@ public class InputControl : MonoBehaviour {
 
 		if (rightController.isValid)
 		{
-			if (leftController.TryGetFeatureValue(CommonUsages.secondaryButton, out bool ybutton))
+			if (rightController.TryGetFeatureValue(CommonUsages.secondaryButton, out bool ybutton))
 			{
 				ExperimentServer.switching_flag = ybutton;
             }
