@@ -128,7 +128,6 @@ public class ExperimentServer : MonoBehaviour
 				VisType.RevealHiddenVisType(false);
 				VisType.globalVisType = VisType.VisualizationType.Both;
 			}else {
-
 				VisType.RevealHiddenVisType(true);
 				if(DroneManager.currentControlType == DroneManager.ControlType.Manual || DroneManager.currentMissionState == DroneManager.MissionState.Returning){
 					VisType.globalVisType = VisType.VisualizationType.SafetyOnly;

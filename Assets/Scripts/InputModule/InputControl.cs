@@ -23,6 +23,7 @@ public class InputControl : MonoBehaviour {
 	private bool autopilot_toggled_off;
 
 	[SerializeField] CustomRayController rightRayController;
+	[SerializeField] CustomRayController leftRayController;
 	bool resetTriggered = false;
 	float buttonHoldTimer = 0f;
 
@@ -39,10 +40,11 @@ public class InputControl : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         InputDevice rightController = rightRayController.GetController();
+		InputDevice leftController = leftRayController.GetController();
 
-        if (rightController.isValid)
+        if (leftController.isValid)
         {
-            if (rightController.TryGetFeatureValue(CommonUsages.secondaryButton, out bool bbutton))
+            if (leftController.TryGetFeatureValue(CommonUsages.secondaryButton, out bool bbutton))
             {
                 if (bbutton)
                 {
@@ -61,6 +63,15 @@ public class InputControl : MonoBehaviour {
                 }
             }
         }
+
+		if (rightController.isValid)
+		{
+			if (leftController.TryGetFeatureValue(CommonUsages.secondaryButton, out bool ybutton))
+			{
+				ExperimentServer.switching_flag = ybutton;
+            }
+		}
+        
         //if(DroneManager.currentMissionState == DroneManager.MissionState.Planning)
         //	return;
         if (Input.GetButtonDown("TakeOff") || take_off_button_pressed)
