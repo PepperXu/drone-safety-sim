@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Unity.XR.CoreUtils;
 
 public class UIUpdater : MonoBehaviour
 {
@@ -34,6 +35,10 @@ public class UIUpdater : MonoBehaviour
     [SerializeField] Transform northIcon, headingIcon, attitudeIconAnchor;
     [SerializeField]
     Image[] col_detect;
+
+    [SerializeField] Transform colDirAnchor;
+    [SerializeField] TextMeshProUGUI colDistText;
+
 
 
     [Header("Mission States")]
@@ -197,13 +202,30 @@ public class UIUpdater : MonoBehaviour
             }
         }
 
+        
+
+        Vector3 col_dir = Communication.collisionData.GetShortestDistance();
+        
+
+        if(col_dir.magnitude < CollisionSensing.surfaceCautionThreshold){
+            colDirAnchor.gameObject.SetActive(true);
+            colDistText.gameObject.SetActive(true);
+            float col_angle = -Vector3.SignedAngle(new Vector3(Communication.droneRb.transform.forward.x, 0f, Communication.droneRb.transform.forward.z), col_dir, Vector3.up);
+            colDirAnchor.transform.localEulerAngles = Vector3.forward * col_angle;
+            colDistText.text = (int)(col_dir.magnitude * 10f)/10f + " m";
+        } else {
+            colDirAnchor.gameObject.SetActive(false);
+            colDistText.gameObject.SetActive(false);
+        }
+
 
 
 
         distToHome.text = ((int)(transform.position-Communication.realPose.WorldPosition).magnitude).ToString();
         altitude.text = ((int)Communication.realPose.Altitude).ToString();
-        horiSpeed.text = ((int)new Vector3(Communication.realPose.WorldVelocity.x, 0f, Communication.realPose.WorldVelocity.z).magnitude).ToString();
-        vertSpeed.text = ((int)Mathf.Abs(Communication.realPose.WorldVelocity.y)).ToString();
+        float horizonSpeed = new Vector3(Communication.realPose.WorldVelocity.x, 0f, Communication.realPose.WorldVelocity.z).magnitude;
+        horiSpeed.text = (((int)(horizonSpeed * 10f))/10f).ToString();
+        vertSpeed.text = (((int)(Mathf.Abs(Communication.realPose.WorldVelocity.y)*10f))/10f).ToString();
 
         UpdateCompassUI();
         UpdateUIStatusText();
