@@ -35,6 +35,16 @@ public class AutopilotManager : MonoBehaviour
 
     bool autopilot_initialized = false;
 
+    public enum AutopilotStatus
+    {
+        Navigating,
+        Waiting,
+        Returning,
+        Off
+    }
+
+    public static AutopilotStatus autopilotStatus = AutopilotStatus.Off;
+
     // Start is called before the first frame update
 
 
@@ -71,6 +81,7 @@ public class AutopilotManager : MonoBehaviour
         if(isAutopiloting){
             if (isRTH)
             {
+                autopilotStatus = AutopilotStatus.Returning; 
                 if(VelocityControl.currentFlightState == VelocityControl.FlightState.Navigating || VelocityControl.currentFlightState == VelocityControl.FlightState.Hovering)
                 {
                     Vector3 offset = Homepoint.position - Communication.realPose.WorldPosition + Vector3.up * ground_offset;
@@ -120,6 +131,7 @@ public class AutopilotManager : MonoBehaviour
                     //Debug.Log("current target offset" + offset);
                     if (offset.magnitude < 0.8f)
                     {
+                        autopilotStatus = AutopilotStatus.Waiting;
                         waitTimer += Time.deltaTime;
                         if(waitTimer >= waitTime/2f & !photoTaken){
                             DroneManager.take_photo_flag = true;
@@ -137,6 +149,7 @@ public class AutopilotManager : MonoBehaviour
                     }
                     else
                     {
+                        autopilotStatus = AutopilotStatus.Navigating;
                         Vector3 localDir = Communication.droneRb.transform.InverseTransformDirection(offset);
                         float heightTarget;
                         if(Mathf.Abs(offset.y) > autopilot_slowing_start_dist)
@@ -178,6 +191,7 @@ public class AutopilotManager : MonoBehaviour
             }
         } else
         {
+            autopilotStatus = AutopilotStatus.Off;
             if (!autopilot_initialized)
             {
                 currentWaypointIndex = 0;
@@ -215,7 +229,7 @@ public class AutopilotManager : MonoBehaviour
             
         } 
         //wordVis.currentWaypointIndex = this.currentWaypointIndex;
-        ExperimentServer.RecordData("Autopilot Start from", "waypoint index: " + currentWaypointIndex, "");
+        ExperimentServer.RecordEventData("Autopilot Start from", "waypoint index: " + currentWaypointIndex, "");
     }
 
 
@@ -223,7 +237,7 @@ public class AutopilotManager : MonoBehaviour
         isAutopiloting = true;
         isRTH = true;
         //int idx = GetCurrentHomepoint();
-        ExperimentServer.RecordData("Returning To Homepoint from",  "battery: " + Communication.battery.batteryPercentage, "");
+        ExperimentServer.RecordEventData("Returning To Homepoint from",  "battery: " + Communication.battery.batteryPercentage, "");
     }   
 
     void StopAutopilot(){
@@ -231,7 +245,7 @@ public class AutopilotManager : MonoBehaviour
             stopWaypointIndex = currentWaypointIndex; 
             isAutopiloting = false;
             isRTH = false;
-            ExperimentServer.RecordData("Autopilot stop at",  "battery: " + Communication.battery.batteryPercentage, "GPS level: " + Communication.positionData.sigLevel);
+            ExperimentServer.RecordEventData("Autopilot stop at", "waypoint index: " + currentWaypointIndex, "battery: " + Communication.battery.batteryPercentage + "|GPS level: " + Communication.positionData.sigLevel);
         }
     }
 

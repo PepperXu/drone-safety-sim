@@ -204,7 +204,7 @@ public class UIUpdater : MonoBehaviour
 
         
 
-        Vector3 col_dir = Communication.collisionData.GetShortestDistance();
+        Vector3 col_dir = Communication.collisionData.shortestDistance;
         
 
         if(col_dir.magnitude < CollisionSensing.surfaceCautionThreshold){
@@ -317,10 +317,10 @@ public class UIUpdater : MonoBehaviour
         
 
 
-        if (Communication.collisionData.GetShortestDistance().magnitude < CollisionSensing.surfaceCautionThreshold)
+        if (Communication.collisionData.shortestDistance.magnitude < CollisionSensing.surfaceCautionThreshold)
             currentTextIndex = 11;
 
-        if (Communication.collisionData.GetShortestDistance().magnitude < CollisionSensing.surfaceWarningThreshold)
+        if (Communication.collisionData.shortestDistance.magnitude < CollisionSensing.surfaceWarningThreshold)
             currentTextIndex = 12;
 
         if (VelocityControl.currentFlightState == VelocityControl.FlightState.Landed)

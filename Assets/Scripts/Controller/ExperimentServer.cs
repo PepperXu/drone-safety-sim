@@ -17,52 +17,54 @@ public class ExperimentServer : MonoBehaviour
 	/// TCPListener to listen for incomming TCP connection 	
 	/// requests. 	
 	/// </summary> 	
-	private TcpListener tcpListener; 
+	private TcpListener tcpListener;
 	/// <summary> 
 	/// Background thread for TcpServer workload. 	
 	/// </summary> 	
-	private Thread tcpListenerThread;  	
+	private Thread tcpListenerThread;
 	/// <summary> 	
 	/// Create handle to connected tcp client. 	
 	/// </summary> 	
-	private TcpClient connectedTcpClient; 	
-	#endregion 
+	private TcpClient connectedTcpClient;
+	#endregion
 
 	public enum VisualizationCondition
-    {
-        TwoDimensionOnly,
-        All,
+	{
+		TwoDimensionOnly,
+		All,
 		//ControlFirst,
-        Adaptive,
+		Adaptive,
 		//SafetyFirst,
-    }
+	}
 
 	private VisualizationCondition currentVisCondition = VisualizationCondition.TwoDimensionOnly;
 	//private VisualizationCondition currentBufferedVisCondition;
 
-	string[] visConditionString = {"2D Only", "All", "Adaptive" };
+	string[] visConditionString = { "2D Only", "All", "Adaptive" };
 
 	public static bool switching_flag = false;
 
-    [SerializeField] private FlightPlanning flightPlanning;
+	[SerializeField] private FlightPlanning flightPlanning;
 	//[SerializeField] private UIUpdater uIUpdater;
 	[SerializeField] private RandomPulseNoise randomPulseNoise;
 	[SerializeField] private Battery battery;
 	[SerializeField] private PositionalSensorSimulator positionalSensorSimulator;
 	[SerializeField] private DroneManager droneManager;
 	[SerializeField] private Transform droneParent;
-	
-    [SerializeField] private XROrigin xrOrigin;
+
+	[SerializeField] private XROrigin xrOrigin;
 	//private string clientMessage = "";
 	//Queue<string> msgQueue = new Queue<string>();
 	string msgString;
 	List<string> incomingMsgList = new List<string>();
 
-	public static bool isRecording {get; private set;}
+	public static bool isRecording { get; private set; }
 	const string baseFileName = "log";
-	static string filePath;
+	static string eventLogfilePath;
+	static string fullLogFilePath;
 
-	public static string folderPath {get; private set;}
+
+	public static string folderPath { get; private set; }
 
 	static float expTimer;
 
@@ -70,6 +72,8 @@ public class ExperimentServer : MonoBehaviour
 	[SerializeField] private LayerMask excludeMark, includeMark;
 	[SerializeField] private GameObject MonitorUI, EXPUI;
 	[SerializeField] private Toggle[] visConditionToggles, configToggles;
+
+	string[] autopilotStatus = {"auto_nav", "auto_wait", "auto_return", "auto_off"};
 
 	int currentDebugMode = 0; //0: wind control (strength only), 1: battery control, 2: position control
     // Start is called before the first frame update
@@ -468,26 +472,46 @@ public class ExperimentServer : MonoBehaviour
 		string folderName = baseFileName + "_" + (flightPlanning.ConfigIndex == 0?"training":"full") + "_config_" + flightPlanning.ConfigIndex + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
         folderPath = Application.persistentDataPath + "/" + folderName;
 		Directory.CreateDirectory(folderPath);
-		filePath = Application.persistentDataPath + "/"  + folderName + "/log.csv";
-		using (StreamWriter writer = new StreamWriter(filePath, true)) {
+		eventLogfilePath = Application.persistentDataPath + "/"  + folderName + "/log_event.csv";
+        fullLogFilePath = Application.persistentDataPath + "/" + folderName + "/log_full.csv";
+        using (StreamWriter writer = new StreamWriter(eventLogfilePath, true)) {
 			writer.WriteLine("Timestamp, Msg, DronePos, Param1, Param2");
+		};
+		using (StreamWriter writer = new StreamWriter(fullLogFilePath, true))
+		{
+			writer.WriteLine("Timestamp, DronePos, ControlMode, CollisionStatus, BatteryStatus, GPSStatus");
 		};
 		expTimer = 0f;
         isRecording = true;
-		RecordData("Visualization Condition", visConditionString[(int)currentVisCondition] , "");
+		RecordEventData("Visualization Condition", visConditionString[(int)currentVisCondition] , "");
+		StartCoroutine(RecordFullLog());
 	}
 
 	void StopRecording(){
 		isRecording = false;
 	}
 
-	public static void RecordData(string logMsg, string param1, string param2){
+	public static void RecordEventData(string logMsg, string param1, string param2){
 		if (isRecording)
         {
-            using (StreamWriter writer = new StreamWriter(filePath, true)) {
+            using (StreamWriter writer = new StreamWriter(eventLogfilePath, true)) {
 				 writer.WriteLine(expTimer + "," + logMsg + "," + Communication.realPose.WorldPosition.x + "|" + Communication.realPose.WorldPosition.y + "|" + Communication.realPose.WorldPosition.z + "," + param1 + "," + param2 );
 				 Debug.Log("log entry generated: " + logMsg);
 			};
+		}
+	}
+
+	IEnumerator RecordFullLog()
+	{
+		while (isRecording)
+		{
+            using (StreamWriter writer = new StreamWriter(fullLogFilePath, true))
+            {	
+				string currentControlState = DroneManager.currentControlType == DroneManager.ControlType.Manual ? (InputControl.inputStatus == InputControl.InputStatus.Idle?"idle":"manual") : autopilotStatus[(int)AutopilotManager.autopilotStatus];
+                writer.WriteLine(expTimer + "," + Communication.realPose.WorldPosition.x + "|" + Communication.realPose.WorldPosition.y + "|" + Communication.realPose.WorldPosition.z + "," +
+                    currentControlState + "," + Communication.collisionData.collisionStatus + "," + Communication.battery.batteryState == "Critical"?"Critical":(Communication.battery.rth?"RTH":Communication.battery.batteryState)+ "," + Communication.positionData.sigLevel);
+            };
+            yield return new WaitForFixedUpdate();
 		}
 	}
 

@@ -209,7 +209,7 @@ public class ControlVisUpdater : MonoBehaviour
     {
         if(!dis2SurfaceVis.gameObject.activeInHierarchy)
             return;
-        Vector3 v2surf = Communication.collisionData.GetShortestDistance();
+        Vector3 v2surf = Communication.collisionData.shortestDistance;
         float dis2surf = v2surf.magnitude;
         if (dis2surf > 12f)
         {
@@ -432,16 +432,16 @@ public class ControlVisUpdater : MonoBehaviour
 
 
 
-        if(previousCollisionDistance > CollisionSensing.surfaceCautionThreshold && Communication.collisionData.GetShortestDistance().magnitude < CollisionSensing.surfaceCautionThreshold)
+        if(previousCollisionDistance > CollisionSensing.surfaceCautionThreshold && Communication.collisionData.shortestDistance.magnitude < CollisionSensing.surfaceCautionThreshold)
             warnings[5].SetActive(true);
 
-        if (previousCollisionDistance > CollisionSensing.surfaceWarningThreshold && Communication.collisionData.GetShortestDistance().magnitude < CollisionSensing.surfaceWarningThreshold)
+        if (previousCollisionDistance > CollisionSensing.surfaceWarningThreshold && Communication.collisionData.shortestDistance.magnitude < CollisionSensing.surfaceWarningThreshold)
         {
             warnings[5].SetActive(false);
             warnings[6].SetActive(true);
         }
 
-        previousCollisionDistance = Communication.collisionData.GetShortestDistance().magnitude;
+        previousCollisionDistance = Communication.collisionData.shortestDistance.magnitude;
 
     }
 

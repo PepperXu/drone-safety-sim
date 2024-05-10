@@ -28,18 +28,9 @@ public class Communication : MonoBehaviour
 
         public bool out_of_balance;
         public Vector3 v2ground;
+        public string collisionStatus;
+        public Vector3 shortestDistance;
 
-        public Vector3 GetShortestDistance(){
-            float minDist = float.MaxValue;
-            int indx = 0;
-            for(int i = 0; i < distances.Length; i++){
-                if(distances[i].magnitude < minDist){
-                    minDist = distances[i].magnitude;
-                    indx = i;
-                }
-            }
-            return distances[indx];
-        }
 
     }
 

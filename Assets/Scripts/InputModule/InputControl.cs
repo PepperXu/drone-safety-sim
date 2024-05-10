@@ -29,6 +29,14 @@ public class InputControl : MonoBehaviour {
 
 	[SerializeField] private ExperimentServer experimentServer;
 
+	public enum InputStatus
+	{
+		Idle,
+		Active
+	}
+
+	public static InputStatus inputStatus = InputStatus.Idle;
+
 	//[SerializeField] UIUpdater uiUpdater;
 
 
@@ -99,39 +107,41 @@ public class InputControl : MonoBehaviour {
 			height_diff = throttleAxix * vertical_sensitivity;
 		}
 		
-		
-
-		if(Input.GetButtonDown("AutoPilot")){
-			AutopilotTogglePressed(true);
-		}
-
-		if (autopilot_toggled_on)
-        {
-			autopilot_toggled_on = false;
-			DroneManager.autopilot_flag = true;
-		}
-
-		if(Mathf.Abs(pitchAxis) > 0.1f || Mathf.Abs(rollAxis) > 0.1f || Mathf.Abs(yawAxis) > 0.1f || Mathf.Abs(throttleAxix) > 0.1f){
-			DroneManager.autopilot_stop_flag = true;
-			autopilot_toggled_off = false;	
-		}
-
-
-		if (autopilot_toggled_off)
-        {
-			DroneManager.autopilot_stop_flag = true;
-			autopilot_toggled_off = false;	
-			//DroneManager.currentMissionState = DroneManager.MissionState.AutopilotInterupted;
-        }
 
 		if(DroneManager.currentControlType == DroneManager.ControlType.Manual){
 			DroneManager.desired_vx = vy;
 			DroneManager.desired_vy = vx;
 			DroneManager.desired_yaw = yaw;
 			DroneManager.desired_height += height_diff;
-		}
+            inputStatus = (Mathf.Abs(pitchAxis) > 0.01f || Mathf.Abs(rollAxis) > 0.01f || Mathf.Abs(yawAxis) > 0.01f || Mathf.Abs(throttleAxix) > 0.01f) ? InputStatus.Active : InputStatus.Idle;
+        } else
+		{
+            if (Mathf.Abs(pitchAxis) > 0.1f || Mathf.Abs(rollAxis) > 0.1f || Mathf.Abs(yawAxis) > 0.1f || Mathf.Abs(throttleAxix) > 0.1f)
+            {
+                DroneManager.autopilot_stop_flag = true;
+                autopilot_toggled_off = false;
+            }
+        }
 
-		if (Input.GetButtonDown("RTH") || rth_button_pressed)
+        if (Input.GetButtonDown("AutoPilot"))
+        {
+            AutopilotTogglePressed(true);
+        }
+
+        if (autopilot_toggled_on)
+        {
+            autopilot_toggled_on = false;
+            DroneManager.autopilot_flag = true;
+        }
+
+        if (autopilot_toggled_off)
+        {
+            DroneManager.autopilot_stop_flag = true;
+            autopilot_toggled_off = false;
+            //DroneManager.currentMissionState = DroneManager.MissionState.AutopilotInterupted;
+        }
+
+        if (Input.GetButtonDown("RTH") || rth_button_pressed)
         {
 			rth_button_pressed = false;
 			DroneManager.rth_flag = true;

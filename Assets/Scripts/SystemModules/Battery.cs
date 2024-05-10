@@ -79,7 +79,7 @@ public class Battery : MonoBehaviour
 
         if(remainingTimeInSeconds < rthTimeThreshold){
             if(!Communication.battery.rth){
-                ExperimentServer.RecordData("Battery RTH point reached", "battery: " + currentBatteryPercentage, "");
+                ExperimentServer.RecordEventData("Battery RTH point reached", "battery: " + currentBatteryPercentage, "");
                 Communication.battery.rth = true;
             }
         } 

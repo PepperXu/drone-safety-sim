@@ -49,7 +49,7 @@ public class EventTriggerDetection : MonoBehaviour {
             GPSDeniedZoneEntered = true;
             if(!Communication.positionData.gpsLost){
                 pss.SetGPSLost(true);
-                ExperimentServer.RecordData("Enters GPS Denied Area at", "zone id: " + other.gameObject.name, "");
+                ExperimentServer.RecordEventData("Enters GPS Denied Area at", "zone id: " + other.gameObject.name, "");
             }
         }
 
@@ -57,7 +57,7 @@ public class EventTriggerDetection : MonoBehaviour {
             batteryDropped = true;
             other.gameObject.SetActive(false);
             battery.BatteryDropToCritical();
-            ExperimentServer.RecordData("Battery dropped", "zone id: " + other.gameObject.name, "");
+            ExperimentServer.RecordEventData("Battery dropped", "zone id: " + other.gameObject.name, "");
             //if (other.name.Contains("Strong")){
             //    pss.SetSignalLevel(signalLostIndex);
             //    ExperimentServer.RecordData("Battery dropped and signal lost", transform.position.x + "|" + transform.position.y + "|" + transform.position.z, "");
@@ -111,7 +111,7 @@ public class EventTriggerDetection : MonoBehaviour {
     {
         yield return new WaitForSeconds(signalLostRecoverDuration);
         pss.SetGPSLost(false);
-        ExperimentServer.RecordData("GPS Recovered at", "", "");
+        ExperimentServer.RecordEventData("GPS Recovered at", "", "");
     }
 
     private void OnTriggerExit(Collider other) {

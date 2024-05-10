@@ -28,14 +28,15 @@ public class CollisionSensing : MonoBehaviour
     void RaySpray(){
         int index = 0;
         bool cur_nearcollision = false;
-        for(float angle = 360f/(2*steps); angle < 360f; angle += (360f/steps)){
+        Vector3 shortestDist = Vector3.positiveInfinity;
+        for (float angle = 360f/(2*steps); angle < 360f; angle += (360f/steps)){
             RaycastHit hit;
             if(Physics.Raycast(Communication.droneRb.transform.position, Quaternion.AngleAxis(angle, Vector3.up) * Communication.droneRb.transform.forward, out hit, 20f, obstacleLayer)){
-                Communication.collisionData.distances[index] = hit.point - Communication.droneRb.transform.position;
-                if(Communication.collisionData.distances[index].magnitude < surfaceWarningThreshold){
-                    cur_nearcollision = true;
-                    if(DroneManager.currentControlType == DroneManager.ControlType.Autonomous)
-                        DroneManager.autopilot_stop_flag = true;
+                Vector3 dist = hit.point - Communication.droneRb.transform.position;
+                Communication.collisionData.distances[index] = dist;
+                if (dist.magnitude < shortestDist.magnitude)
+                {
+                    shortestDist = dist;
                 }
                 
             } else {
@@ -43,17 +44,32 @@ public class CollisionSensing : MonoBehaviour
             }
             index++;
         }
-        if(VelocityControl.currentFlightState == VelocityControl.FlightState.Navigating || VelocityControl.currentFlightState == VelocityControl.FlightState.Hovering){
-                if(nearCollision != cur_nearcollision){
-                    if(!cur_nearcollision){
-                        ExperimentServer.RecordData("Stop Near collision at", "GPS level: " + Communication.positionData.sigLevel, "");
-                    } else {
-                        ExperimentServer.RecordData("Start Near collision at", "GPS level: " + Communication.positionData.sigLevel, "");
-                    }
+        Communication.collisionData.shortestDistance = shortestDist;
+        if (shortestDist.magnitude < surfaceWarningThreshold)
+        {
+            cur_nearcollision = true;
+            Communication.collisionData.collisionStatus = "Warning";
+            if (DroneManager.currentControlType == DroneManager.ControlType.Autonomous)
+                DroneManager.autopilot_stop_flag = true;
+        } else if (shortestDist.magnitude < surfaceCautionThreshold)
+        {
+            Communication.collisionData.collisionStatus = "Caution";
+        } else
+        {
+            Communication.collisionData.collisionStatus = "Safe";
+        }
+
+        if (VelocityControl.currentFlightState == VelocityControl.FlightState.Navigating || VelocityControl.currentFlightState == VelocityControl.FlightState.Hovering){
+            if(nearCollision != cur_nearcollision){
+                if(!cur_nearcollision){
+                    ExperimentServer.RecordEventData("Stop Near collision at", "GPS level: " + Communication.positionData.sigLevel, "");
+                } else {
+                    ExperimentServer.RecordEventData("Start Near collision at", "GPS level: " + Communication.positionData.sigLevel, "");
                 }
             }
+        }
 
-            nearCollision = cur_nearcollision;
+        nearCollision = cur_nearcollision;
     }
 
 
