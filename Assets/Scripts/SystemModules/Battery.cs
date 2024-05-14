@@ -87,13 +87,19 @@ public class Battery : MonoBehaviour
         
 
         if(currentBatteryPercentage < batteryCriticalThreshold){
-            Communication.battery.batteryState = "Critical";
-            if(DroneManager.currentControlType == DroneManager.ControlType.Autonomous && DroneManager.currentMissionState != DroneManager.MissionState.Returning)
-            {
-                DroneManager.autopilot_stop_flag = true;
+            if(Communication.battery.batteryState != "Critical"){
+                Communication.battery.batteryState = "Critical";
+                ExperimentServer.RecordEventData("Battery Critical point reached", "battery: " + currentBatteryPercentage, "");
+                if(DroneManager.currentControlType == DroneManager.ControlType.Autonomous && DroneManager.currentMissionState != DroneManager.MissionState.Returning)
+                {
+                    DroneManager.autopilot_stop_flag = true;
+                }
             }
         } else if (currentBatteryPercentage < batteryLowThreshold){
-            Communication.battery.batteryState = "Low";
+            if(Communication.battery.batteryState != "Low"){
+                Communication.battery.batteryState = "Low";
+                ExperimentServer.RecordEventData("Battery Low point reached", "battery: " + currentBatteryPercentage, "");
+            }
         } else {
             Communication.battery.batteryState = "Normal";
         }

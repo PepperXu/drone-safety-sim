@@ -508,8 +508,10 @@ public class ExperimentServer : MonoBehaviour
             using (StreamWriter writer = new StreamWriter(fullLogFilePath, true))
             {	
 				string currentControlState = DroneManager.currentControlType == DroneManager.ControlType.Manual ? (InputControl.inputStatus == InputControl.InputStatus.Idle?"idle":"manual") : autopilotStatus[(int)AutopilotManager.autopilotStatus];
+				string currentBatteryState = Communication.battery.batteryState == "Critical"?"Critical":(Communication.battery.rth?"RTH":Communication.battery.batteryState);
                 writer.WriteLine(expTimer + "," + Communication.realPose.WorldPosition.x + "|" + Communication.realPose.WorldPosition.y + "|" + Communication.realPose.WorldPosition.z + "," +
-                    currentControlState + "," + Communication.collisionData.collisionStatus + "," + Communication.battery.batteryState == "Critical"?"Critical":(Communication.battery.rth?"RTH":Communication.battery.batteryState)+ "," + Communication.positionData.sigLevel);
+                    currentControlState + "," + Communication.collisionData.collisionStatus + "," + 
+					currentBatteryState + "," + Communication.positionData.sigLevel);
             };
             yield return new WaitForFixedUpdate();
 		}
