@@ -200,6 +200,8 @@ public class VelocityControl : MonoBehaviour {
                     desired_vx = 0f;
                     desired_vy = 0f;
                     desired_yaw = 0f;
+                } else {
+                    currentFlightState = (Communication.realPose.WorldAcceleration.magnitude > 0.1f || Communication.realPose.WorldVelocity.magnitude > 0.5f)?FlightState.Navigating:FlightState.Hovering;
                 }
             } else
             {
@@ -217,13 +219,17 @@ public class VelocityControl : MonoBehaviour {
                 }
             }
         }
+        if(currentFlightState != FlightState.Landed){
+            if(Communication.collisionData.out_of_balance)
+                currentFlightState = FlightState.Collided;
+        }
     }
 
     void FixedUpdate () {
         //state.GetState ();
 
         // NOTE: I'm using stupid vector order (sideways, up, forward) at the end
-        if (currentFlightState != FlightState.Landed)
+        if (currentFlightState != FlightState.Landed && currentFlightState != FlightState.Collided)
         {
             Vector3 desiredTheta;
             Vector3 desiredOmega;
@@ -285,19 +291,6 @@ public class VelocityControl : MonoBehaviour {
     }
 
 
-    private void OnCollisionEnter(Collision collision)
-    {
-        if(currentFlightState == FlightState.Navigating || currentFlightState == FlightState.Hovering)
-        {
-            //DroneManager.currentSystemState = DroneManager.SystemState.Emergency;
-            Communication.collisionData.collisionCount++;
-            if(Communication.droneRb.transform.up.y < 0.6f)
-                Communication.collisionData.out_of_balance = true;
-            DroneManager.autopilot_stop_flag = true;
-            currentFlightState = FlightState.Collided;
-            //autopilotManager.StopAutopilot();
-            ExperimentServer.RecordEventData("Collides with an obstacle at", "out of balance?" + (Communication.collisionData.out_of_balance?"true":"false"), "GPS level: " + Communication.positionData.sigLevel);
-        }
-    }
+    
 
 }

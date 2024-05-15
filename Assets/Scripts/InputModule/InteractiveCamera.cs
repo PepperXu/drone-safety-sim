@@ -38,7 +38,7 @@ public class InteractiveCamera : MonoBehaviour
         
         RaycastHit correctMarkHit;
         if(Physics.Raycast(ray, out correctMarkHit, raycastLengthThreshold, correctMarkTrigger)){
-            ExperimentServer.RecordEventData("Defect marked at", correctMarkHit.transform.gameObject.name, "correct mark?true");
+            ExperimentServer.RecordEventData("Defect marked at", correctMarkHit.transform.gameObject.name + "|distance:" + (Communication.realPose.WorldPosition - (Communication.positionData.virtualPosition + Communication.positionData.v2surf)).magnitude , "correct mark?true");
         } else {
             ExperimentServer.RecordEventData("Defect marked at", buildingHit.point.x + "|" + buildingHit.point.y + "|" + buildingHit.point.z, "correct mark?false");
         }

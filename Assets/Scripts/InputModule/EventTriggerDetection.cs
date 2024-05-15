@@ -107,6 +107,21 @@ public class EventTriggerDetection : MonoBehaviour {
             //}
      }
 
+     private void OnCollisionEnter(Collision collision)
+    {
+        if(VelocityControl.currentFlightState == VelocityControl.FlightState.Navigating || VelocityControl.currentFlightState == VelocityControl.FlightState.Hovering)
+        {
+            //DroneManager.currentSystemState = DroneManager.SystemState.Emergency;
+            Communication.collisionData.collisionCount++;
+            if(Communication.droneRb.transform.up.y < 0.6f)
+                Communication.collisionData.out_of_balance = true;
+            DroneManager.autopilot_stop_flag = true;
+            
+            //autopilotManager.StopAutopilot();
+            ExperimentServer.RecordEventData("Collides with an obstacle at", "out of balance?" + (Communication.collisionData.out_of_balance?"true":"false"), "GPS level: " + Communication.positionData.sigLevel);
+        }
+    }
+
     IEnumerator SignalLostRecoverFixedDuration()
     {
         yield return new WaitForSeconds(signalLostRecoverDuration);

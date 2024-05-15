@@ -87,8 +87,8 @@ public class UIUpdater : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        flightState.text = flightStateString[(int)VelocityControl.currentFlightState];
-        missionState.text = missionStateString[(int)DroneManager.currentMissionState];
+        //flightState.text = flightStateString[(int)VelocityControl.currentFlightState];
+        //missionState.text = missionStateString[(int)DroneManager.currentMissionState];
         //systemState.text = Enum.GetName(typeof(DroneManager.SystemState), DroneManager.currentSystemState);
         //controlState.text = controlStateString[(int)DroneManager.currentControlType];
         if(DroneManager.currentControlType == DroneManager.ControlType.Autonomous)

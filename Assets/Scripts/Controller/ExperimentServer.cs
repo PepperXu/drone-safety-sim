@@ -74,6 +74,8 @@ public class ExperimentServer : MonoBehaviour
 	[SerializeField] private Toggle[] visConditionToggles, configToggles;
 
 	string[] autopilotStatus = {"auto_nav", "auto_wait", "auto_return", "auto_off"};
+	string[] flightStateString = {"landed", "taking off", "hovering", "navigating", "landing", "collided"};
+	bool landed = true;
 
 	int currentDebugMode = 0; //0: wind control (strength only), 1: battery control, 2: position control
     // Start is called before the first frame update
@@ -479,7 +481,7 @@ public class ExperimentServer : MonoBehaviour
 		};
 		using (StreamWriter writer = new StreamWriter(fullLogFilePath, true))
 		{
-			writer.WriteLine("Timestamp, DronePos, ControlMode, CollisionStatus, BatteryStatus, GPSStatus");
+			writer.WriteLine("Timestamp, DronePos, ControlMode, FlightState, CollisionStatus, BatteryStatus, GPSStatus");
 		};
 		expTimer = 0f;
         isRecording = true;
@@ -505,14 +507,23 @@ public class ExperimentServer : MonoBehaviour
 	{
 		while (isRecording)
 		{
-            using (StreamWriter writer = new StreamWriter(fullLogFilePath, true))
-            {	
+			if(!landed){
 				string currentControlState = DroneManager.currentControlType == DroneManager.ControlType.Manual ? (InputControl.inputStatus == InputControl.InputStatus.Idle?"idle":"manual") : autopilotStatus[(int)AutopilotManager.autopilotStatus];
 				string currentBatteryState = Communication.battery.batteryState == "Critical"?"Critical":(Communication.battery.rth?"RTH":Communication.battery.batteryState);
-                writer.WriteLine(expTimer + "," + Communication.realPose.WorldPosition.x + "|" + Communication.realPose.WorldPosition.y + "|" + Communication.realPose.WorldPosition.z + "," +
-                    currentControlState + "," + Communication.collisionData.collisionStatus + "," + 
-					currentBatteryState + "," + Communication.positionData.sigLevel);
-            };
+				string currentFlightState = flightStateString[(int)VelocityControl.currentFlightState];
+            	using (StreamWriter writer = new StreamWriter(fullLogFilePath, true))
+            	{	
+					
+            	    writer.WriteLine(expTimer + "," + Communication.realPose.WorldPosition.x + "|" + Communication.realPose.WorldPosition.y + "|" + Communication.realPose.WorldPosition.z + "," +
+            	        currentControlState + "," + currentFlightState + "," + Communication.collisionData.collisionStatus + "," + 
+						currentBatteryState + "," + Communication.positionData.sigLevel);
+            	};
+				if(VelocityControl.currentFlightState == VelocityControl.FlightState.Landed)
+					landed = true;
+			} else {
+				if(VelocityControl.currentFlightState != VelocityControl.FlightState.Landed)
+					landed = false;
+			}
             yield return new WaitForFixedUpdate();
 		}
 	}
