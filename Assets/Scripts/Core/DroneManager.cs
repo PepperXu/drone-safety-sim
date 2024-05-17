@@ -195,6 +195,12 @@ public class DroneManager : MonoBehaviour
                     currentMissionState = MissionState.Inspecting;
                     autopilot_flag = false;
                 }
+                if (take_photo_flag)
+                {
+                    take_photo_flag = false;
+                    takePhotoEvent.Invoke();
+                    //camController.TakePhoto(false);
+                }
             } else if(currentMissionState == MissionState.Inspecting){
                 if(!Communication.positionData.inBuffer){
                     autopilot_stop_flag = true;

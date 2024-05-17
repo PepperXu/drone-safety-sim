@@ -13,8 +13,8 @@ public class VelocityControl : MonoBehaviour {
     private float gravity = 9.81f;
     private float time_constant_z_velocity = 1.0f; // Normal-person coordinates
     private float time_constant_acceleration = 0.5f;
-    private float time_constant_omega_xy_rate = 0.01f; // Normal-person coordinates (roll/pitch)
-    private float time_constant_alpha_xy_rate = 0.01f; // Normal-person coordinates (roll/pitch)
+    private float time_constant_omega_xy_rate = 0.1f; // Normal-person coordinates (roll/pitch)
+    private float time_constant_alpha_xy_rate = 0.05f; // Normal-person coordinates (roll/pitch)
     private float time_constant_alpha_z_rate = 0.05f; // Normal-person coordinates (yaw)
 
     private float max_pitch = 0.175f; // 10 Degrees in radians, otherwise small-angle approximation dies 

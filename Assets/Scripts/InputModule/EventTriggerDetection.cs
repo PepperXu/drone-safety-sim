@@ -11,10 +11,10 @@ public class EventTriggerDetection : MonoBehaviour {
     [SerializeField] PositionalSensorSimulator pss;
 
 
-    float windStrength = 50f, strongWindStrength = 65f;
-    float windDuration = 20f, windDurationLong = 30f;
-    float signalLostRecoverDuration = 20f;
-    int signalNormalIndex = 1, signalLostIndex = 0;
+    float normalDriftStrength = 10f, strongDriftStrength = 50f;
+    //float windDuration = 20f, windDurationLong = 30f;
+    float signalLostRecoverDuration = 5f;
+    //int signalNormalIndex = 1, signalLostIndex = 0;
 
     bool batteryDropped = false;
     bool GPSDeniedZoneEntered = false;
@@ -48,6 +48,8 @@ public class EventTriggerDetection : MonoBehaviour {
             StopAllCoroutines();
             GPSDeniedZoneEntered = true;
             if(!Communication.positionData.gpsLost){
+                rpn.strength_mean = strongDriftStrength;
+                rpn.wind_change_flag = true;
                 pss.SetGPSLost(true);
                 ExperimentServer.RecordEventData("Enters GPS Denied Area at", "zone id: " + other.gameObject.name, "");
             }
@@ -126,6 +128,8 @@ public class EventTriggerDetection : MonoBehaviour {
     {
         yield return new WaitForSeconds(signalLostRecoverDuration);
         pss.SetGPSLost(false);
+        rpn.strength_mean = normalDriftStrength;
+        rpn.wind_change_flag = true;
         ExperimentServer.RecordEventData("GPS Recovered at", "", "");
     }
 

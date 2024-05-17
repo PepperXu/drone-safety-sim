@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.Properties;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Utilities.Tweenables.Primitives;
+using static UnityEngine.GraphicsBuffer;
 
 public class AutopilotManager : MonoBehaviour
 {
@@ -10,6 +11,7 @@ public class AutopilotManager : MonoBehaviour
     bool isRTH = false;
     //For Autopiloting
     int currentWaypointIndex = 0;
+    //int previousWaypointIndex = -1;
     int stopWaypointIndex = 0;
 
     //[SerializeField] FlightPlanning flightPlanning;
@@ -23,14 +25,14 @@ public class AutopilotManager : MonoBehaviour
     float ground_offset = 0.2f;
 
 
-    const float waitTime = 0.5f;
+    const float waitTime = 0.2f;
     float waitTimer = 0f;
 
-    float autopilot_max_speed = 3.0f;
+    float autopilot_max_speed = 5.0f;
     float autopilot_slowing_start_dist = 5.0f;
     //public Vector3 vectorToBuildingSurface;
 
-    bool photoTaken = false;
+    List<int> coverageSpawnedIndices = new List<int>();
     //public Vector3 positionOffset;
 
     bool autopilot_initialized = false;
@@ -72,6 +74,7 @@ public class AutopilotManager : MonoBehaviour
         isRTH = false;
         currentWaypointIndex = 0;
         stopWaypointIndex = 0;
+        coverageSpawnedIndices.Clear();
     }
 
     // Update is called once per frame
@@ -129,13 +132,14 @@ public class AutopilotManager : MonoBehaviour
                     Vector3 offset = target - sensedPosition;
 
                     //Debug.Log("current target offset" + offset);
-                    if (offset.magnitude < 0.8f)
+                    if (offset.magnitude < 0.5f)
                     {
                         autopilotStatus = AutopilotStatus.Waiting;
                         waitTimer += Time.deltaTime;
-                        if(waitTimer >= waitTime/2f & !photoTaken){
+                        if(waitTimer >= waitTime/2f && !coverageSpawnedIndices.Contains(currentWaypointIndex))
+                        {
                             DroneManager.take_photo_flag = true;
-                            photoTaken = true;
+                            coverageSpawnedIndices.Add(currentWaypointIndex);
                         }
                         if (waitTimer >= waitTime)
                         {
@@ -144,7 +148,6 @@ public class AutopilotManager : MonoBehaviour
                             //wordVis.currentWaypointIndex = this.currentWaypointIndex;
                             Communication.currentWaypointIndex = this.currentWaypointIndex;
                             waitTimer = 0f;
-                            photoTaken = false;
                         }
                     }
                     else
@@ -196,6 +199,20 @@ public class AutopilotManager : MonoBehaviour
             {
                 currentWaypointIndex = 0;
                 Communication.currentWaypointIndex = currentWaypointIndex;
+                if((Communication.positionData.virtualPosition - Communication.waypoints[0].transform.position).magnitude < 1f)
+                {
+                    waitTimer += Time.deltaTime;
+                    if (waitTimer >= waitTime)
+                    {
+                        DroneManager.take_photo_flag = true;
+                        coverageSpawnedIndices.Add(0);
+                        waitTimer = 0f;
+                        autopilot_initialized = true;
+                    }
+                } else
+                {
+                    waitTimer = 0f;
+                }
             }
             else
             {
@@ -211,6 +228,31 @@ public class AutopilotManager : MonoBehaviour
                         shortestDistance = (Communication.positionData.virtualPosition - target).magnitude;
                     }
                 }
+                if (!coverageSpawnedIndices.Contains(currentIndex) && Communication.positionData.sigLevel > 1)
+                {
+                    if (currentIndex == currentWaypointIndex)
+                    {
+                        if (shortestDistance < 1f)
+                        {
+                            waitTimer += Time.deltaTime;
+                            if (waitTimer >= waitTime)
+                            {
+                                DroneManager.take_photo_flag = true;
+                                coverageSpawnedIndices.Add(currentIndex);
+                                waitTimer = 0f;
+                            }
+                        }
+                        else
+                        {
+                            waitTimer = 0f;
+                        }
+                    }
+                    else
+                    {
+                        waitTimer = 0f;
+
+                    }
+                }
                 currentWaypointIndex = currentIndex;
                 Communication.currentWaypointIndex = currentIndex;
             }
@@ -221,10 +263,14 @@ public class AutopilotManager : MonoBehaviour
     void EnableAutopilot()
     {
         //vc.SetMaxPitchRoll(enable?0.175f:0.3f);
-
+        if (!isAutopiloting)
+        {
+            waitTimer = 0f;
+        }
         isAutopiloting = true;
         isRTH = false;
         if(!autopilot_initialized){
+            
             autopilot_initialized = true;
             
         } 
@@ -242,6 +288,7 @@ public class AutopilotManager : MonoBehaviour
 
     void StopAutopilot(){
         if(isAutopiloting){
+            waitTimer = 0f;
             stopWaypointIndex = currentWaypointIndex; 
             isAutopiloting = false;
             isRTH = false;

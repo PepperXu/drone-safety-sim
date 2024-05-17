@@ -12,7 +12,7 @@ public class InputControl : MonoBehaviour {
 	private float abs_height = 1;
 
 	private float horizontal_sensitivity = 7f;
-	private float vertical_sensitivity = 0.03f;
+	private float vertical_sensitivity = 0.06f;
 	private float turning_sensitivity = 4f;
 
 	private bool switched = false;
@@ -93,10 +93,58 @@ public class InputControl : MonoBehaviour {
 		float yawAxis = Input.GetAxis ("Yaw");
 		float throttleAxix = Input.GetAxis("Throttle");
 
-		float vx = pitchAxis * horizontal_sensitivity;
-		float vy = rollAxis * horizontal_sensitivity;
+		float vx = rollAxis * horizontal_sensitivity;
+		float vy = pitchAxis * horizontal_sensitivity;
 
-		float yaw = 0f;
+		float angle = Mathf.Atan2(vy, vx);
+		Vector2 input = new Vector2(vx, vy);
+		Vector2 normDir;
+
+		if (Mathf.Abs(angle) < Mathf.PI / 8f)
+		{
+            normDir = Vector2.right;
+		}
+		else if (Mathf.Abs(angle) > Mathf.PI / 8f * 7f)
+		{
+            normDir = Vector2.left;
+		}
+		else if (angle > 0f)
+		{
+			if (Mathf.Abs(angle) >= Mathf.PI / 8f && Mathf.Abs(angle) <= Mathf.PI / 8f * 3f)
+			{
+                normDir = new Vector2(1f, 1f).normalized;
+            }
+			else if (Mathf.Abs(angle) > Mathf.PI / 8f * 3f && Mathf.Abs(angle) < Mathf.PI / 8f * 5f)
+			{
+                normDir = Vector2.up;
+            }
+			else 
+			{
+                normDir = new Vector2(-1f, 1f).normalized;
+            }
+		} else
+		{
+            if (Mathf.Abs(angle) >= Mathf.PI / 8f && Mathf.Abs(angle) <= Mathf.PI / 8f * 3f)
+            {
+                normDir = new Vector2(1f, -1f).normalized;
+            }
+            else if (Mathf.Abs(angle) > Mathf.PI / 8f * 3f && Mathf.Abs(angle) < Mathf.PI / 8f * 5f)
+            {
+                normDir = Vector2.down;
+            }
+            else 
+            {
+                normDir = new Vector2(-1f, -1f).normalized;
+                
+            }
+        }
+
+        float magnitude = Vector2.Dot(input, normDir);
+        vx = (magnitude * normDir).x;
+        vy = (magnitude * normDir).y;
+		Debug.Log("vx:" + vx + ", vy: " + vy);
+
+        float yaw = 0f;
 		float height_diff = 0f;
 
 		
@@ -109,8 +157,8 @@ public class InputControl : MonoBehaviour {
 		
 
 		if(DroneManager.currentControlType == DroneManager.ControlType.Manual){
-			DroneManager.desired_vx = vy;
-			DroneManager.desired_vy = vx;
+			DroneManager.desired_vx = vx;
+			DroneManager.desired_vy = vy;
 			DroneManager.desired_yaw = yaw;
 			DroneManager.desired_height += height_diff;
             inputStatus = (Mathf.Abs(pitchAxis) > 0.01f || Mathf.Abs(rollAxis) > 0.01f || Mathf.Abs(yawAxis) > 0.01f || Mathf.Abs(throttleAxix) > 0.01f) ? InputStatus.Active : InputStatus.Idle;

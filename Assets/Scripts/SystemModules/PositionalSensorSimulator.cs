@@ -91,7 +91,15 @@ public class PositionalSensorSimulator : MonoBehaviour
             Vector2 randomOffset;
             if (!gps_lost)
             {
-                randomOffset = Random.insideUnitCircle * maxPositionUncertaintyNormal;
+                Vector2 randomVector = Random.insideUnitCircle;
+                if (targetOffset.magnitude > 6f)
+                    randomOffset = randomVector.normalized * (randomVector.magnitude * (targetOffset.magnitude-5f) + 5f);
+                else if (targetOffset.magnitude > 4f)
+                    randomOffset = randomVector.normalized * (randomVector.magnitude * (targetOffset.magnitude-3f) + 3f);
+                else if(targetOffset.magnitude > 2f)
+                    randomOffset = randomVector.normalized * (randomVector.magnitude * (targetOffset.magnitude-1f) + 1f);
+                else
+                    randomOffset = randomVector * maxPositionUncertaintyNormal;
             } else
             {
                 Vector2 randomVector = Random.insideUnitCircle;

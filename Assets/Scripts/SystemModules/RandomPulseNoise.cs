@@ -159,7 +159,8 @@ public class RandomPulseNoise : MonoBehaviour {
             else 
             {
                 pulse_timer += Time.deltaTime;
-                if (pulse_timer >= pulse_duration) {
+                if (pulse_timer >= pulse_duration || wind_change_flag) {
+                    wind_change_flag = false;
                     pulse_timer = 0.0f; //reset
                     pulse_mode = 0;
                 } else {

@@ -69,7 +69,7 @@ public class ExperimentServer : MonoBehaviour
 	static float expTimer;
 
 	[SerializeField] private Camera vrCamera;
-	[SerializeField] private LayerMask excludeMark, includeMark;
+	//[SerializeField] private LayerMask excludeMark, includeMark;
 	[SerializeField] private GameObject MonitorUI, EXPUI;
 	[SerializeField] private Toggle[] visConditionToggles, configToggles;
 
@@ -127,9 +127,9 @@ public class ExperimentServer : MonoBehaviour
 		ProcessKeyboardInput();
 		if(currentVisCondition == VisualizationCondition.TwoDimensionOnly){
 			VisType.globalVisType = VisType.VisualizationType.TwoDOnly;
-			vrCamera.cullingMask = excludeMark;
+			//vrCamera.cullingMask = excludeMark;
 		} else {
-			vrCamera.cullingMask = includeMark;
+			//vrCamera.cullingMask = includeMark;
 			if(currentVisCondition == VisualizationCondition.All || switching_flag){
 				VisType.RevealHiddenVisType(false);
 				VisType.globalVisType = VisType.VisualizationType.Both;
