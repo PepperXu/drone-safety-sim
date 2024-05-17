@@ -12,6 +12,8 @@ public class CustomRayController : MonoBehaviour
     private float triggerValue;
     private bool triggered = false;
 
+    [SerializeField] bool headGaze = false;
+
     [SerializeField] bool mouseDebugging = false;
     // Start is called before the first frame update
     void Start()
@@ -31,7 +33,14 @@ public class CustomRayController : MonoBehaviour
                     hit.transform.GetComponent<InteractiveCamera>().MarkDefectFromCamera(hit);
                 }
             }
-        } else {
+        } else if(headGaze){
+            RaycastHit hit;
+            Ray ray = new Ray(transform.position, transform.forward);
+
+            if(Physics.Raycast(ray, out hit, float.PositiveInfinity, fpv_cam_layer)){
+                
+            }
+        }else{
 
             if(!controller.isValid){
                 List<InputDevice> devices = new List<InputDevice>();

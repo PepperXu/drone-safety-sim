@@ -53,7 +53,7 @@ public class UIUpdater : MonoBehaviour
     [Header("External Anchors")]
     [SerializeField] Transform headAnchor;
     [SerializeField] Transform handAnchor;
-    [SerializeField] Transform droneAnchor;
+    //[SerializeField] Transform droneAnchor;
 
     [Header("Buttons")]
     [SerializeField] Toggle autoPilotToggle;
@@ -66,7 +66,7 @@ public class UIUpdater : MonoBehaviour
 
     [SerializeField] Transform uiAnchor;
 
-    [SerializeField] Vector3 posLOS, posLow, angLOS, angLow, posHand, angHand, scaleHead, scaleHand, posDrone, scaleDrone;
+    [SerializeField] Vector3 posLOS, posLow, angLOS, angLow, posHand, angHand, scaleHead, scaleHand;// posDrone, scaleDrone;
 
     //Vector3 targetPos, targetAng;
 
@@ -246,7 +246,7 @@ public class UIUpdater : MonoBehaviour
                     uiAnchor.localEulerAngles = angHand;
                     uiAnchor.localScale = scaleHand;
                 }
-            } else if(VisType.globalVisType == VisType.VisualizationType.MissionOnly || VisType.globalVisType == VisType.VisualizationType.Both){
+            } else {//if(VisType.globalVisType == VisType.VisualizationType.MissionOnly || VisType.globalVisType == VisType.VisualizationType.Both){
                 if(uiAnchor.parent != headAnchor){
                     uiAnchor.parent = headAnchor;
                     uiAnchor.localPosition = posLow;
@@ -272,15 +272,16 @@ public class UIUpdater : MonoBehaviour
                 {
                     uiAnchor.localEulerAngles = Vector3.MoveTowards(uiAnchor.localEulerAngles, targetAng, 33f * Time.deltaTime);
                 }
-            } else {
-                if(uiAnchor.parent != droneAnchor){
-                    uiAnchor.parent = droneAnchor;
-                    uiAnchor.localPosition = posDrone;
-                   
-                }
-                uiAnchor.transform.LookAt(2f*droneAnchor.position-headAnchor.position);
-                uiAnchor.localScale = scaleDrone * Mathf.Max((droneAnchor.position - headAnchor.position).magnitude * 0.1f, 1f);
-            }
+            } 
+            //else {
+            //    if(uiAnchor.parent != droneAnchor){
+            //        uiAnchor.parent = droneAnchor;
+            //        uiAnchor.localPosition = posDrone;
+            //       
+            //    }
+            //    uiAnchor.transform.LookAt(2f*droneAnchor.position-headAnchor.position);
+            //    uiAnchor.localScale = scaleDrone * Mathf.Max((droneAnchor.position - headAnchor.position).magnitude * 0.1f, 1f);
+            //}
             
             yield return new WaitForEndOfFrame();
         }
