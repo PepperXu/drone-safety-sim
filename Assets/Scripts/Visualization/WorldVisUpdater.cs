@@ -65,15 +65,28 @@ public class WorldVisUpdater : MonoBehaviour
         StopAllCoroutines();
         RemoveAllCoverageObject();
         StartCoroutine(WorldVisUpdateCoroutine());
+        
     }
 
     void ResetTrajectoryVis(){
         LineRenderer traj = flightPlan.visRoot.GetChild(0).GetComponent<LineRenderer>();
-        //waypoints.Clear();
-        foreach(Waypoint wp in Communication.waypoints){
-            //Waypoint wp = t.GetComponent<Waypoint>();
-            //waypoints.Add(wp);
-            wp.currentWaypointState = Waypoint.WaypointState.Neutral;
+        if (VisType.globalVisType == VisType.VisualizationType.TwoDOnly)
+        {
+            traj.widthMultiplier = 0.2f;
+            foreach (Waypoint wp in Communication.waypoints)
+            {
+                wp.transform.localScale = Vector3.one * 2f;
+                wp.currentWaypointState = Waypoint.WaypointState.Neutral;
+            }
+        }
+        else
+        {
+            traj.widthMultiplier = 0.1f;
+            foreach (Waypoint wp in Communication.waypoints)
+            {
+                wp.transform.localScale = Vector3.one;
+                wp.currentWaypointState = Waypoint.WaypointState.Neutral;
+            }
         }
         Gradient g = traj.colorGradient;
         GradientColorKey[] ck = g.colorKeys;
@@ -217,6 +230,7 @@ public class WorldVisUpdater : MonoBehaviour
             markObj.transform.position = hit.point + hit.normal.normalized * 0.01f;
             markObj.transform.rotation = Quaternion.LookRotation(Vector3.up, hit.normal);
             markObj.transform.parent = transform;
+            spawnedCoverageObjects.Add(markObj);
             Debug.Log("Coverage Spawned with Mark");
         }
 

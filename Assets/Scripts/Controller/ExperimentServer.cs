@@ -69,7 +69,7 @@ public class ExperimentServer : MonoBehaviour
 	static float expTimer;
 
 	[SerializeField] private Camera vrCamera;
-	//[SerializeField] private LayerMask excludeMark, includeMark;
+	[SerializeField] private LayerMask Cam2DOnly, ARCam;
 	[SerializeField] private GameObject MonitorUI, EXPUI;
 	[SerializeField] private Toggle[] visConditionToggles, configToggles;
 
@@ -127,9 +127,9 @@ public class ExperimentServer : MonoBehaviour
 		ProcessKeyboardInput();
 		if(currentVisCondition == VisualizationCondition.TwoDimensionOnly){
 			VisType.globalVisType = VisType.VisualizationType.TwoDOnly;
-			//vrCamera.cullingMask = excludeMark;
+			vrCamera.cullingMask = Cam2DOnly;
 		} else {
-			//vrCamera.cullingMask = includeMark;
+			vrCamera.cullingMask = ARCam;
 			if(currentVisCondition == VisualizationCondition.All || switching_flag){
 				VisType.RevealHiddenVisType(false);
 				VisType.globalVisType = VisType.VisualizationType.Both;
@@ -178,92 +178,105 @@ public class ExperimentServer : MonoBehaviour
         	if(Input.GetKeyDown(KeyCode.Alpha3)){
         	    UpdateVisCondition(2);
         	}
-			if(Input.GetKeyDown(KeyCode.Tab)){
-				currentDebugMode = (currentDebugMode + 1) % 4;
-				string debugModeText = "";
-				switch(currentDebugMode){
-					case 0:
-						debugModeText = "wind turbulence";
-						break;
-					case 1:
-						debugModeText = "reduce battery";
-						break;
-					case 2:
-						debugModeText = "gps instable";
-						break;
-					case 3:
-						debugModeText = "facade config";
-						break;
-					default:
-						break;
-				}
-				Debug.LogWarning("Current Debug Mode: " + debugModeText);
-			}
-			switch(currentDebugMode){
-				case 0:
-					if(Input.GetKeyDown(KeyCode.F1)){
-						randomPulseNoise.strength_mean = 20f;
-						randomPulseNoise.wind_change_flag = true;
-        			}
-        			if(Input.GetKeyDown(KeyCode.F2)){
-        			    randomPulseNoise.strength_mean = 40f;
-						randomPulseNoise.wind_change_flag = true;
-        			}
-        			if(Input.GetKeyDown(KeyCode.F3)){
-        			    randomPulseNoise.strength_mean = 60f;
-						randomPulseNoise.wind_change_flag = true;
-        			}
-        			if(Input.GetKeyDown(KeyCode.F4)){
-        			    randomPulseNoise.strength_mean = 80f;
-						randomPulseNoise.wind_change_flag = true;
-        			}
-					if(Input.GetKeyDown(KeyCode.F5)){
-        			    randomPulseNoise.strength_mean = 100f;
-						randomPulseNoise.wind_change_flag = true;
-        			}
-					break;
-				case 1:
-					if(Input.GetKeyDown(KeyCode.F1)){
-						battery.ReduceBatteryCap(0.1f);
-        			}
-        			if(Input.GetKeyDown(KeyCode.F2)){
-        			    battery.ReduceBatteryCap(0.2f);
-        			}
-        			if(Input.GetKeyDown(KeyCode.F3)){
-        			    battery.ReduceBatteryCap(0.3f);
-        			}
-					break;
-				case 2:
-					if(Input.GetKeyDown(KeyCode.F1)){
-						positionalSensorSimulator.SetGPSLost(false);
-        			}
-        			if(Input.GetKeyDown(KeyCode.F2)){
-        			    positionalSensorSimulator.SetGPSLost(true);
-        			}
-        			//if(Input.GetKeyDown(KeyCode.F3)){
-        			//    positionalSensorSimulator.SetSignalLevel(1);
-        			//}
-        			//if(Input.GetKeyDown(KeyCode.F4)){
-        			//    positionalSensorSimulator.SetSignalLevel(0);
-        			//}
-					break;
-				case 3:
-					if(Input.GetKeyDown(KeyCode.F1)){
-						UpdateConfig(0);
-                    }
-        			if(Input.GetKeyDown(KeyCode.F2)){
-                        UpdateConfig(1);
-                    }
-        			if(Input.GetKeyDown(KeyCode.F3)){
-                        UpdateConfig(2);
-                    }
-        			if(Input.GetKeyDown(KeyCode.F4)){
-        			    UpdateConfig(3);
-        			}
-					break;
-				default:
-					break;
-			}
+            if (Input.GetKeyDown(KeyCode.F1))
+            {
+                UpdateConfig(0);
+            }
+            if (Input.GetKeyDown(KeyCode.F2))
+            {
+                UpdateConfig(1);
+            }
+            if (Input.GetKeyDown(KeyCode.F3))
+            {
+                UpdateConfig(2);
+            }
+            if (Input.GetKeyDown(KeyCode.F4))
+            {
+                UpdateConfig(3);
+            }
+            if (Input.GetKeyDown(KeyCode.F5))
+            {
+                UpdateConfig(4);
+            }
+            if (Input.GetKeyDown(KeyCode.F6))
+            {
+                UpdateConfig(5);
+            }
+            //if (Input.GetKeyDown(KeyCode.Tab)){
+			//	currentDebugMode = (currentDebugMode + 1) % 4;
+			//	string debugModeText = "";
+			//	switch(currentDebugMode){
+			//		case 0:
+			//			debugModeText = "wind turbulence";
+			//			break;
+			//		case 1:
+			//			debugModeText = "reduce battery";
+			//			break;
+			//		case 2:
+			//			debugModeText = "gps instable";
+			//			break;
+			//		case 3:
+			//			debugModeText = "facade config";
+			//			break;
+			//		default:
+			//			break;
+			//	}
+			//	Debug.LogWarning("Current Debug Mode: " + debugModeText);
+			//}
+			//switch(currentDebugMode){
+			//	case 0:
+			//		if(Input.GetKeyDown(KeyCode.F1)){
+			//			randomPulseNoise.strength_mean = 20f;
+			//			randomPulseNoise.wind_change_flag = true;
+        	//		}
+        	//		if(Input.GetKeyDown(KeyCode.F2)){
+        	//		    randomPulseNoise.strength_mean = 40f;
+			//			randomPulseNoise.wind_change_flag = true;
+        	//		}
+        	//		if(Input.GetKeyDown(KeyCode.F3)){
+        	//		    randomPulseNoise.strength_mean = 60f;
+			//			randomPulseNoise.wind_change_flag = true;
+        	//		}
+        	//		if(Input.GetKeyDown(KeyCode.F4)){
+        	//		    randomPulseNoise.strength_mean = 80f;
+			//			randomPulseNoise.wind_change_flag = true;
+        	//		}
+			//		if(Input.GetKeyDown(KeyCode.F5)){
+        	//		    randomPulseNoise.strength_mean = 100f;
+			//			randomPulseNoise.wind_change_flag = true;
+        	//		}
+			//		break;
+			//	case 1:
+			//		if(Input.GetKeyDown(KeyCode.F1)){
+			//			battery.ReduceBatteryCap(0.1f);
+        	//		}
+        	//		if(Input.GetKeyDown(KeyCode.F2)){
+        	//		    battery.ReduceBatteryCap(0.2f);
+        	//		}
+        	//		if(Input.GetKeyDown(KeyCode.F3)){
+        	//		    battery.ReduceBatteryCap(0.3f);
+        	//		}
+			//		break;
+			//	case 2:
+			//		if(Input.GetKeyDown(KeyCode.F1)){
+			//			positionalSensorSimulator.SetGPSLost(false);
+        	//		}
+        	//		if(Input.GetKeyDown(KeyCode.F2)){
+        	//		    positionalSensorSimulator.SetGPSLost(true);
+        	//		}
+        	//		//if(Input.GetKeyDown(KeyCode.F3)){
+        	//		//    positionalSensorSimulator.SetSignalLevel(1);
+        	//		//}
+        	//		//if(Input.GetKeyDown(KeyCode.F4)){
+        	//		//    positionalSensorSimulator.SetSignalLevel(0);
+        	//		//}
+			//		break;
+			//	case 3:
+			//		
+			//		break;
+			//	default:
+			//		break;
+			//}
 			if(Input.GetKeyDown(KeyCode.X)){
 				ResetExperiment();
 			}

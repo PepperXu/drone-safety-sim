@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2247190997305538397}
   - component: {fileID: 8679603893896122722}
   - component: {fileID: 2632745565731479351}
-  m_Layer: 0
+  m_Layer: 24
   m_Name: wp-next-next
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -94,7 +94,7 @@ GameObject:
   - component: {fileID: 834405600867536456}
   - component: {fileID: 8925349453824279259}
   - component: {fileID: 246369086277903691}
-  m_Layer: 0
+  m_Layer: 24
   m_Name: wp-neutral
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -177,7 +177,7 @@ GameObject:
   - component: {fileID: 3222478379200854092}
   - component: {fileID: 8143127605851996954}
   - component: {fileID: 4284096309344310047}
-  m_Layer: 0
+  m_Layer: 24
   m_Name: wp-next
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -263,7 +263,7 @@ GameObject:
   - component: {fileID: 3872073791876059492}
   - component: {fileID: 59062910405273591}
   - component: {fileID: 8176685382676223851}
-  m_Layer: 0
+  m_Layer: 24
   m_Name: Text (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -436,7 +436,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mainCamera: {fileID: 0}
-  alignX: 0
+  fixZ_alignX: 0
+  fixX_alighZ: 0
+  alignZ: 0
 --- !u!114 &8176685382676223851
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -463,7 +465,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1987881775663732472}
   - component: {fileID: 8382790479016284487}
-  m_Layer: 0
+  m_Layer: 24
   m_Name: waypoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}

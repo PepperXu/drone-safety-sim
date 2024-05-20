@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using TMPro;
+using UnityEditor.XR.Interaction.Toolkit;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -18,6 +19,9 @@ public class VisType : MonoBehaviour
     [SerializeField] private VisualizationType visType;
 
     [SerializeField] private bool is2D;
+    [SerializeField] private bool isFlightPlan;
+
+    private static bool isGazed = false;
 
     public Transform visRoot;
 
@@ -80,11 +84,28 @@ public class VisType : MonoBehaviour
     void Update()
     {
         if(globalVisType == VisualizationType.TwoDOnly){
-            visRoot.gameObject.SetActive(is2D);
+            visRoot.gameObject.SetActive(is2D || isFlightPlan);
             return;
         }
         if(isRevealing) visType = hiddenVisType; else visType = originalVisType;
         visRoot.gameObject.SetActive((globalVisType == visType || visType == VisualizationType.Both || globalVisType == VisualizationType.Both) && showVisualization);
+    }
+
+    private void LateUpdate()
+    {
+        if(is2D && globalVisType == VisualizationType.SafetyOnly)
+        {
+            if (isGazed)
+            {
+                SetTransparency(0);
+            } else
+            {
+                SetTransparency(1);
+            }
+        } else
+        {
+            SetTransparency(0);
+        }
     }
 
     public static void SwitchVisType()
@@ -103,6 +124,11 @@ public class VisType : MonoBehaviour
         isRevealing = reveal;
     }
 
+    public static void SetGazed(bool gazed)
+    {
+        isGazed = gazed;
+    }
+
     public void SetTransparency(int level){
         int i = 0;
         foreach(SpriteRenderer sprite in sprites){
@@ -110,7 +136,7 @@ public class VisType : MonoBehaviour
             //c.a = initialColors[i].a * (level == 0 ? normalAlpha: sigLostAlpha);
             //sprite.color = c;
             Color c = sprite.color;
-            c.a = initialAlphas[i]*(level == 0 ? normalAlpha : sigLostAlpha);
+            c.a = initialAlphas[i] * (level == 0 ? normalAlpha : sigLostAlpha);
             sprite.color = c;
             i++;
         }

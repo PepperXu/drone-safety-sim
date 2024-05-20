@@ -7,6 +7,7 @@ using UnityEngine.XR;
 public class CustomRayController : MonoBehaviour
 {
     [SerializeField] private LayerMask fpv_cam_layer;
+    [SerializeField] private LayerMask ui_gaze_layer;
     [SerializeField] InputDeviceCharacteristics deviceCharacteristics;
     private InputDevice controller;
     private float triggerValue;
@@ -35,10 +36,13 @@ public class CustomRayController : MonoBehaviour
             }
         } else if(headGaze){
             RaycastHit hit;
-            Ray ray = new Ray(transform.position, transform.forward);
+            Ray ray = new Ray(transform.position, Quaternion.AngleAxis(20f, transform.right) * transform.forward);
 
-            if(Physics.Raycast(ray, out hit, float.PositiveInfinity, fpv_cam_layer)){
-                
+            if(Physics.Raycast(ray, out hit, float.PositiveInfinity, ui_gaze_layer)){
+                VisType.SetGazed(true);
+            } else
+            {
+                VisType.SetGazed(false);
             }
         }else{
 

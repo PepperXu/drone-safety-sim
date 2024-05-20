@@ -64,6 +64,8 @@ public class FlightPlanning : MonoBehaviour
     public GameObject[] configs;
 
     private List<Waypoint> wpList = new List<Waypoint>();
+    [SerializeField] Vector3 posLeft, posRight, angleLeft, angleRight;
+    [SerializeField] Transform satelliteCam;
 
     // Start is called before the first frame update
 
@@ -130,28 +132,60 @@ public class FlightPlanning : MonoBehaviour
             configs[1].SetActive(false);
             configs[2].SetActive(false);
             configs[3].SetActive(false);
+            configs[4].SetActive(false);
+            configs[5].SetActive(false);
             GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
+
             //GenerateTrajectoryOnSurface(ref path, wpParent, 1, true, false);
             //GenerateTrajectoryOnSurface(ref path, wpParent, currentSelectedSurfaceIndex, isFromTop, false);
-        } else if (configIndex == 1){
+        }
+        else if (configIndex == 1)
+        {
             configs[0].SetActive(false);
             configs[1].SetActive(true);
             configs[2].SetActive(false);
             configs[3].SetActive(false);
+            configs[4].SetActive(false);
+            configs[5].SetActive(false);
             GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, false);
             //GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
-        } else if (configIndex == 2) {
+        }
+        else if (configIndex == 2)
+        {
             configs[0].SetActive(false);
             configs[1].SetActive(false);
             configs[2].SetActive(true);
             configs[3].SetActive(false);
+            configs[4].SetActive(false);
+            configs[5].SetActive(false);
             GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
             //GenerateTrajectoryOnSurface(ref path, wpParent, 1, true, false);
-        } else if (configIndex == 3){
+        }
+        else if (configIndex == 3){
             configs[0].SetActive(false);
             configs[1].SetActive(false);
             configs[2].SetActive(false);
             configs[3].SetActive(true);
+            configs[4].SetActive(false);
+            configs[5].SetActive(false);
+            GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, false);
+            //GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
+        } else if (configIndex == 4) {
+            configs[0].SetActive(false);
+            configs[1].SetActive(false);
+            configs[2].SetActive(false);
+            configs[3].SetActive(false);
+            configs[4].SetActive(true);
+            configs[5].SetActive(false);
+            GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
+            //GenerateTrajectoryOnSurface(ref path, wpParent, 1, true, false);
+        } else if (configIndex == 5){
+            configs[0].SetActive(false);
+            configs[1].SetActive(false);
+            configs[2].SetActive(false);
+            configs[3].SetActive(false);
+            configs[4].SetActive(false);
+            configs[5].SetActive(true);
             GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, false);
             //GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
         }
@@ -162,6 +196,11 @@ public class FlightPlanning : MonoBehaviour
         pathPlanned = true;
     }
 
+    void PositionSatelliteCam(int index)
+    {
+        satelliteCam.position = (index == 0)?posLeft:posRight;
+        satelliteCam.eulerAngles = (index == 0)?angleLeft:angleRight;
+    }
     void GenerateTrajectoryOnSurface(ref List<Vector3> path, Transform wpParent, int surfaceIndex, bool fromTop, bool reverse){
         List<Vector3> surfacePath = new List<Vector3>();
         Vector3[] currentSurfaceVertices = new Vector3[4];

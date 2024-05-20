@@ -53,6 +53,7 @@ public class UIUpdater : MonoBehaviour
     [Header("External Anchors")]
     [SerializeField] Transform headAnchor;
     [SerializeField] Transform handAnchor;
+    [SerializeField] Transform bodyAnchor;
     //[SerializeField] Transform droneAnchor;
 
     [Header("Buttons")]
@@ -65,6 +66,8 @@ public class UIUpdater : MonoBehaviour
     string[] controlStateString = {"Auto", "Manual"};
 
     [SerializeField] Transform uiAnchor;
+
+    [SerializeField] GameObject SatelliteUI;
 
     [SerializeField] Vector3 posLOS, posLow, angLOS, angLow, posHand, angHand, scaleHead, scaleHand;// posDrone, scaleDrone;
 
@@ -187,18 +190,18 @@ public class UIUpdater : MonoBehaviour
             if (Communication.collisionData.distances[i].magnitude < CollisionSensing.surfaceWarningThreshold)
             {
                 Color c = Color.red;
-                c.a = 1f;
+                col_detect[i].gameObject.SetActive(true);
                 col_detect[i].color = c;
 
             } else if (Communication.collisionData.distances[i].magnitude < CollisionSensing.surfaceCautionThreshold)
             {
                 Color c = Color.yellow;
-                c.a = 1f;
+                col_detect[i].gameObject.SetActive(true);
                 col_detect[i].color = c;
             } else
             {
                 Color c = Color.white;
-                c.a = 0f;
+                col_detect[i].gameObject.SetActive(false);
                 col_detect[i].color = c;
             }
         }
@@ -245,13 +248,17 @@ public class UIUpdater : MonoBehaviour
                     uiAnchor.localPosition = posHand;
                     uiAnchor.localEulerAngles = angHand;
                     uiAnchor.localScale = scaleHand;
+                    if(!SatelliteUI.activeInHierarchy)
+                        SatelliteUI.SetActive(true);
                 }
-            } else {//if(VisType.globalVisType == VisType.VisualizationType.MissionOnly || VisType.globalVisType == VisType.VisualizationType.Both){
+            } else if(VisType.globalVisType == VisType.VisualizationType.MissionOnly || VisType.globalVisType == VisType.VisualizationType.Both){
                 if(uiAnchor.parent != headAnchor){
                     uiAnchor.parent = headAnchor;
                     uiAnchor.localPosition = posLow;
                     uiAnchor.localEulerAngles = angLow;
                     uiAnchor.localScale = scaleHead;
+                    if (SatelliteUI.activeInHierarchy)
+                        SatelliteUI.SetActive(false);
                 }
                 Vector3 targetPos, targetAng;
                 if(VisType.globalVisType == VisType.VisualizationType.MissionOnly)
@@ -272,7 +279,29 @@ public class UIUpdater : MonoBehaviour
                 {
                     uiAnchor.localEulerAngles = Vector3.MoveTowards(uiAnchor.localEulerAngles, targetAng, 33f * Time.deltaTime);
                 }
-            } 
+            } else
+            {
+                if (uiAnchor.parent != bodyAnchor.parent)
+                {
+                    uiAnchor.parent = bodyAnchor.parent;
+                    uiAnchor.position = bodyAnchor.position + bodyAnchor.forward * posLow.z + bodyAnchor.up * posLow.y + bodyAnchor.right * posLow.x;
+                    uiAnchor.eulerAngles = bodyAnchor.eulerAngles + angLow;
+                    uiAnchor.localScale = scaleHead;
+                    if (SatelliteUI.activeInHierarchy)
+                        SatelliteUI.SetActive(false);
+                }
+
+                Vector3 targetPos = bodyAnchor.position + bodyAnchor.forward * posLow.z + bodyAnchor.up * posLow.y + bodyAnchor.right * posLow.x;
+                Vector3 targetAng = bodyAnchor.eulerAngles + angLow;
+                if ((uiAnchor.position - targetPos).magnitude > 0.05f)
+                {
+                    uiAnchor.position = Vector3.MoveTowards(uiAnchor.position, targetPos, 0.5f * Time.deltaTime);
+                }
+                if ((uiAnchor.eulerAngles - targetAng).magnitude > 1f)
+                {
+                    uiAnchor.eulerAngles = Vector3.MoveTowards(uiAnchor.eulerAngles, targetAng, 33f * Time.deltaTime);
+                }
+            }
             //else {
             //    if(uiAnchor.parent != droneAnchor){
             //        uiAnchor.parent = droneAnchor;

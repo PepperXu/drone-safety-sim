@@ -57,9 +57,9 @@ TagManager:
   - BuildingCollision
   - ground
   - correct-defect
-  - 
-  - 
-  - 
+  - ui-gaze
+  - satellite-plan
+  - waypoints
   - 
   - 
   - 
