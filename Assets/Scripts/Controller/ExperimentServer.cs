@@ -494,7 +494,7 @@ public class ExperimentServer : MonoBehaviour
 		};
 		using (StreamWriter writer = new StreamWriter(fullLogFilePath, true))
 		{
-			writer.WriteLine("Timestamp, DronePos, ControlMode, FlightState, CollisionStatus, BatteryStatus, GPSStatus");
+			writer.WriteLine("Timestamp, DronePos, NearestWaypointPos, NearestWaypointIndex, ControlMode, FlightState, CollisionStatus, BatteryStatus, GPSStatus");
 		};
 		expTimer = 0f;
         isRecording = true;
@@ -528,7 +528,8 @@ public class ExperimentServer : MonoBehaviour
             	{	
 					
             	    writer.WriteLine(expTimer + "," + Communication.realPose.WorldPosition.x + "|" + Communication.realPose.WorldPosition.y + "|" + Communication.realPose.WorldPosition.z + "," +
-            	        currentControlState + "," + currentFlightState + "," + Communication.collisionData.collisionStatus + "," + 
+                        Communication.positionData.nearestWaypoint.x + "|" + Communication.positionData.nearestWaypoint.y + "|" + Communication.positionData.nearestWaypoint.z + "," + Communication.positionData.nearestWaypointIndex + "," + 
+                        currentControlState + "," + currentFlightState + "," + Communication.collisionData.collisionStatus + "," + 
 						currentBatteryState + "," + Communication.positionData.sigLevel);
             	};
 				if(VelocityControl.currentFlightState == VelocityControl.FlightState.Landed)

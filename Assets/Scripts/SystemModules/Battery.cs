@@ -17,7 +17,7 @@ public class Battery : MonoBehaviour
     float remainingTimeInSeconds;
 
     public static float batteryLowThreshold = 0.25f;
-    public static float batteryCriticalThreshold = 0.15f;
+    public static float batteryCriticalThreshold = 0.1f;
     //System.Random r;
 
     [SerializeField] Transform Homepoint;

@@ -43,6 +43,8 @@ public class Communication : MonoBehaviour
         
         public bool inBuffer;
         public Vector3 currentTargetOffset;
+        public Vector3 nearestWaypoint;
+        public int nearestWaypointIndex;
     }
 
     public struct RealPose{

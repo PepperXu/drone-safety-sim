@@ -171,6 +171,28 @@ public class PositionalSensorSimulator : MonoBehaviour
             Communication.positionData.virtualPosition = vdronePos;
             Communication.positionData.v2bound = CheckPositionInContingencyBuffer(out Communication.positionData.inBuffer, vdronePos);
             Communication.positionData.v2surf = CheckDistanceToBuildingSurface(vdronePos);
+            if (Communication.positionData.inBuffer)
+            {
+                int wpIndex = 0;
+                float shortestDistance = float.MaxValue;
+                for (int i = 0; i < Communication.waypoints.Length; i++)
+                {
+                    Vector3 target = Communication.waypoints[i].transform.position;
+                    if ((Communication.realPose.WorldPosition - target).magnitude < shortestDistance)
+                    {
+                        wpIndex = i;
+                        shortestDistance = (Communication.positionData.virtualPosition - target).magnitude;
+                    }
+                }
+                Communication.positionData.nearestWaypoint = Communication.waypoints[wpIndex].transform.position;
+                Communication.positionData.nearestWaypointIndex = wpIndex;
+            } else
+            {
+                Communication.positionData.nearestWaypoint = Vector3.one * -1f;
+                Communication.positionData.nearestWaypointIndex = -1;
+            }
+
+
 
             lastDronePos = Communication.realPose.WorldPosition;
 

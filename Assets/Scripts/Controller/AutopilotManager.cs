@@ -139,6 +139,7 @@ public class AutopilotManager : MonoBehaviour
                         if(waitTimer >= waitTime/2f && !coverageSpawnedIndices.Contains(currentWaypointIndex))
                         {
                             DroneManager.take_photo_flag = true;
+                            ExperimentServer.RecordEventData("Waypoint Reached!", "index: " + currentWaypointIndex, "autopilot");
                             coverageSpawnedIndices.Add(currentWaypointIndex);
                         }
                         if (waitTimer >= waitTime)
@@ -205,6 +206,7 @@ public class AutopilotManager : MonoBehaviour
                     if (waitTimer >= waitTime)
                     {
                         DroneManager.take_photo_flag = true;
+                        ExperimentServer.RecordEventData("Waypoint Reached!", "index: " + 0, "manual");
                         coverageSpawnedIndices.Add(0);
                         waitTimer = 0f;
                         autopilot_initialized = true;
@@ -238,6 +240,7 @@ public class AutopilotManager : MonoBehaviour
                             if (waitTimer >= waitTime)
                             {
                                 DroneManager.take_photo_flag = true;
+                                ExperimentServer.RecordEventData("Waypoint Reached!", "index: " + currentWaypointIndex, "manual");
                                 coverageSpawnedIndices.Add(currentIndex);
                                 waitTimer = 0f;
                             }
