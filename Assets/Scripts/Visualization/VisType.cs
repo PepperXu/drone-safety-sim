@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using TMPro;
-using UnityEditor.XR.Interaction.Toolkit;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -46,7 +45,7 @@ public class VisType : MonoBehaviour
 
     private List<float> initialAlphas = new List<float>();
 
-    float sigLostAlpha = 0.25f;
+    float sigLostAlpha = 0.15f;
     //float sigAbnormalAlpha = 0.25f;
     float normalAlpha = 1f;
     bool initialized = false;

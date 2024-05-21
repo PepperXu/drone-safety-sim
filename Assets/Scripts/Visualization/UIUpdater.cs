@@ -248,47 +248,53 @@ public class UIUpdater : MonoBehaviour
                     uiAnchor.localPosition = posHand;
                     uiAnchor.localEulerAngles = angHand;
                     uiAnchor.localScale = scaleHand;
-                    if(!SatelliteUI.activeInHierarchy)
-                        SatelliteUI.SetActive(true);
+                
+                    SatelliteUI.SetActive(true);
                 }
             } else if(VisType.globalVisType == VisType.VisualizationType.MissionOnly || VisType.globalVisType == VisType.VisualizationType.Both){
                 if(uiAnchor.parent != headAnchor){
                     uiAnchor.parent = headAnchor;
-                    uiAnchor.localPosition = posLow;
-                    uiAnchor.localEulerAngles = angLow;
+                    uiAnchor.localPosition = posLOS;
+                    uiAnchor.localEulerAngles = angLOS;
                     uiAnchor.localScale = scaleHead;
-                    if (SatelliteUI.activeInHierarchy)
-                        SatelliteUI.SetActive(false);
+                    
+                    SatelliteUI.SetActive(false);
                 }
-                Vector3 targetPos, targetAng;
-                if(VisType.globalVisType == VisType.VisualizationType.MissionOnly)
-                {
-                    targetPos = posLOS;
-                    targetAng = angLOS;
-                } else
-                {
-                    targetPos = posLow;
-                    targetAng = angLow;
-                }
-
-                if((uiAnchor.localPosition - targetPos).magnitude > 0.05f)
-                {
-                    uiAnchor.localPosition = Vector3.MoveTowards(uiAnchor.localPosition, targetPos, 0.5f * Time.deltaTime);
-                }
-                if ((uiAnchor.localEulerAngles - targetAng).magnitude > 0.5f)
-                {
-                    uiAnchor.localEulerAngles = Vector3.MoveTowards(uiAnchor.localEulerAngles, targetAng, 33f * Time.deltaTime);
-                }
+                //Vector3 targetPos, targetAng;
+                //if(VisType.globalVisType == VisType.VisualizationType.MissionOnly)
+                //{
+                //    targetPos = posLOS;
+                //    targetAng = angLOS;
+                //} else
+                //{
+                //    targetPos = posLow;
+                //    targetAng = angLow;
+                //}
+                //
+                //if((uiAnchor.localPosition - targetPos).magnitude > 0.05f)
+                //{
+                //    uiAnchor.localPosition = Vector3.MoveTowards(uiAnchor.localPosition, targetPos, 0.5f * Time.deltaTime);
+                //}
+                //if ((uiAnchor.localEulerAngles - targetAng).magnitude > 0.5f)
+                //{
+                //    uiAnchor.localRotation = Quaternion.RotateTowards(uiAnchor.localRotation, Quaternion.Euler(targetAng), 40f * Time.deltaTime);
+                //}
             } else
             {
                 if (uiAnchor.parent != bodyAnchor.parent)
                 {
-                    uiAnchor.parent = bodyAnchor.parent;
-                    uiAnchor.position = bodyAnchor.position + bodyAnchor.forward * posLow.z + bodyAnchor.up * posLow.y + bodyAnchor.right * posLow.x;
-                    uiAnchor.eulerAngles = bodyAnchor.eulerAngles + angLow;
-                    uiAnchor.localScale = scaleHead;
-                    if (SatelliteUI.activeInHierarchy)
-                        SatelliteUI.SetActive(false);
+                    if (uiAnchor.parent == handAnchor)
+                    {
+                        uiAnchor.parent = bodyAnchor.parent;
+                        uiAnchor.position = bodyAnchor.position + bodyAnchor.forward * posLow.z + bodyAnchor.up * posLow.y + bodyAnchor.right * posLow.x;
+                        uiAnchor.eulerAngles = bodyAnchor.eulerAngles + angLow;
+                        uiAnchor.localScale = scaleHead;
+                    } else
+                    {
+                        uiAnchor.parent = bodyAnchor.parent;
+                    }
+                    bodyAnchor.eulerAngles = headAnchor.eulerAngles.y * Vector3.up;
+                    SatelliteUI.SetActive(false);
                 }
 
                 Vector3 targetPos = bodyAnchor.position + bodyAnchor.forward * posLow.z + bodyAnchor.up * posLow.y + bodyAnchor.right * posLow.x;
@@ -299,7 +305,7 @@ public class UIUpdater : MonoBehaviour
                 }
                 if ((uiAnchor.eulerAngles - targetAng).magnitude > 1f)
                 {
-                    uiAnchor.eulerAngles = Vector3.MoveTowards(uiAnchor.eulerAngles, targetAng, 33f * Time.deltaTime);
+                    uiAnchor.rotation = Quaternion.RotateTowards(uiAnchor.rotation, Quaternion.Euler(targetAng), 40f * Time.deltaTime);
                 }
             }
             //else {

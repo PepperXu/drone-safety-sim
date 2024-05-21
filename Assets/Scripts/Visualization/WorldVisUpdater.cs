@@ -140,7 +140,6 @@ public class WorldVisUpdater : MonoBehaviour
             for(int i = 0; i < Communication.waypoints.Length; i++){
                 if(i == Communication.currentWaypointIndex) {
                     Communication.waypoints[i].currentWaypointState = Waypoint.WaypointState.Next;
-                    Communication.waypoints[i].missionProgress = (float)Communication.currentWaypointIndex/ Communication.waypoints.Length;
                 }
                 else if(i == Communication.currentWaypointIndex + 1)
                     Communication.waypoints[i].currentWaypointState = Waypoint.WaypointState.NextNext;

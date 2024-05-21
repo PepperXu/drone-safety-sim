@@ -135,7 +135,7 @@ public class FlightPlanning : MonoBehaviour
             configs[4].SetActive(false);
             configs[5].SetActive(false);
             GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
-
+            PositionSatelliteCam(0);
             //GenerateTrajectoryOnSurface(ref path, wpParent, 1, true, false);
             //GenerateTrajectoryOnSurface(ref path, wpParent, currentSelectedSurfaceIndex, isFromTop, false);
         }
@@ -149,6 +149,7 @@ public class FlightPlanning : MonoBehaviour
             configs[5].SetActive(false);
             GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, false);
             //GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
+            PositionSatelliteCam(1);
         }
         else if (configIndex == 2)
         {
@@ -160,6 +161,7 @@ public class FlightPlanning : MonoBehaviour
             configs[5].SetActive(false);
             GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
             //GenerateTrajectoryOnSurface(ref path, wpParent, 1, true, false);
+            PositionSatelliteCam(0);
         }
         else if (configIndex == 3){
             configs[0].SetActive(false);
@@ -170,6 +172,7 @@ public class FlightPlanning : MonoBehaviour
             configs[5].SetActive(false);
             GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, false);
             //GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
+            PositionSatelliteCam(1);
         } else if (configIndex == 4) {
             configs[0].SetActive(false);
             configs[1].SetActive(false);
@@ -179,6 +182,7 @@ public class FlightPlanning : MonoBehaviour
             configs[5].SetActive(false);
             GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
             //GenerateTrajectoryOnSurface(ref path, wpParent, 1, true, false);
+            PositionSatelliteCam(0);
         } else if (configIndex == 5){
             configs[0].SetActive(false);
             configs[1].SetActive(false);
@@ -188,6 +192,7 @@ public class FlightPlanning : MonoBehaviour
             configs[5].SetActive(true);
             GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, false);
             //GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
+            PositionSatelliteCam(1);
         }
         flightTrajectory = new Vector3[path.Count];
         flightTrajectory = path.ToArray();

@@ -8,7 +8,7 @@ using UnityEngine.XR.Interaction.Toolkit.Utilities.Tweenables.SmartTweenableVari
 public class Battery : MonoBehaviour
 {
     //private float hoveringDischargeRate = 7.66f;
-    public static float batteryCapacity = 1440f;
+    public static float batteryCapacity = 850f;
     public static float autopilotFlightSpeed = 3f;
     private const float normalDischargeRate = 8.754f;
     float currentBatteryPercentage;
@@ -17,7 +17,7 @@ public class Battery : MonoBehaviour
     float remainingTimeInSeconds;
 
     public static float batteryLowThreshold = 0.25f;
-    public static float batteryCriticalThreshold = 0.1f;
+    public static float batteryCriticalThreshold = 0.15f;
     //System.Random r;
 
     [SerializeField] Transform Homepoint;
