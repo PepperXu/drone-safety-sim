@@ -101,6 +101,7 @@ public class Communication : MonoBehaviour
     public static Waypoint[] waypoints;
     
     public static int currentWaypointIndex = -1;
+    public static int currentSurfaceIndex = 0;
 
     public static Rigidbody droneRb;
 

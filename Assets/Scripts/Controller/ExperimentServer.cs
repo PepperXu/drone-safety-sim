@@ -484,7 +484,7 @@ public class ExperimentServer : MonoBehaviour
 	}
 #endregion
 	void StartRecording(){
-		string folderName = baseFileName + "_" + (flightPlanning.ConfigIndex == 0?"training":"full") + "_config_" + flightPlanning.ConfigIndex + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
+		string folderName = baseFileName + "_config_" + flightPlanning.ConfigIndex + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
         folderPath = Application.persistentDataPath + "/" + folderName;
 		Directory.CreateDirectory(folderPath);
 		eventLogfilePath = Application.persistentDataPath + "/"  + folderName + "/log_event.csv";

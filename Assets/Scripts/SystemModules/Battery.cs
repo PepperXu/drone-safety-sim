@@ -8,7 +8,8 @@ using UnityEngine.XR.Interaction.Toolkit.Utilities.Tweenables.SmartTweenableVari
 public class Battery : MonoBehaviour
 {
     //private float hoveringDischargeRate = 7.66f;
-    public static float batteryCapacity = 850f;
+    private float batteryCapacity = 850f;
+    private const float batteryCapacityLow = 727f, batteryCapacityHigh = 850f;
     public static float autopilotFlightSpeed = 3f;
     private const float normalDischargeRate = 8.754f;
     float currentBatteryPercentage;
@@ -24,16 +25,17 @@ public class Battery : MonoBehaviour
 
 
     void OnEnable(){
-        DroneManager.resetAllEvent.AddListener(ResetBattery);
+        DroneManager.finishPlanningEvent.AddListener(ResetBattery);
         DroneManager.landedEvent.AddListener(ResetBattery);
     }
 
     void OnDisable(){
-        DroneManager.resetAllEvent.RemoveListener(ResetBattery);
+        DroneManager.finishPlanningEvent.RemoveListener(ResetBattery);
         DroneManager.landedEvent.RemoveListener(ResetBattery);
     }
 
     void ResetBattery(){
+        batteryCapacity = (Communication.currentSurfaceIndex == 0)?batteryCapacityLow:batteryCapacityHigh;
         currentBatteryCapacity = batteryCapacity;
         Communication.battery.rth = false;
         Communication.battery.batteryState = "Normal";

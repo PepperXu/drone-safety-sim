@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1798324870568582580}
   - component: {fileID: 2573429042712309706}
   - component: {fileID: 6212301636729479203}
-  m_Layer: 13
+  m_Layer: 24
   m_Name: projection
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -194,7 +194,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7536612086123798091}
   - component: {fileID: 8732623330030287409}
-  m_Layer: 13
+  m_Layer: 24
   m_Name: projection disk
   m_TagString: Untagged
   m_Icon: {fileID: 0}
