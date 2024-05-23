@@ -182,11 +182,11 @@ public class AutopilotManager : MonoBehaviour
                             while(angleOffset <= -180f){
                                 angleOffset += 360f;
                             }
-                            if(angleOffset > 5f){
-                                angleOffset = 5f;
+                            if(angleOffset > 3f){
+                                angleOffset = 3f;
                             }
-                            if(angleOffset < -5f){
-                                angleOffset = -5f;
+                            if(angleOffset < -3f){
+                                angleOffset = -3f;
                             }
                             DroneManager.desired_yaw = angleOffset;
                         }
