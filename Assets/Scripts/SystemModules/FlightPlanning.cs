@@ -67,6 +67,7 @@ public class FlightPlanning : MonoBehaviour
     [SerializeField] Vector3 posLeft, posRight, angleLeft, angleRight;
     [SerializeField] Transform satelliteCam;
 
+    private Color editorPathColor = new Color(0f, 1f, 0.93f);
     // Start is called before the first frame update
 
     void OnEnable(){
@@ -110,7 +111,30 @@ public class FlightPlanning : MonoBehaviour
         FinishPlanning();
     }
 
+    public void VisualizeFlightPlanEditor(int surfaceIndex){
+        UpdateBoundsGeometry();
+        List<Vector3> path = new List<Vector3>();
+        wpList.Clear();
+        GameObject flightPlan = new GameObject("Flight Plan");
+        LineRenderer flightPlanLR = flightPlan.AddComponent<LineRenderer>();
+        flightPlanLR.widthMultiplier = 0.2f;
+        flightPlanLR.material = new Material(Shader.Find("Sprites/Default"));
+        flightPlanLR.startColor = editorPathColor;
 
+
+        GenerateTrajectoryOnSurface(ref path, flightPlanLR.transform, surfaceIndex, false, surfaceIndex == 0);
+
+        Vector3[] flightTrajectoryEditor = new Vector3[path.Count];
+        flightTrajectoryEditor = path.ToArray();
+        flightPlanLR.positionCount = flightTrajectoryEditor.Length;
+        flightPlanLR.SetPositions(flightTrajectoryEditor);
+        flightPlanLR.useWorldSpace = true;
+
+        foreach(Waypoint wp in wpList){
+            wp.ForceUpdateWaypointVisualization();
+        }
+        wpList.Clear();
+    }
     public void GenerateFlightTrajectory()
     {
         //if (currentSelectedSurfaceIndex < 0)

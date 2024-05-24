@@ -45,4 +45,31 @@ public class Waypoint : MonoBehaviour
                 break;
         }
     }
+
+    public void ForceUpdateWaypointVisualization(){
+        switch(currentWaypointState){
+            case WaypointState.Hidden:
+                wp_neutral.SetActive(false);
+                wp_next.SetActive(false);
+                wp_next_next.SetActive(false);
+                break;
+            case WaypointState.Neutral:
+                wp_neutral.SetActive(true);
+                wp_next.SetActive(false);
+                wp_next_next.SetActive(false);
+                break;
+            case WaypointState.Next:
+                wp_neutral.SetActive(false);
+                wp_next.SetActive(true);
+                wp_next_next.SetActive(false);
+                break;
+            case WaypointState.NextNext:
+                wp_neutral.SetActive(false);
+                wp_next.SetActive(false);
+                wp_next_next.SetActive(true);
+                break;
+            default:
+                break;
+        }
+    }
 }
