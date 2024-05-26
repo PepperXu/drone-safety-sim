@@ -9,6 +9,9 @@ using UnityEngine;
 using Unity.XR.CoreUtils;
 using System.IO;
 using UnityEngine.UI;
+using TMPro;
+using System.Net.NetworkInformation;
+using System.Linq;
 
 public class ExperimentServer : MonoBehaviour
 {
@@ -75,9 +78,16 @@ public class ExperimentServer : MonoBehaviour
 
 	string[] autopilotStatus = {"auto_nav", "auto_wait", "auto_return", "auto_off"};
 	string[] flightStateString = {"landed", "taking off", "hovering", "navigating", "landing", "collided"};
+	string[] configNames = { "training_1", "training_2", "training_3", "benchmark", "config_1", "config_2", "config_3" };
 	bool landed = true;
 
 	int currentDebugMode = 0; //0: wind control (strength only), 1: battery control, 2: position control
+
+
+	public static ConfigManager configManager;
+
+	static int lastWaypointIndex = -1;
+    [SerializeField] TextMeshPro result;
     // Start is called before the first frame update
     void Start()
     {
@@ -178,30 +188,30 @@ public class ExperimentServer : MonoBehaviour
         	if(Input.GetKeyDown(KeyCode.Alpha3)){
         	    UpdateVisCondition(2);
         	}
-            if (Input.GetKeyDown(KeyCode.F1))
-            {
-                UpdateConfig(0);
-            }
-            if (Input.GetKeyDown(KeyCode.F2))
-            {
-                UpdateConfig(1);
-            }
-            if (Input.GetKeyDown(KeyCode.F3))
-            {
-                UpdateConfig(2);
-            }
-            if (Input.GetKeyDown(KeyCode.F4))
-            {
-                UpdateConfig(3);
-            }
-            if (Input.GetKeyDown(KeyCode.F5))
-            {
-                UpdateConfig(4);
-            }
-            if (Input.GetKeyDown(KeyCode.F6))
-            {
-                UpdateConfig(5);
-            }
+            //if (Input.GetKeyDown(KeyCode.F1))
+            //{
+            //    UpdateConfig(0);
+            //}
+            //if (Input.GetKeyDown(KeyCode.F2))
+            //{
+            //    UpdateConfig(1);
+            //}
+            //if (Input.GetKeyDown(KeyCode.F3))
+            //{
+            //    UpdateConfig(2);
+            //}
+            //if (Input.GetKeyDown(KeyCode.F4))
+            //{
+            //    UpdateConfig(3);
+            //}
+            //if (Input.GetKeyDown(KeyCode.F5))
+            //{
+            //    UpdateConfig(4);
+            //}
+            //if (Input.GetKeyDown(KeyCode.F6))
+            //{
+            //    UpdateConfig(5);
+            //}
             //if (Input.GetKeyDown(KeyCode.Tab)){
 			//	currentDebugMode = (currentDebugMode + 1) % 4;
 			//	string debugModeText = "";
@@ -484,7 +494,7 @@ public class ExperimentServer : MonoBehaviour
 	}
 #endregion
 	void StartRecording(){
-		string folderName = baseFileName + "_config_" + flightPlanning.ConfigIndex + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
+		string folderName = baseFileName + "_" + configNames[flightPlanning.ConfigIndex] + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
         folderPath = Application.persistentDataPath + "/" + folderName;
 		Directory.CreateDirectory(folderPath);
 		eventLogfilePath = Application.persistentDataPath + "/"  + folderName + "/log_event.csv";
@@ -498,6 +508,7 @@ public class ExperimentServer : MonoBehaviour
 		};
 		expTimer = 0f;
         isRecording = true;
+		lastWaypointIndex = -1;
 		RecordEventData("Visualization Condition", visConditionString[(int)currentVisCondition] , "");
 		StartCoroutine(RecordFullLog());
 	}
@@ -532,11 +543,64 @@ public class ExperimentServer : MonoBehaviour
                         currentControlState + "," + currentFlightState + "," + Communication.collisionData.collisionStatus + "," + 
 						currentBatteryState + "," + Communication.positionData.sigLevel);
             	};
-				if(VelocityControl.currentFlightState == VelocityControl.FlightState.Landed)
+				lastWaypointIndex = Math.Max(lastWaypointIndex, Communication.positionData.nearestWaypointIndex);
+				if (VelocityControl.currentFlightState == VelocityControl.FlightState.Landed)
+				{
 					landed = true;
+					if (lastWaypointIndex > 0) {
+                        List<Vector3> recordPath = new List<Vector3>();
+						float[] waypointDistances = new float[lastWaypointIndex + 1];
+						for (int i = 0; i < lastWaypointIndex + 1; i++)
+						{
+							waypointDistances[i] = float.MaxValue;
+						}
+
+                        using (StreamReader reader = new StreamReader(fullLogFilePath))
+						{
+							reader.ReadLine();
+							string line;
+							while ((line = reader.ReadLine()) != null)
+							{
+								string[] values = line.Split(',');
+								int closestWpIndex = int.Parse(values[3]);
+                                if (closestWpIndex >= 0)
+                                {
+                                    string[] coordSplit = values[1].Split("|");
+                                    Vector3 position = new Vector3(float.Parse(coordSplit[0]), float.Parse(coordSplit[1]), float.Parse(coordSplit[2]));
+									recordPath.Add(position);
+									waypointDistances[closestWpIndex] = Mathf.Min(Vector3.Distance(position, Communication.waypoints[closestWpIndex].transform.position), waypointDistances[closestWpIndex]);
+                                }
+                            }
+						}
+
+                        for (int i = 0; i < lastWaypointIndex + 1; i++)
+						{
+							if (waypointDistances[i] > 9999f)
+							{
+								Vector3 wpPosition = Communication.waypoints[i].transform.position;
+								foreach(Vector3 sample in recordPath)
+                                {
+									waypointDistances[i] = Mathf.Min(Vector3.Distance(sample, wpPosition), waypointDistances[i]);
+								}
+                            }
+						}
+
+						float avgDistance = waypointDistances.Average();
+						Debug.Log(configManager.markedDefect.Count + "/" + configManager.totalDefectCount + ", " + avgDistance);
+						result.text = "Defect Marked: " + configManager.markedDefect.Count + "/" + configManager.totalDefectCount + ", Path Deviation: " + avgDistance;
+						RecordEventData("Result", "Defect Marked: " + configManager.markedDefect.Count + "/" + configManager.totalDefectCount + ", Path Deviation: " + avgDistance, lastWaypointIndex.ToString());
+						result.gameObject.SetActive(true);
+
+                    }
+				}
 			} else {
-				if(VelocityControl.currentFlightState != VelocityControl.FlightState.Landed)
+				if (VelocityControl.currentFlightState != VelocityControl.FlightState.Landed)
+				{
 					landed = false;
+                    result.gameObject.SetActive(false);
+                }
+
+
 			}
             yield return new WaitForFixedUpdate();
 		}

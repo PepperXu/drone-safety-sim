@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 
 public class PositionalSensorSimulator : MonoBehaviour
@@ -40,6 +41,8 @@ public class PositionalSensorSimulator : MonoBehaviour
     //public static Vector3 dronePositionVirtual;
 
     bool switch_gps_normal;
+
+    
     // Start is called before the first frame update
     
     void OnEnable(){

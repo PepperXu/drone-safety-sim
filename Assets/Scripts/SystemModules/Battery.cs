@@ -9,7 +9,7 @@ public class Battery : MonoBehaviour
 {
     //private float hoveringDischargeRate = 7.66f;
     private float batteryCapacity = 850f;
-    private const float batteryCapacityLow = 727f, batteryCapacityHigh = 850f;
+    private const float batteryCapacityLow = 630f, batteryCapacityHigh = 756f;
     public static float autopilotFlightSpeed = 3f;
     private const float normalDischargeRate = 8.754f;
     float currentBatteryPercentage;

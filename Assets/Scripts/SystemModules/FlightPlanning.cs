@@ -28,7 +28,7 @@ public class FlightPlanning : MonoBehaviour
 
     private float vertStepLength;
     private float distToSurface = 7f;
-    private int horizontalSteps = 5;
+    private int horizontalSteps = 4;
 
     private float groundOffset = 12f;
     private float lrmargin = 1f;
@@ -111,7 +111,7 @@ public class FlightPlanning : MonoBehaviour
         FinishPlanning();
     }
 
-    public void VisualizeFlightPlanEditor(int surfaceIndex){
+    public List<Waypoint> VisualizeFlightPlanEditor(int surfaceIndex){
         UpdateBoundsGeometry();
         List<Vector3> path = new List<Vector3>();
         wpList.Clear();
@@ -133,7 +133,7 @@ public class FlightPlanning : MonoBehaviour
         foreach(Waypoint wp in wpList){
             wp.ForceUpdateWaypointVisualization();
         }
-        wpList.Clear();
+        return wpList;
     }
     public void GenerateFlightTrajectory()
     {
@@ -158,9 +158,11 @@ public class FlightPlanning : MonoBehaviour
             configs[3].SetActive(false);
             configs[4].SetActive(false);
             configs[5].SetActive(false);
+            configs[6].SetActive(false);
             GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
             PositionSatelliteCam(0);
             Communication.currentSurfaceIndex = 0;
+            ExperimentServer.configManager = configs[0].GetComponent<ConfigManager>();
             //GenerateTrajectoryOnSurface(ref path, wpParent, 1, true, false);
             //GenerateTrajectoryOnSurface(ref path, wpParent, currentSelectedSurfaceIndex, isFromTop, false);
         }
@@ -172,10 +174,12 @@ public class FlightPlanning : MonoBehaviour
             configs[3].SetActive(false);
             configs[4].SetActive(false);
             configs[5].SetActive(false);
+            configs[6].SetActive(false);
             GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, false);
             //GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
             PositionSatelliteCam(1);
             Communication.currentSurfaceIndex = 1;
+            ExperimentServer.configManager = configs[1].GetComponent<ConfigManager>();
         }
         else if (configIndex == 2)
         {
@@ -185,11 +189,13 @@ public class FlightPlanning : MonoBehaviour
             configs[3].SetActive(false);
             configs[4].SetActive(false);
             configs[5].SetActive(false);
+            configs[6].SetActive(false);
+            configs[6].SetActive(false);
             GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
             //GenerateTrajectoryOnSurface(ref path, wpParent, 1, true, false);
             PositionSatelliteCam(0);
             Communication.currentSurfaceIndex = 0;
-
+            ExperimentServer.configManager = configs[2].GetComponent<ConfigManager>();
         }
         else if (configIndex == 3){
             configs[0].SetActive(false);
@@ -198,10 +204,12 @@ public class FlightPlanning : MonoBehaviour
             configs[3].SetActive(true);
             configs[4].SetActive(false);
             configs[5].SetActive(false);
-            GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, false);
+            configs[6].SetActive(false);
+            GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
             //GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
-            PositionSatelliteCam(1);
-            Communication.currentSurfaceIndex = 1;
+            PositionSatelliteCam(0);
+            Communication.currentSurfaceIndex = 0;
+            ExperimentServer.configManager = configs[3].GetComponent<ConfigManager>();
         } else if (configIndex == 4) {
             configs[0].SetActive(false);
             configs[1].SetActive(false);
@@ -209,10 +217,12 @@ public class FlightPlanning : MonoBehaviour
             configs[3].SetActive(false);
             configs[4].SetActive(true);
             configs[5].SetActive(false);
-            GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
+            configs[6].SetActive(false);
+            GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, false);
             //GenerateTrajectoryOnSurface(ref path, wpParent, 1, true, false);
-            PositionSatelliteCam(0);
-            Communication.currentSurfaceIndex = 0;
+            PositionSatelliteCam(1);
+            Communication.currentSurfaceIndex = 1;
+            ExperimentServer.configManager = configs[4].GetComponent<ConfigManager>();
         } else if (configIndex == 5){
             configs[0].SetActive(false);
             configs[1].SetActive(false);
@@ -220,10 +230,26 @@ public class FlightPlanning : MonoBehaviour
             configs[3].SetActive(false);
             configs[4].SetActive(false);
             configs[5].SetActive(true);
+            configs[6].SetActive(false);
+            GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
+            //GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
+            PositionSatelliteCam(0);
+            Communication.currentSurfaceIndex = 0;
+            ExperimentServer.configManager = configs[5].GetComponent<ConfigManager>();
+        } else if (configIndex == 6)
+        {
+            configs[0].SetActive(false);
+            configs[1].SetActive(false);
+            configs[2].SetActive(false);
+            configs[3].SetActive(false);
+            configs[4].SetActive(false);
+            configs[5].SetActive(false);
+            configs[6].SetActive(true);
             GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, false);
             //GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
             PositionSatelliteCam(1);
             Communication.currentSurfaceIndex = 1;
+            ExperimentServer.configManager = configs[6].GetComponent<ConfigManager>();
         }
         flightTrajectory = new Vector3[path.Count];
         flightTrajectory = path.ToArray();
@@ -240,8 +266,20 @@ public class FlightPlanning : MonoBehaviour
     void GenerateTrajectoryOnSurface(ref List<Vector3> path, Transform wpParent, int surfaceIndex, bool fromTop, bool reverse){
         List<Vector3> surfacePath = new List<Vector3>();
         Vector3[] currentSurfaceVertices = new Vector3[4];
-        for (int t = 0; t < 4; t++)
-            currentSurfaceVertices[t] = surfaceVerts[surfaceIndex, t];
+        if (reverse)
+        {
+            currentSurfaceVertices[0] = surfaceVerts[surfaceIndex, 0] + (surfaceVerts[surfaceIndex, 1] - surfaceVerts[surfaceIndex, 0]).normalized * 3.3f;
+            currentSurfaceVertices[1] = surfaceVerts[surfaceIndex, 1] + (surfaceVerts[surfaceIndex, 0] - surfaceVerts[surfaceIndex, 1]).normalized * 8.6f;
+            currentSurfaceVertices[2] = surfaceVerts[surfaceIndex, 2] + (surfaceVerts[surfaceIndex, 0] - surfaceVerts[surfaceIndex, 1]).normalized * 8.6f;
+            currentSurfaceVertices[3] = surfaceVerts[surfaceIndex, 3] + (surfaceVerts[surfaceIndex, 1] - surfaceVerts[surfaceIndex, 0]).normalized * 3.3f;
+        } else
+        {
+            currentSurfaceVertices[0] = surfaceVerts[surfaceIndex, 0] + (surfaceVerts[surfaceIndex, 1] - surfaceVerts[surfaceIndex, 0]).normalized * 8.8f;
+            currentSurfaceVertices[1] = surfaceVerts[surfaceIndex, 1] + (surfaceVerts[surfaceIndex, 0] - surfaceVerts[surfaceIndex, 1]).normalized * 3.3f;
+            currentSurfaceVertices[2] = surfaceVerts[surfaceIndex, 2] + (surfaceVerts[surfaceIndex, 0] - surfaceVerts[surfaceIndex, 1]).normalized * 3.3f;
+            currentSurfaceVertices[3] = surfaceVerts[surfaceIndex, 3] + (surfaceVerts[surfaceIndex, 1] - surfaceVerts[surfaceIndex, 0]).normalized * 8.8f;
+        }
+        Debug.Log("path length: " + ((currentSurfaceVertices[0] - currentSurfaceVertices[1]).magnitude * (verticalSteps + 1f) + (currentSurfaceVertices[1] - currentSurfaceVertices[2]).magnitude));
         Vector3 horizontalOffset = (reverse?-1f:1f) * (currentSurfaceVertices[1] - currentSurfaceVertices[0]);
         bool flipped = false;
         Vector3 surfaceNormal = (surfaceVerts[surfaceIndex, 0] - surfaceVerts[(surfaceIndex + 3) % 4, 0]).normalized;

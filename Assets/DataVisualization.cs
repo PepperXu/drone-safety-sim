@@ -4,8 +4,12 @@ using UnityEngine;
 
 public class DataVisualization : MonoBehaviour
 {
-    public Color idleColor, manualColor, autoNavColor, autoWaitColor, autoReturnColor, errorColor;
+    public Color manualColor, autoColor, nearColColor, autoReturnColor, errorColor;
+    public Color deviationColor;
     public Material defaultMaterial;
+    public int lastWaypointIndex;
+    public FlightPlanning flightPlanning;
+    public int surfaceIndex;
     // Start is called before the first frame update
     void Start()
     {
