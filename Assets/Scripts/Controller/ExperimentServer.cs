@@ -89,6 +89,15 @@ public class ExperimentServer : MonoBehaviour
 	static int lastWaypointIndex = -1;
     [SerializeField] TextMeshPro result;
     // Start is called before the first frame update
+    private void OnEnable()
+    {
+		DroneManager.logEvent.AddListener(LogResult);
+    }
+    private void OnDisable()
+    {
+        DroneManager.logEvent.RemoveListener(LogResult);
+    }
+
     void Start()
     {
 		//Networking: to be removed...
@@ -547,51 +556,6 @@ public class ExperimentServer : MonoBehaviour
 				if (VelocityControl.currentFlightState == VelocityControl.FlightState.Landed)
 				{
 					landed = true;
-					if (lastWaypointIndex > 0) {
-                        List<Vector3> recordPath = new List<Vector3>();
-						float[] waypointDistances = new float[lastWaypointIndex + 1];
-						for (int i = 0; i < lastWaypointIndex + 1; i++)
-						{
-							waypointDistances[i] = float.MaxValue;
-						}
-
-                        using (StreamReader reader = new StreamReader(fullLogFilePath))
-						{
-							reader.ReadLine();
-							string line;
-							while ((line = reader.ReadLine()) != null)
-							{
-								string[] values = line.Split(',');
-								int closestWpIndex = int.Parse(values[3]);
-                                if (closestWpIndex >= 0)
-                                {
-                                    string[] coordSplit = values[1].Split("|");
-                                    Vector3 position = new Vector3(float.Parse(coordSplit[0]), float.Parse(coordSplit[1]), float.Parse(coordSplit[2]));
-									recordPath.Add(position);
-									waypointDistances[closestWpIndex] = Mathf.Min(Vector3.Distance(position, Communication.waypoints[closestWpIndex].transform.position), waypointDistances[closestWpIndex]);
-                                }
-                            }
-						}
-
-                        for (int i = 0; i < lastWaypointIndex + 1; i++)
-						{
-							if (waypointDistances[i] > 9999f)
-							{
-								Vector3 wpPosition = Communication.waypoints[i].transform.position;
-								foreach(Vector3 sample in recordPath)
-                                {
-									waypointDistances[i] = Mathf.Min(Vector3.Distance(sample, wpPosition), waypointDistances[i]);
-								}
-                            }
-						}
-
-						float avgDistance = waypointDistances.Average();
-						Debug.Log(configManager.markedDefect.Count + "/" + configManager.totalDefectCount + ", " + avgDistance);
-						result.text = "Defect Marked: " + configManager.markedDefect.Count + "/" + configManager.totalDefectCount + ", Path Deviation: " + avgDistance;
-						RecordEventData("Result", "Defect Marked: " + configManager.markedDefect.Count + "/" + configManager.totalDefectCount + ", Path Deviation: " + avgDistance, lastWaypointIndex.ToString());
-						result.gameObject.SetActive(true);
-
-                    }
 				}
 			} else {
 				if (VelocityControl.currentFlightState != VelocityControl.FlightState.Landed)
@@ -599,11 +563,59 @@ public class ExperimentServer : MonoBehaviour
 					landed = false;
                     result.gameObject.SetActive(false);
                 }
-
-
 			}
             yield return new WaitForFixedUpdate();
 		}
 	}
+
+	void LogResult()
+	{
+        if (lastWaypointIndex > 0)
+        {
+            List<Vector3> recordPath = new List<Vector3>();
+            float[] waypointDistances = new float[lastWaypointIndex + 1];
+            for (int i = 0; i < lastWaypointIndex + 1; i++)
+            {
+                waypointDistances[i] = float.MaxValue;
+            }
+
+            using (StreamReader reader = new StreamReader(fullLogFilePath))
+            {
+                reader.ReadLine();
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    string[] values = line.Split(',');
+                    int closestWpIndex = int.Parse(values[3]);
+                    if (closestWpIndex >= 0)
+                    {
+                        string[] coordSplit = values[1].Split("|");
+                        Vector3 position = new Vector3(float.Parse(coordSplit[0]), float.Parse(coordSplit[1]), float.Parse(coordSplit[2]));
+                        recordPath.Add(position);
+                        waypointDistances[closestWpIndex] = Mathf.Min(Vector3.Distance(position, Communication.waypoints[closestWpIndex].transform.position), waypointDistances[closestWpIndex]);
+                    }
+                }
+            }
+
+            for (int i = 0; i < lastWaypointIndex + 1; i++)
+            {
+                if (waypointDistances[i] > 9999f)
+                {
+                    Vector3 wpPosition = Communication.waypoints[i].transform.position;
+                    foreach (Vector3 sample in recordPath)
+                    {
+                        waypointDistances[i] = Mathf.Min(Vector3.Distance(sample, wpPosition), waypointDistances[i]);
+                    }
+                }
+            }
+
+            float avgDistance = waypointDistances.Average();
+            Debug.Log(configManager.markedDefect.Count + "/" + configManager.totalDefectCount + ", " + avgDistance);
+            result.text = "Defect Marked: " + configManager.markedDefect.Count + "/" + configManager.totalDefectCount + ", Path Deviation: " + avgDistance + ", Landed Battery: " + Communication.battery.batteryPercentage;
+            RecordEventData("Result", "Defect Marked: " + configManager.markedDefect.Count + "/" + configManager.totalDefectCount + ", Path Deviation: " + avgDistance, lastWaypointIndex.ToString());
+            result.gameObject.SetActive(true);
+
+        }
+    }
 
 }

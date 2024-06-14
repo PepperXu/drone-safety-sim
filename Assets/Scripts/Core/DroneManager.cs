@@ -58,7 +58,7 @@ public class DroneManager : MonoBehaviour
     //Events invoked as transition
     public static UnityEvent takeOffEvent = new UnityEvent(), autopilotEvent = new UnityEvent(), autopilotStopEvent = new UnityEvent(), returnToHomeEvent = new UnityEvent(), takePhotoEvent = new UnityEvent(), markDefectEvent = new UnityEvent(), finishPlanningEvent = new UnityEvent();
     //Events invoked repeatedly during state
-    public static UnityEvent onFlightEvent = new UnityEvent(), landingEvent = new UnityEvent(), landedEvent = new UnityEvent();
+    public static UnityEvent onFlightEvent = new UnityEvent(), landingEvent = new UnityEvent(), logEvent = new UnityEvent(), landedEvent = new UnityEvent();
 
     public static UnityEvent<float, float, float, float> setVelocityControlEvent = new UnityEvent<float, float, float, float>();
 
@@ -229,6 +229,7 @@ public class DroneManager : MonoBehaviour
             } 
             
             if(previousFlightState != VelocityControl.FlightState.Landed && VelocityControl.currentFlightState == VelocityControl.FlightState.Landed){
+                logEvent.Invoke();
                 landedEvent.Invoke();
             }
         }
