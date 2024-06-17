@@ -28,7 +28,7 @@ public class VelocityControl : MonoBehaviour {
     //must set this
     [SerializeField] private float take_off_height = 4.0f;
 
-    float groundOffset = 0.2f;
+    float groundOffset = 0.4f;
 
     private float previous_desired_height;
     
@@ -196,7 +196,7 @@ public class VelocityControl : MonoBehaviour {
                     DroneManager.autopilot_stop_flag = true;
                     //autopilotManager.StopAutopilot();
                     PlayLandingAudio(); 
-                    desired_height = Communication.realPose.WorldPosition.y - dis2ground - groundOffset;
+                    desired_height = Communication.realPose.WorldPosition.y - dis2ground;
                     desired_vx = 0f;
                     desired_vy = 0f;
                     desired_yaw = 0f;
