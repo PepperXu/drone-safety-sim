@@ -196,28 +196,28 @@ public class AutopilotManager : MonoBehaviour
         } else
         {
             autopilotStatus = AutopilotStatus.Off;
-            if (!autopilot_initialized)
-            {
-                currentWaypointIndex = 0;
-                Communication.currentWaypointIndex = currentWaypointIndex;
-                if((Communication.positionData.virtualPosition - Communication.waypoints[0].transform.position).magnitude < 1f)
-                {
-                    waitTimer += Time.deltaTime;
-                    if (waitTimer >= waitTime)
-                    {
-                        DroneManager.take_photo_flag = true;
-                        ExperimentServer.RecordEventData("Waypoint Reached!", "index: " + 0, "manual");
-                        coverageSpawnedIndices.Add(0);
-                        waitTimer = 0f;
-                        autopilot_initialized = true;
-                    }
-                } else
-                {
-                    waitTimer = 0f;
-                }
-            }
-            else
-            {
+            //if (!autopilot_initialized)
+            //{
+            //    currentWaypointIndex = 0;
+            //    Communication.currentWaypointIndex = currentWaypointIndex;
+            //    if((Communication.positionData.virtualPosition - Communication.waypoints[0].transform.position).magnitude < 1f)
+            //    {
+            //        waitTimer += Time.deltaTime;
+            //        if (waitTimer >= waitTime)
+            //        {
+            //            DroneManager.take_photo_flag = true;
+            //            ExperimentServer.RecordEventData("Waypoint Reached!", "index: " + 0, "manual");
+            //            coverageSpawnedIndices.Add(0);
+            //            waitTimer = 0f;
+            //            autopilot_initialized = true;
+            //        }
+            //    } else
+            //    {
+            //        waitTimer = 0f;
+            //    }
+            //}
+            //else
+            //{
 
                 int currentIndex = stopWaypointIndex;
                 float shortestDistance = float.MaxValue;
@@ -258,7 +258,7 @@ public class AutopilotManager : MonoBehaviour
                 }
                 currentWaypointIndex = currentIndex;
                 Communication.currentWaypointIndex = currentIndex;
-            }
+            //}
         }
     }
 
