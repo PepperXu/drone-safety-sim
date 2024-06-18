@@ -53,6 +53,9 @@ public class VelocityControl : MonoBehaviour {
     [SerializeField] AudioClip take_off, flying, landing;
     [SerializeField] AudioSource audioSource;
 
+    float landingTimer = 0f;
+    const float landingTime = 5f;
+
     public enum FlightState{
         Landed,
         TakingOff,
@@ -96,6 +99,7 @@ public class VelocityControl : MonoBehaviour {
         desired_vx = 0.0f;
         desired_vy = 0.0f;
         desired_yaw = 0.0f;
+        landingTimer = 0.0f;
         
         if (droneTransform)
         {
@@ -192,6 +196,7 @@ public class VelocityControl : MonoBehaviour {
                 if (dis2ground < landingHeightThreshold)
                 {
                     currentFlightState = FlightState.Landing;
+                    landingTimer = 0f;
                     ExperimentServer.RecordEventData("Landing start from", "battery: " + Communication.battery.batteryPercentage, "");
                     DroneManager.autopilot_stop_flag = true;
                     //autopilotManager.StopAutopilot();
@@ -206,9 +211,12 @@ public class VelocityControl : MonoBehaviour {
             } else
             {
                 Debug.Log(dis2ground);
-                if (dis2ground <= groundOffset)
+                landingTimer += Time.deltaTime;
+
+                if (dis2ground <= groundOffset || landingTimer >= landingTime)
                 {
                     Debug.Log("Landed");
+                    landingTimer = 0f;
                     ExperimentServer.RecordEventData("Landed at", "battery: " + Communication.battery.batteryPercentage, "");
                     //landedHeight = Communication.realPose.WorldPosition.y;
                     //Communication.constProps.landedHeight = landedHeight;
