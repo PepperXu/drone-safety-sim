@@ -12,6 +12,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Net.NetworkInformation;
 using System.Linq;
+using System.Globalization;
 
 public class ExperimentServer : MonoBehaviour
 {
@@ -534,7 +535,8 @@ public class ExperimentServer : MonoBehaviour
         isRecording = true;
 		lastWaypointIndex = -1;
 		RecordEventData("Visualization Condition", visConditionString[(int)currentVisCondition] , "");
-		StartCoroutine(RecordFullLog());
+        recordedPath.Clear();
+        StartCoroutine(RecordFullLog());
 	}
 
 	void StopRecording(){
@@ -545,7 +547,8 @@ public class ExperimentServer : MonoBehaviour
 		if (isRecording)
         {
             using (StreamWriter writer = new StreamWriter(eventLogfilePath, true)) {
-				 writer.WriteLine(expTimer + "," + logMsg + "," + Communication.realPose.WorldPosition.x + "|" + Communication.realPose.WorldPosition.y + "|" + Communication.realPose.WorldPosition.z + "," + param1 + "," + param2 );
+				 writer.WriteLine(expTimer.ToString(CultureInfo.InvariantCulture) + "," + logMsg + "," + 
+					 Communication.realPose.WorldPosition.x.ToString(CultureInfo.InvariantCulture) + "|" + Communication.realPose.WorldPosition.y.ToString(CultureInfo.InvariantCulture) + "|" + Communication.realPose.WorldPosition.z.ToString(CultureInfo.InvariantCulture) + "," + param1 + "," + param2 );
 				 Debug.Log("log entry generated: " + logMsg);
 			};
 		}
@@ -559,26 +562,28 @@ public class ExperimentServer : MonoBehaviour
                 if (VelocityControl.currentFlightState == VelocityControl.FlightState.Landed)
                 {
                     landed = true;
-					break;
                 }
-                string currentControlState = DroneManager.currentControlType == DroneManager.ControlType.Manual ? (InputControl.inputStatus == InputControl.InputStatus.Idle?"idle":"manual") : autopilotStatus[(int)AutopilotManager.autopilotStatus];
-				string currentBatteryState = Communication.battery.batteryState == "Critical"?"Critical":(Communication.battery.rth?"RTH":Communication.battery.batteryState);
-				string currentFlightState = flightStateString[(int)VelocityControl.currentFlightState];
-            	using (StreamWriter writer = new StreamWriter(fullLogFilePath, true))
-            	{	
-					
-            	    writer.WriteLine(expTimer + "," + Communication.realPose.WorldPosition.x + "|" + Communication.realPose.WorldPosition.y + "|" + Communication.realPose.WorldPosition.z + "," +
-                        Communication.positionData.nearestWaypoint.x + "|" + Communication.positionData.nearestWaypoint.y + "|" + Communication.positionData.nearestWaypoint.z + "," + Communication.positionData.nearestWaypointIndex + "," + 
-                        currentControlState + "," + currentFlightState + "," + Communication.collisionData.collisionStatus + "," + 
-						currentBatteryState + "," + Communication.positionData.sigLevel);
-					if(Communication.positionData.nearestWaypointIndex >= 0)
+				if (!landed)
+				{
+					string currentControlState = DroneManager.currentControlType == DroneManager.ControlType.Manual ? (InputControl.inputStatus == InputControl.InputStatus.Idle ? "idle" : "manual") : autopilotStatus[(int)AutopilotManager.autopilotStatus];
+					string currentBatteryState = Communication.battery.batteryState == "Critical" ? "Critical" : (Communication.battery.rth ? "RTH" : Communication.battery.batteryState);
+					string currentFlightState = flightStateString[(int)VelocityControl.currentFlightState];
+					using (StreamWriter writer = new StreamWriter(fullLogFilePath, true))
 					{
-						recordedPath.Add(new RecordedPoint(Communication.positionData.nearestWaypointIndex, Communication.realPose.WorldPosition));
-					}
-					landedBattery = Communication.battery.batteryPercentage;
-            	};
-				lastWaypointIndex = Math.Max(lastWaypointIndex, Communication.positionData.nearestWaypointIndex);
-				
+
+						writer.WriteLine(expTimer.ToString(CultureInfo.InvariantCulture) + "," +
+							Communication.realPose.WorldPosition.x.ToString(CultureInfo.InvariantCulture) + "|" + Communication.realPose.WorldPosition.y.ToString(CultureInfo.InvariantCulture) + "|" + Communication.realPose.WorldPosition.z.ToString(CultureInfo.InvariantCulture) + "," +
+							Communication.positionData.nearestWaypoint.x.ToString(CultureInfo.InvariantCulture) + "|" + Communication.positionData.nearestWaypoint.y.ToString(CultureInfo.InvariantCulture) + "|" + Communication.positionData.nearestWaypoint.z.ToString(CultureInfo.InvariantCulture) + "," + Communication.positionData.nearestWaypointIndex.ToString(CultureInfo.InvariantCulture) + "," +
+							currentControlState + "," + currentFlightState + "," + Communication.collisionData.collisionStatus + "," +
+							currentBatteryState + "," + Communication.positionData.sigLevel);
+						if (Communication.positionData.nearestWaypointIndex >= 0)
+						{
+							recordedPath.Add(new RecordedPoint(Communication.positionData.nearestWaypointIndex, Communication.realPose.WorldPosition));
+						}
+						landedBattery = Communication.battery.batteryPercentage;
+					};
+					lastWaypointIndex = Math.Max(lastWaypointIndex, Communication.positionData.nearestWaypointIndex);
+				}
 			} else {
 				if (VelocityControl.currentFlightState != VelocityControl.FlightState.Landed)
 				{
@@ -645,7 +650,7 @@ public class ExperimentServer : MonoBehaviour
         float avgDistance = waypointDistances.Average();
         Debug.Log(configManager.markedDefect.Count + "/" + configManager.totalDefectCount + ", " + avgDistance);
         result.text = "Defect Marked: " + configManager.markedDefect.Count + "/" + configManager.totalDefectCount + ", Path Deviation: " + avgDistance + ", Landed Battery: " + landedBattery;
-        RecordEventData("Result", "Defect Marked: " + configManager.markedDefect.Count + "/" + configManager.totalDefectCount + ", Path Deviation: " + avgDistance, lastWaypointIndex.ToString());
+        RecordEventData("Result", "Defect Marked: " + configManager.markedDefect.Count + "/" + configManager.totalDefectCount + ", Path Deviation: " + avgDistance.ToString(CultureInfo.InvariantCulture), lastWaypointIndex.ToString());
         result.gameObject.SetActive(true);
 		recordedPath.Clear();
 

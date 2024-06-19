@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.XR.Interaction.Toolkit.Utilities.Tweenables.SmartTweenableVariables;
+using System.Globalization;
 
 public class Battery : MonoBehaviour
 {
@@ -81,7 +82,7 @@ public class Battery : MonoBehaviour
 
         if(remainingTimeInSeconds < rthTimeThreshold){
             if(!Communication.battery.rth){
-                ExperimentServer.RecordEventData("Battery RTH point reached", "battery: " + currentBatteryPercentage, "");
+                ExperimentServer.RecordEventData("Battery RTH point reached", "battery: " + currentBatteryPercentage.ToString(CultureInfo.InvariantCulture), "");
                 Communication.battery.rth = true;
             }
         } 
@@ -91,7 +92,7 @@ public class Battery : MonoBehaviour
         if(currentBatteryPercentage < batteryCriticalThreshold){
             if(Communication.battery.batteryState != "Critical"){
                 Communication.battery.batteryState = "Critical";
-                ExperimentServer.RecordEventData("Battery Critical point reached", "battery: " + currentBatteryPercentage, "");
+                ExperimentServer.RecordEventData("Battery Critical point reached", "battery: " + currentBatteryPercentage.ToString(CultureInfo.InvariantCulture), "");
                 if(DroneManager.currentControlType == DroneManager.ControlType.Autonomous && DroneManager.currentMissionState != DroneManager.MissionState.Returning)
                 {
                     DroneManager.autopilot_stop_flag = true;
@@ -100,7 +101,7 @@ public class Battery : MonoBehaviour
         } else if (currentBatteryPercentage < batteryLowThreshold){
             if(Communication.battery.batteryState != "Low"){
                 Communication.battery.batteryState = "Low";
-                ExperimentServer.RecordEventData("Battery Low point reached", "battery: " + currentBatteryPercentage, "");
+                ExperimentServer.RecordEventData("Battery Low point reached", "battery: " + currentBatteryPercentage.ToString(CultureInfo.InvariantCulture), "");
             }
         } else {
             Communication.battery.batteryState = "Normal";

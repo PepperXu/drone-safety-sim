@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using Unity.Properties;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Utilities.Tweenables.Primitives;
@@ -286,7 +287,7 @@ public class AutopilotManager : MonoBehaviour
         isAutopiloting = true;
         isRTH = true;
         //int idx = GetCurrentHomepoint();
-        ExperimentServer.RecordEventData("Returning To Homepoint from",  "battery: " + Communication.battery.batteryPercentage, "");
+        ExperimentServer.RecordEventData("Returning To Homepoint from",  "battery: " + Communication.battery.batteryPercentage.ToString(CultureInfo.InvariantCulture), "");
     }   
 
     void StopAutopilot(){
@@ -295,7 +296,7 @@ public class AutopilotManager : MonoBehaviour
             stopWaypointIndex = currentWaypointIndex; 
             isAutopiloting = false;
             isRTH = false;
-            ExperimentServer.RecordEventData("Autopilot stop at", "waypoint index: " + currentWaypointIndex, "battery: " + Communication.battery.batteryPercentage + "|GPS level: " + Communication.positionData.sigLevel);
+            ExperimentServer.RecordEventData("Autopilot stop at", "waypoint index: " + currentWaypointIndex, "battery: " + Communication.battery.batteryPercentage.ToString(CultureInfo.InvariantCulture) + "|GPS level: " + Communication.positionData.sigLevel);
         }
     }
 

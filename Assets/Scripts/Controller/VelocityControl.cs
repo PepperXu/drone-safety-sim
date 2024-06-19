@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine;
 
 public class VelocityControl : MonoBehaviour {
@@ -197,7 +198,7 @@ public class VelocityControl : MonoBehaviour {
                 {
                     currentFlightState = FlightState.Landing;
                     landingTimer = 0f;
-                    ExperimentServer.RecordEventData("Landing start from", "battery: " + Communication.battery.batteryPercentage, "");
+                    ExperimentServer.RecordEventData("Landing start from", "battery: " + Communication.battery.batteryPercentage.ToString(CultureInfo.InvariantCulture), "");
                     DroneManager.autopilot_stop_flag = true;
                     //autopilotManager.StopAutopilot();
                     PlayLandingAudio(); 
@@ -217,7 +218,7 @@ public class VelocityControl : MonoBehaviour {
                 {
                     Debug.Log("Landed");
                     landingTimer = 0f;
-                    ExperimentServer.RecordEventData("Landed at", "battery: " + Communication.battery.batteryPercentage, "");
+                    ExperimentServer.RecordEventData("Landed at", "battery: " + Communication.battery.batteryPercentage.ToString(CultureInfo.InvariantCulture), "");
                     //landedHeight = Communication.realPose.WorldPosition.y;
                     //Communication.constProps.landedHeight = landedHeight;
                     //desired_height = landedHeight;
