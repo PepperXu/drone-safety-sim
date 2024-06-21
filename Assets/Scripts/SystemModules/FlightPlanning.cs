@@ -153,8 +153,9 @@ public class FlightPlanning : MonoBehaviour
         for(int i = 0; i < configs.Length; i++){
             if(configIndex == i){
                 configs[i].SetActive(true);
-                ConfigManager cm = configs[0].GetComponent<ConfigManager>();
+                ConfigManager cm = configs[i].GetComponent<ConfigManager>();
                 ExperimentServer.configManager = cm;
+                Debug.LogWarning("current surface: " + cm.surfaceIndex);
                 GenerateTrajectoryOnSurface(ref path, wpParent, cm.surfaceIndex, false, cm.surfaceIndex == 0);
                 PositionSatelliteCam(cm.surfaceIndex);
                 Communication.currentSurfaceIndex = cm.surfaceIndex;
