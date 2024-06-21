@@ -79,7 +79,7 @@ public class ExperimentServer : MonoBehaviour
 
 	string[] autopilotStatus = {"auto_nav", "auto_wait", "auto_return", "auto_off"};
 	string[] flightStateString = {"landed", "taking off", "hovering", "navigating", "landing", "collided"};
-	string[] configNames = { "training_1", "training_2", "training_3", "benchmark", "config_1", "config_2", "config_3" };
+	string[] configNames = { "basic_training", "interface_training", "config_1", "config_2", "config_3" };
 	bool landed = true;
 
 	int currentDebugMode = 0; //0: wind control (strength only), 1: battery control, 2: position control
@@ -518,7 +518,7 @@ public class ExperimentServer : MonoBehaviour
 	}
 #endregion
 	void StartRecording(){
-		string folderName = baseFileName + "_" + configNames[flightPlanning.ConfigIndex] + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
+		string folderName = baseFileName + "_" + configNames[flightPlanning.ConfigIndex] + "_" + visConditionString[(int)currentVisCondition] + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
         folderPath = Application.persistentDataPath + "/" + folderName;
 		Directory.CreateDirectory(folderPath);
 		eventLogfilePath = Application.persistentDataPath + "/"  + folderName + "/log_event.csv";
@@ -534,7 +534,7 @@ public class ExperimentServer : MonoBehaviour
 		expTimer = 0f;
         isRecording = true;
 		lastWaypointIndex = -1;
-		RecordEventData("Visualization Condition", visConditionString[(int)currentVisCondition] , "");
+		RecordEventData("Current condition", configNames[flightPlanning.ConfigIndex], visConditionString[(int)currentVisCondition]);
         recordedPath.Clear();
         StartCoroutine(RecordFullLog());
 	}
@@ -588,6 +588,7 @@ public class ExperimentServer : MonoBehaviour
 				if (VelocityControl.currentFlightState != VelocityControl.FlightState.Landed)
 				{
 					landed = false;
+					
                     result.gameObject.SetActive(false);
                 }
 			}
@@ -649,9 +650,15 @@ public class ExperimentServer : MonoBehaviour
 
         float avgDistance = waypointDistances.Average();
         Debug.Log(configManager.markedDefect.Count + "/" + configManager.totalDefectCount + ", " + avgDistance);
-        result.text = "Defect Marked: " + configManager.markedDefect.Count + "/" + configManager.totalDefectCount + ", Path Deviation: " + avgDistance + ", Landed Battery: " + landedBattery;
+        
         RecordEventData("Result", "Defect Marked: " + configManager.markedDefect.Count + "/" + configManager.totalDefectCount + ", Path Deviation: " + avgDistance.ToString(CultureInfo.InvariantCulture), lastWaypointIndex.ToString());
-        result.gameObject.SetActive(true);
+        
+		if(flightPlanning.ConfigIndex < 2){
+			result.text = "Defect Marked: " + configManager.markedDefect.Count + "/" + configManager.totalDefectCount + ", Path Deviation: " + avgDistance + ", Landed Battery: " + landedBattery;
+		} else {
+			result.text = "Landed Battery: " + landedBattery;
+		}
+		result.gameObject.SetActive(true);
 		recordedPath.Clear();
 
     }

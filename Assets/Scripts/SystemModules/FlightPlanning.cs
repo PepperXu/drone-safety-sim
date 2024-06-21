@@ -150,107 +150,19 @@ public class FlightPlanning : MonoBehaviour
             Destroy(waypoint.gameObject);
         }
 
-    
-        if(configIndex == 0){
-            configs[0].SetActive(true);
-            configs[1].SetActive(false);
-            configs[2].SetActive(false);
-            configs[3].SetActive(false);
-            configs[4].SetActive(false);
-            configs[5].SetActive(false);
-            configs[6].SetActive(false);
-            GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
-            PositionSatelliteCam(0);
-            Communication.currentSurfaceIndex = 0;
-            ExperimentServer.configManager = configs[0].GetComponent<ConfigManager>();
-            //GenerateTrajectoryOnSurface(ref path, wpParent, 1, true, false);
-            //GenerateTrajectoryOnSurface(ref path, wpParent, currentSelectedSurfaceIndex, isFromTop, false);
+        for(int i = 0; i < configs.Length; i++){
+            if(configIndex == i){
+                configs[i].SetActive(true);
+                ConfigManager cm = configs[0].GetComponent<ConfigManager>();
+                ExperimentServer.configManager = cm;
+                GenerateTrajectoryOnSurface(ref path, wpParent, cm.surfaceIndex, false, cm.surfaceIndex == 0);
+                PositionSatelliteCam(cm.surfaceIndex);
+                Communication.currentSurfaceIndex = cm.surfaceIndex;
+            } else {
+                configs[i].SetActive(false);
+            }
         }
-        else if (configIndex == 1)
-        {
-            configs[0].SetActive(false);
-            configs[1].SetActive(true);
-            configs[2].SetActive(false);
-            configs[3].SetActive(false);
-            configs[4].SetActive(false);
-            configs[5].SetActive(false);
-            configs[6].SetActive(false);
-            GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, false);
-            //GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
-            PositionSatelliteCam(1);
-            Communication.currentSurfaceIndex = 1;
-            ExperimentServer.configManager = configs[1].GetComponent<ConfigManager>();
-        }
-        else if (configIndex == 2)
-        {
-            configs[0].SetActive(false);
-            configs[1].SetActive(false);
-            configs[2].SetActive(true);
-            configs[3].SetActive(false);
-            configs[4].SetActive(false);
-            configs[5].SetActive(false);
-            configs[6].SetActive(false);
-            configs[6].SetActive(false);
-            GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
-            //GenerateTrajectoryOnSurface(ref path, wpParent, 1, true, false);
-            PositionSatelliteCam(0);
-            Communication.currentSurfaceIndex = 0;
-            ExperimentServer.configManager = configs[2].GetComponent<ConfigManager>();
-        }
-        else if (configIndex == 3){
-            configs[0].SetActive(false);
-            configs[1].SetActive(false);
-            configs[2].SetActive(false);
-            configs[3].SetActive(true);
-            configs[4].SetActive(false);
-            configs[5].SetActive(false);
-            configs[6].SetActive(false);
-            GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
-            //GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
-            PositionSatelliteCam(0);
-            Communication.currentSurfaceIndex = 0;
-            ExperimentServer.configManager = configs[3].GetComponent<ConfigManager>();
-        } else if (configIndex == 4) {
-            configs[0].SetActive(false);
-            configs[1].SetActive(false);
-            configs[2].SetActive(false);
-            configs[3].SetActive(false);
-            configs[4].SetActive(true);
-            configs[5].SetActive(false);
-            configs[6].SetActive(false);
-            GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, false);
-            //GenerateTrajectoryOnSurface(ref path, wpParent, 1, true, false);
-            PositionSatelliteCam(1);
-            Communication.currentSurfaceIndex = 1;
-            ExperimentServer.configManager = configs[4].GetComponent<ConfigManager>();
-        } else if (configIndex == 5){
-            configs[0].SetActive(false);
-            configs[1].SetActive(false);
-            configs[2].SetActive(false);
-            configs[3].SetActive(false);
-            configs[4].SetActive(false);
-            configs[5].SetActive(true);
-            configs[6].SetActive(false);
-            GenerateTrajectoryOnSurface(ref path, wpParent, 0, false, true);
-            //GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
-            PositionSatelliteCam(0);
-            Communication.currentSurfaceIndex = 0;
-            ExperimentServer.configManager = configs[5].GetComponent<ConfigManager>();
-        } else if (configIndex == 6)
-        {
-            configs[0].SetActive(false);
-            configs[1].SetActive(false);
-            configs[2].SetActive(false);
-            configs[3].SetActive(false);
-            configs[4].SetActive(false);
-            configs[5].SetActive(false);
-            configs[6].SetActive(true);
-            GenerateTrajectoryOnSurface(ref path, wpParent, 1, false, false);
-            //GenerateTrajectoryOnSurface(ref path, wpParent, 0, true, true);
-            PositionSatelliteCam(1);
-            Communication.currentSurfaceIndex = 1;
-            ExperimentServer.configManager = configs[6].GetComponent<ConfigManager>();
-        }
+
         flightTrajectory = new Vector3[path.Count];
         flightTrajectory = path.ToArray();
         pathVisualization.positionCount = flightTrajectory.Length;
