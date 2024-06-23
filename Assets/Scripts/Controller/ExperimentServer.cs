@@ -102,6 +102,7 @@ public class ExperimentServer : MonoBehaviour
 	}
 	private List<RecordedPoint> recordedPath = new List<RecordedPoint>();
 	private float landedBattery;
+	string pid = "test";
     // Start is called before the first frame update
     private void OnEnable()
     {
@@ -324,7 +325,10 @@ public class ExperimentServer : MonoBehaviour
 			//}
 		}
 	}
-
+	public void SetPID(string pid)
+	{
+		this.pid = pid;
+	}
 
 	public void ResetExperiment()
 	{
@@ -519,10 +523,10 @@ public class ExperimentServer : MonoBehaviour
 #endregion
 	void StartRecording(){
 		string folderName = baseFileName + "_" + configNames[flightPlanning.ConfigIndex] + "_" + visConditionString[(int)currentVisCondition] + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
-        folderPath = Application.persistentDataPath + "/" + folderName;
+        folderPath = Application.persistentDataPath + "/" + pid + "/" + folderName;
 		Directory.CreateDirectory(folderPath);
-		eventLogfilePath = Application.persistentDataPath + "/"  + folderName + "/log_event.csv";
-        fullLogFilePath = Application.persistentDataPath + "/" + folderName + "/log_full.csv";
+		eventLogfilePath = folderPath + "/log_event.csv";
+        fullLogFilePath = folderPath + "/log_full.csv";
         using (StreamWriter writer = new StreamWriter(eventLogfilePath, true)) {
 			writer.WriteLine("Timestamp, Msg, DronePos, Param1, Param2");
 		};

@@ -99,7 +99,7 @@ public class DroneManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        ResetAllStates();
+        //ResetAllStates();
     }
 
     public void ResetAllStates(){
