@@ -90,17 +90,17 @@ public class ExperimentServer : MonoBehaviour
 	static int lastWaypointIndex = -1;
     [SerializeField] TextMeshPro result;
 
-	struct RecordedPoint
-	{
-		public int closestWP;
-        public Vector3 samplePoint;
-        public RecordedPoint(int closestWP, Vector3 samplePoint)
-		{
-			this.closestWP = closestWP;
-			this.samplePoint = samplePoint;
-		}
-	}
-	private List<RecordedPoint> recordedPath = new List<RecordedPoint>();
+	//struct RecordedPoint
+	//{
+	//	public int closestWP;
+    //    public Vector3 samplePoint;
+    //    public RecordedPoint(int closestWP, Vector3 samplePoint)
+	//	{
+	//		this.closestWP = closestWP;
+	//		this.samplePoint = samplePoint;
+	//	}
+	//}
+	//private List<RecordedPoint> recordedPath = new List<RecordedPoint>();
 	private float landedBattery;
 	string pid = "test";
     // Start is called before the first frame update
@@ -333,7 +333,7 @@ public class ExperimentServer : MonoBehaviour
 	public void ResetExperiment()
 	{
 		StopRecording();
-        recordedPath.Clear();
+        //recordedPath.Clear();
         droneManager.ResetAllStates();
 		MonitorUI.SetActive(false);
 		EXPUI.SetActive(true);
@@ -539,7 +539,7 @@ public class ExperimentServer : MonoBehaviour
         isRecording = true;
 		lastWaypointIndex = -1;
 		RecordEventData("Current condition", configNames[flightPlanning.ConfigIndex], visConditionString[(int)currentVisCondition]);
-        recordedPath.Clear();
+        //recordedPath.Clear();
         StartCoroutine(RecordFullLog());
 	}
 
@@ -580,10 +580,10 @@ public class ExperimentServer : MonoBehaviour
 							Communication.positionData.nearestWaypoint.x.ToString(CultureInfo.InvariantCulture) + "|" + Communication.positionData.nearestWaypoint.y.ToString(CultureInfo.InvariantCulture) + "|" + Communication.positionData.nearestWaypoint.z.ToString(CultureInfo.InvariantCulture) + "," + Communication.positionData.nearestWaypointIndex.ToString(CultureInfo.InvariantCulture) + "," +
 							currentControlState + "," + currentFlightState + "," + Communication.collisionData.collisionStatus + "," +
 							currentBatteryState + "," + Communication.positionData.sigLevel);
-						if (Communication.positionData.nearestWaypointIndex >= 0)
-						{
-							recordedPath.Add(new RecordedPoint(Communication.positionData.nearestWaypointIndex, Communication.realPose.WorldPosition));
-						}
+						//if (Communication.positionData.nearestWaypointIndex >= 0)
+						//{
+						//	recordedPath.Add(new RecordedPoint(Communication.positionData.nearestWaypointIndex, Communication.realPose.WorldPosition));
+						//}
 						landedBattery = Communication.battery.batteryPercentage;
 					};
 					lastWaypointIndex = Math.Max(lastWaypointIndex, Communication.positionData.nearestWaypointIndex);
@@ -611,7 +611,7 @@ public class ExperimentServer : MonoBehaviour
 	IEnumerator LogResultDelayed()
 	{
 		yield return new WaitForSeconds(0.3f);
-        //List<Vector3> recordPath = new List<Vector3>();
+        List<Vector3> recordPath = new List<Vector3>();
         float[] waypointDistances = new float[lastWaypointIndex + 1];
         for (int i = 0; i < lastWaypointIndex + 1; i++)
         {
@@ -619,35 +619,35 @@ public class ExperimentServer : MonoBehaviour
         }
 
 
-		foreach(RecordedPoint point in recordedPath) {
-            waypointDistances[point.closestWP] = Mathf.Min(Vector3.Distance(point.samplePoint, Communication.waypoints[point.closestWP].transform.position), waypointDistances[point.closestWP]);
-        }
-        //using (StreamReader reader = new StreamReader(fullLogFilePath))
-        //{
-        //    reader.ReadLine();
-        //    string line;
-        //    while ((line = reader.ReadLine()) != null)
-        //    {
-        //        string[] values = line.Split(',');
-        //        int closestWpIndex = int.Parse(values[3]);
-        //        if (closestWpIndex >= 0)
-        //        {
-        //            string[] coordSplit = values[1].Split("|");
-        //            Vector3 position = new Vector3(float.Parse(coordSplit[0]), float.Parse(coordSplit[1]), float.Parse(coordSplit[2]));
-        //            recordPath.Add(position);
-        //            waypointDistances[closestWpIndex] = Mathf.Min(Vector3.Distance(position, Communication.waypoints[closestWpIndex].transform.position), waypointDistances[closestWpIndex]);
-        //        }
-        //    }
+		//foreach(RecordedPoint point in recordedPath) {
+        //    waypointDistances[point.closestWP] = Mathf.Min(Vector3.Distance(point.samplePoint, Communication.waypoints[point.closestWP].transform.position), waypointDistances[point.closestWP]);
         //}
+        using (StreamReader reader = new StreamReader(fullLogFilePath))
+        {
+            reader.ReadLine();
+            string line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                string[] values = line.Split(',');
+                int closestWpIndex = int.Parse(values[3]);
+                if (closestWpIndex >= 0)
+                {
+                    string[] coordSplit = values[1].Split("|");
+                    Vector3 position = new Vector3(float.Parse(coordSplit[0]), float.Parse(coordSplit[1]), float.Parse(coordSplit[2]));
+                    recordPath.Add(position);
+                    waypointDistances[closestWpIndex] = Mathf.Min(Vector3.Distance(position, Communication.waypoints[closestWpIndex].transform.position), waypointDistances[closestWpIndex]);
+                }
+            }
+        }
 
         for (int i = 0; i < lastWaypointIndex + 1; i++)
         {
             if (waypointDistances[i] > 9999f)
             {
                 Vector3 wpPosition = Communication.waypoints[i].transform.position;
-                foreach (RecordedPoint sample in recordedPath)
+                foreach (Vector3 sample in recordPath)
                 {
-                    waypointDistances[i] = Mathf.Min(Vector3.Distance(sample.samplePoint, wpPosition), waypointDistances[i]);
+                    waypointDistances[i] = Mathf.Min(Vector3.Distance(sample, wpPosition), waypointDistances[i]);
                 }
             }
         }
@@ -663,7 +663,7 @@ public class ExperimentServer : MonoBehaviour
 			result.text = "Landed Battery: " + landedBattery;
 		}
 		result.gameObject.SetActive(true);
-		recordedPath.Clear();
+		//recordedPath.Clear();
 
     }
 

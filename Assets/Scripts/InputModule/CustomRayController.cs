@@ -36,9 +36,11 @@ public class CustomRayController : MonoBehaviour
             }
         } else if(headGaze){
             RaycastHit hit;
-            Ray ray = new Ray(transform.position, Quaternion.AngleAxis(20f, transform.right) * transform.forward);
+            Ray ray1 = new Ray(transform.position, Quaternion.AngleAxis(20f, transform.right) * transform.forward);
+            Ray ray2 = new Ray(transform.position, transform.forward);
 
-            if(Physics.Raycast(ray, out hit, float.PositiveInfinity, ui_gaze_layer)){
+            if (Physics.Raycast(ray1, out hit, float.PositiveInfinity, ui_gaze_layer) || Physics.Raycast(ray2, out hit, float.PositiveInfinity, ui_gaze_layer))
+            {
                 VisType.SetGazed(true);
             } else
             {
