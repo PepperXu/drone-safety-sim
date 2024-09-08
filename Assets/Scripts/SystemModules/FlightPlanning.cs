@@ -135,6 +135,18 @@ public class FlightPlanning : MonoBehaviour
         }
         return wpList;
     }
+
+
+    public List<Vector3> GenerateFlightPlanEditor(int surfaceIndex)
+    {
+        UpdateBoundsGeometry();
+        List<Vector3> path = new List<Vector3>();
+        GameObject flightPlan = new GameObject("Flight Plan Temp");
+        GenerateTrajectoryOnSurface(ref path, flightPlan.transform, surfaceIndex, false, surfaceIndex == 0);
+        DestroyImmediate(flightPlan);
+        return path;
+    }
+
     public void GenerateFlightTrajectory()
     {
         //if (currentSelectedSurfaceIndex < 0)

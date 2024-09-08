@@ -8,6 +8,24 @@ public class CollisionCalculation : MonoBehaviour
     //public int currentConfig;
     //public int lastWaypointIndex;
     public LayerMask obstacleLayer;
+    public FlightPlanning flightPlanning;
+    
+
+    public enum CalculationMode
+    {
+        AvgDist,
+        NearColDuration,
+        WarningDuration,
+        EffectiveDuration,
+        TotalDuration,
+        AvgDeviationNoCol,
+        WaypointCoverage,
+        AutopilotPercentage
+    }
+
+    public CalculationMode currentCalculationMode;
+
+    public string fileName = "log_full.csv";
     // Start is called before the first frame update
     void Start()
     {

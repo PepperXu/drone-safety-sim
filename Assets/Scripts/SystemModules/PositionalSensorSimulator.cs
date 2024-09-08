@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -41,6 +42,9 @@ public class PositionalSensorSimulator : MonoBehaviour
     //public static Vector3 dronePositionVirtual;
 
     bool switch_gps_normal;
+
+
+
 
     
     // Start is called before the first frame update
@@ -289,4 +293,6 @@ public class PositionalSensorSimulator : MonoBehaviour
     public void SetGPSLost(bool lost){
         gps_lost = lost;
     }
+
+
 }
