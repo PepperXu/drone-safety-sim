@@ -30,13 +30,13 @@ public class TennisAgent : Agent
     {
         AddVectorObs(invertMult * (transform.position.x - myArea.transform.position.x));
         AddVectorObs(transform.position.y - myArea.transform.position.y);
-        AddVectorObs(invertMult * agentRb.velocity.x);
-        AddVectorObs(agentRb.velocity.y);
+        AddVectorObs(invertMult * agentRb.linearVelocity.x);
+        AddVectorObs(agentRb.linearVelocity.y);
 
         AddVectorObs(invertMult * (ball.transform.position.x - myArea.transform.position.x));
         AddVectorObs(ball.transform.position.y - myArea.transform.position.y);
-        AddVectorObs(invertMult * ballRb.velocity.x);
-        AddVectorObs(ballRb.velocity.y);
+        AddVectorObs(invertMult * ballRb.linearVelocity.x);
+        AddVectorObs(ballRb.linearVelocity.y);
     }
 
 
@@ -47,10 +47,10 @@ public class TennisAgent : Agent
         
         if (moveY > 0.5 && transform.position.y - transform.parent.transform.position.y < -1.5f)
         {
-            agentRb.velocity = new Vector3(agentRb.velocity.x, 7f, 0f);
+            agentRb.linearVelocity = new Vector3(agentRb.linearVelocity.x, 7f, 0f);
         }
 
-        agentRb.velocity = new Vector3(moveX * 30f, agentRb.velocity.y, 0f);
+        agentRb.linearVelocity = new Vector3(moveX * 30f, agentRb.linearVelocity.y, 0f);
 
         if (invertX && transform.position.x - transform.parent.transform.position.x < -invertMult || 
             !invertX && transform.position.x - transform.parent.transform.position.x > -invertMult)
@@ -68,6 +68,6 @@ public class TennisAgent : Agent
         invertMult = invertX ? -1f : 1f;
 
         transform.position = new Vector3(-invertMult * Random.Range(6f, 8f), -1.5f, 0f) + transform.parent.transform.position;
-        agentRb.velocity = new Vector3(0f, 0f, 0f);
+        agentRb.linearVelocity = new Vector3(0f, 0f, 0f);
     }
 }

@@ -194,7 +194,7 @@ public class PushAgentBasic : Agent
         block.transform.position = GetRandomSpawnPos();
 
         // Reset block velocity back to zero.
-        blockRB.velocity = Vector3.zero;
+        blockRB.linearVelocity = Vector3.zero;
 
         // Reset block angularVelocity back to zero.
         blockRB.angularVelocity = Vector3.zero;
@@ -213,7 +213,7 @@ public class PushAgentBasic : Agent
 
         ResetBlock();
         transform.position = GetRandomSpawnPos();
-        agentRB.velocity = Vector3.zero;
+        agentRB.linearVelocity = Vector3.zero;
         agentRB.angularVelocity = Vector3.zero;
     }
 }

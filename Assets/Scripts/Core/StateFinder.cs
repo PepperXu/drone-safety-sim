@@ -61,7 +61,7 @@ public class StateFinder : MonoBehaviour {
 
 		//Altitude = droneTransform.transform.position.y - landedHeight;
 
-		pose.WorldVelocity = droneTransform.transform.GetComponent<Rigidbody> ().velocity;
+		pose.WorldVelocity = droneTransform.transform.GetComponent<Rigidbody> ().linearVelocity;
 		LocalVelocityVector = droneTransform.transform.InverseTransformDirection (pose.WorldVelocity);
 
 		pose.WorldAcceleration = (pose.WorldVelocity-previousWorldVelocity)/Time.fixedDeltaTime;

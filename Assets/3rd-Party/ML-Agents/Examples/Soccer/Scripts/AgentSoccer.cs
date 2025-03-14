@@ -192,7 +192,7 @@ public class AgentSoccer : Agent
         }
         transform.position = area.GetRandomSpawnPos(team.ToString(),
                                                     agentRole.ToString());
-        agentRB.velocity = Vector3.zero;
+        agentRB.linearVelocity = Vector3.zero;
         agentRB.angularVelocity = Vector3.zero;
         area.ResetBall();
     }

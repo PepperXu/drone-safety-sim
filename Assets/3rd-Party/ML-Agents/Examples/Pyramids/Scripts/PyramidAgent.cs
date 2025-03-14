@@ -39,7 +39,7 @@ public class PyramidAgent : Agent
             AddVectorObs(rayPer.Perceive(rayDistance, rayAngles1, detectableObjects, 0f, 5f));
             AddVectorObs(rayPer.Perceive(rayDistance, rayAngles2, detectableObjects, 0f, 10f));
             AddVectorObs(switchLogic.GetState());
-            AddVectorObs(transform.InverseTransformDirection(agentRb.velocity));
+            AddVectorObs(transform.InverseTransformDirection(agentRb.linearVelocity));
         }
     }
 
@@ -89,7 +89,7 @@ public class PyramidAgent : Agent
         
         myArea.CleanPyramidArea();
         
-        agentRb.velocity = Vector3.zero;
+        agentRb.linearVelocity = Vector3.zero;
         myArea.PlaceObject(gameObject, items[0]);
         transform.rotation = Quaternion.Euler(new Vector3(0f, Random.Range(0, 360)));
 

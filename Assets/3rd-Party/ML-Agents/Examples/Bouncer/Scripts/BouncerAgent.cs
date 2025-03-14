@@ -51,7 +51,7 @@ public class BouncerAgent : Agent {
 
         gameObject.transform.localPosition = new Vector3(
             (1 - 2 * Random.value) *5, 2, (1 - 2 * Random.value)*5);
-        rb.velocity = default(Vector3);
+        rb.linearVelocity = default(Vector3);
         GameObject environment = gameObject.transform.parent.gameObject;
         BouncerBanana[] bananas = 
             environment.GetComponentsInChildren<BouncerBanana>();
@@ -74,7 +74,7 @@ public class BouncerAgent : Agent {
             RequestDecision();
             jumpLeft -= 1;
             jumpCooldown = 0.1f;
-            rb.velocity = default(Vector3);
+            rb.linearVelocity = default(Vector3);
         }
         
         jumpCooldown -= Time.fixedDeltaTime;

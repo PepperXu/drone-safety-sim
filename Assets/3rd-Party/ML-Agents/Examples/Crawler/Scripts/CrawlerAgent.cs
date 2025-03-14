@@ -89,7 +89,7 @@ public class CrawlerAgent : Agent
     {
         var rb = bp.rb;
         AddVectorObs(bp.groundContact.touchingGround ? 1 : 0); // Whether the bp touching the ground
-        AddVectorObs(rb.velocity);
+        AddVectorObs(rb.linearVelocity);
         AddVectorObs(rb.angularVelocity);
 
         if (bp.rb.transform != body)
@@ -227,7 +227,7 @@ public class CrawlerAgent : Agent
     /// </summary>
     void RewardFunctionMovingTowards()
     {
-        movingTowardsDot = Vector3.Dot(jdController.bodyPartsDict[body].rb.velocity, dirToTarget.normalized);
+        movingTowardsDot = Vector3.Dot(jdController.bodyPartsDict[body].rb.linearVelocity, dirToTarget.normalized);
         AddReward(0.03f * movingTowardsDot);
     }
 

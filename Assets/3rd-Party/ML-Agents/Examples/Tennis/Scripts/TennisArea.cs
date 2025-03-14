@@ -29,14 +29,14 @@ public class TennisArea : MonoBehaviour {
         {
             ball.transform.position = new Vector3(ballOut, 6f, 0f) + transform.position;
         }
-        ballRb.velocity = new Vector3(0f, 0f, 0f);
+        ballRb.linearVelocity = new Vector3(0f, 0f, 0f);
         ball.transform.localScale = new Vector3(1, 1, 1);
         ball.GetComponent<HitWall>().lastAgentHit = -1;
     }
 
     void FixedUpdate() 
     {
-        Vector3 rgV = ballRb.velocity;
-        ballRb.velocity = new Vector3(Mathf.Clamp(rgV.x, -9f, 9f), Mathf.Clamp(rgV.y, -9f, 9f), rgV.z);
+        Vector3 rgV = ballRb.linearVelocity;
+        ballRb.linearVelocity = new Vector3(Mathf.Clamp(rgV.x, -9f, 9f), Mathf.Clamp(rgV.y, -9f, 9f), rgV.z);
     }
 }

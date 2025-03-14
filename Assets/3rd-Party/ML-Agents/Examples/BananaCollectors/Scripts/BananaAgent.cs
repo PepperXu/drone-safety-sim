@@ -49,7 +49,7 @@ public class BananaAgent : Agent
             float[] rayAngles = { 20f, 90f, 160f, 45f, 135f, 70f, 110f };
             string[] detectableObjects = { "banana", "agent", "wall", "badBanana", "frozenAgent" };
             AddVectorObs(rayPer.Perceive(rayDistance, rayAngles, detectableObjects, 0f, 0f));
-            Vector3 localVelocity = transform.InverseTransformDirection(agentRb.velocity);
+            Vector3 localVelocity = transform.InverseTransformDirection(agentRb.linearVelocity);
             AddVectorObs(localVelocity.x);
             AddVectorObs(localVelocity.z);
             AddVectorObs(System.Convert.ToInt32(frozen));
@@ -144,15 +144,15 @@ public class BananaAgent : Agent
             {
                 shoot = true;
                 dirToGo *= 0.5f;
-                agentRb.velocity *= 0.75f;
+                agentRb.linearVelocity *= 0.75f;
             }
             agentRb.AddForce(dirToGo * moveSpeed, ForceMode.VelocityChange);
             transform.Rotate(rotateDir, Time.fixedDeltaTime * turnSpeed);
         }
 
-        if (agentRb.velocity.sqrMagnitude > 25f) // slow it down
+        if (agentRb.linearVelocity.sqrMagnitude > 25f) // slow it down
         {
-            agentRb.velocity *= 0.95f;
+            agentRb.linearVelocity *= 0.95f;
         }
 
         if (shoot)
@@ -232,7 +232,7 @@ public class BananaAgent : Agent
         Unpoison();
         Unsatiate();
         shoot = false;
-        agentRb.velocity = Vector3.zero;
+        agentRb.linearVelocity = Vector3.zero;
         bananas = 0;
         myLaser.transform.localScale = new Vector3(0f, 0f, 0f);
         transform.position = new Vector3(Random.Range(-myArea.range, myArea.range),

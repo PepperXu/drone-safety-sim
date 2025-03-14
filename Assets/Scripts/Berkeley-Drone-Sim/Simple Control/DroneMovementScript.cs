@@ -27,14 +27,14 @@ public class DroneMovementScript : MonoBehaviour {
     void MovementUpDown(){
         if(Mathf.Abs(Input.GetAxis("Vertical")) > .2f || Mathf.Abs(Input.GetAxis("Horizontal")) > .2f) {
             if(Input.GetKey(KeyCode.I) || Input.GetKey(KeyCode.K)){
-                drone.velocity = drone.velocity;
+                drone.linearVelocity = drone.linearVelocity;
             }
             if(!Input.GetKey(KeyCode.I) && !Input.GetKey(KeyCode.K) && !Input.GetKey(KeyCode.J) && !Input.GetKey(KeyCode.L)) {
-                drone.velocity = new Vector3(drone.velocity.x, Mathf.Lerp(drone.velocity.y, 0, Time.deltaTime * 5), drone.velocity.z);
+                drone.linearVelocity = new Vector3(drone.linearVelocity.x, Mathf.Lerp(drone.linearVelocity.y, 0, Time.deltaTime * 5), drone.linearVelocity.z);
                 upForce = 281;
             }
             if (!Input.GetKey(KeyCode.I) && !Input.GetKey(KeyCode.K) && !Input.GetKey(KeyCode.J) || Input.GetKey(KeyCode.L)){
-                drone.velocity = new Vector3(drone.velocity.x, Mathf.Lerp(drone.velocity.y, 0, Time.deltaTime * 5), drone.velocity.z);
+                drone.linearVelocity = new Vector3(drone.linearVelocity.x, Mathf.Lerp(drone.linearVelocity.y, 0, Time.deltaTime * 5), drone.linearVelocity.z);
                 upForce = 110;
             }
             if(Input.GetKey(KeyCode.J) || Input.GetKey(KeyCode.L)) {
@@ -84,16 +84,16 @@ public class DroneMovementScript : MonoBehaviour {
     private Vector3 velocityToSmoothDampingToZero;
     void ClampingSpeedValues(){
         if(Mathf.Abs(Input.GetAxis("Vertical")) > .2f && Mathf.Abs(Input.GetAxis("Horizontal")) > .2f) {
-            drone.velocity = Vector3.ClampMagnitude(drone.velocity, Mathf.Lerp(drone.velocity.magnitude, 10.0f, Time.deltaTime * 5f));
+            drone.linearVelocity = Vector3.ClampMagnitude(drone.linearVelocity, Mathf.Lerp(drone.linearVelocity.magnitude, 10.0f, Time.deltaTime * 5f));
         }
         if (Mathf.Abs(Input.GetAxis("Vertical")) > .2f && Mathf.Abs(Input.GetAxis("Horizontal")) < .2f){
-            drone.velocity = Vector3.ClampMagnitude(drone.velocity, Mathf.Lerp(drone.velocity.magnitude, 10.0f, Time.deltaTime * 5f));
+            drone.linearVelocity = Vector3.ClampMagnitude(drone.linearVelocity, Mathf.Lerp(drone.linearVelocity.magnitude, 10.0f, Time.deltaTime * 5f));
         }
         if (Mathf.Abs(Input.GetAxis("Vertical")) < .2f && Mathf.Abs(Input.GetAxis("Horizontal")) > .2f){
-            drone.velocity = Vector3.ClampMagnitude(drone.velocity, Mathf.Lerp(drone.velocity.magnitude, 10.0f, Time.deltaTime * 5f));
+            drone.linearVelocity = Vector3.ClampMagnitude(drone.linearVelocity, Mathf.Lerp(drone.linearVelocity.magnitude, 10.0f, Time.deltaTime * 5f));
         }
         if (Mathf.Abs(Input.GetAxis("Vertical")) < .2f && Mathf.Abs(Input.GetAxis("Horizontal")) < .2f) {
-            drone.velocity = Vector3.SmoothDamp(drone.velocity, Vector3.zero, ref velocityToSmoothDampingToZero, .95f);
+            drone.linearVelocity = Vector3.SmoothDamp(drone.linearVelocity, Vector3.zero, ref velocityToSmoothDampingToZero, .95f);
         }
     }
 

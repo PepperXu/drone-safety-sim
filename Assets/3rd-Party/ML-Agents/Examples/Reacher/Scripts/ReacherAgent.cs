@@ -34,12 +34,12 @@ public class ReacherAgent : Agent {
         AddVectorObs(pendulumA.transform.localPosition);
         AddVectorObs(pendulumA.transform.rotation);
         AddVectorObs(rbA.angularVelocity);
-        AddVectorObs(rbA.velocity);
+        AddVectorObs(rbA.linearVelocity);
 
         AddVectorObs(pendulumB.transform.localPosition);
         AddVectorObs(pendulumB.transform.rotation);
         AddVectorObs(rbB.angularVelocity);
-        AddVectorObs(rbB.velocity);
+        AddVectorObs(rbB.linearVelocity);
 
         AddVectorObs(goal.transform.localPosition);
         AddVectorObs(hand.transform.localPosition);
@@ -82,12 +82,12 @@ public class ReacherAgent : Agent {
     {
         pendulumA.transform.position = new Vector3(0f, -4f, 0f) + transform.position;
         pendulumA.transform.rotation = Quaternion.Euler(180f, 0f, 0f);
-        rbA.velocity = Vector3.zero;
+        rbA.linearVelocity = Vector3.zero;
         rbA.angularVelocity = Vector3.zero;
 
         pendulumB.transform.position = new Vector3(0f, -10f, 0f) + transform.position;
         pendulumB.transform.rotation = Quaternion.Euler(180f, 0f, 0f);
-        rbB.velocity = Vector3.zero;
+        rbB.linearVelocity = Vector3.zero;
         rbB.angularVelocity = Vector3.zero;
 
         goalDegree = Random.Range(0, 360);

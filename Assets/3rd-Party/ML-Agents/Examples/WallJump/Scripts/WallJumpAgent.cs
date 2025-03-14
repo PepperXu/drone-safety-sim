@@ -137,8 +137,8 @@ public class WallJumpAgent : Agent
         Vector3 velocityTarget = moveToPos * targetVel * Time.fixedDeltaTime;
         if (float.IsNaN(velocityTarget.x) == false)
         {
-            rb.velocity = Vector3.MoveTowards(
-                rb.velocity, velocityTarget, maxVel);
+            rb.linearVelocity = Vector3.MoveTowards(
+                rb.linearVelocity, velocityTarget, maxVel);
         }
     }
 
@@ -272,7 +272,7 @@ public class WallJumpAgent : Agent
     void ResetBlock(Rigidbody blockRB)
     {
         blockRB.transform.position = GetRandomSpawnPos();
-        blockRB.velocity = Vector3.zero;
+        blockRB.linearVelocity = Vector3.zero;
         blockRB.angularVelocity = Vector3.zero;
     }
 
@@ -282,7 +282,7 @@ public class WallJumpAgent : Agent
         transform.localPosition = new Vector3(
             18 * (Random.value - 0.5f), 1, -12);
         configuration = Random.Range(0, 5);
-        agentRB.velocity = default(Vector3);
+        agentRB.linearVelocity = default(Vector3);
 
     }
 

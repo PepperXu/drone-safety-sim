@@ -136,7 +136,7 @@ public class HallwayAgent : Agent
                                          1f, agentOffset + Random.Range(-5f, 5f))
             + ground.transform.position;
         transform.rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
-        agentRB.velocity *= 0f;
+        agentRB.linearVelocity *= 0f;
 
         int goalPos = Random.Range(0, 2);
         if (goalPos == 0)

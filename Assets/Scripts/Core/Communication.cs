@@ -161,7 +161,7 @@ public class Communication : MonoBehaviour
 
 		realPose.Altitude = droneTransform.position.y - constProps.landedHeight;
 
-		realPose.WorldVelocity = droneRb.velocity;
+		realPose.WorldVelocity = droneRb.linearVelocity;
 		realPose.LocalVelocityVector = droneTransform.InverseTransformDirection (realPose.WorldVelocity);
 
 		realPose.WorldAcceleration = (realPose.WorldVelocity - realPose.previousWorldVelocity)/Time.fixedDeltaTime;

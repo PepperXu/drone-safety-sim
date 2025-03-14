@@ -178,7 +178,7 @@ public class SoccerFieldArea : MonoBehaviour
     public void ResetBall()
     {
         ball.transform.position = GetRandomSpawnPos("ball", "ball");
-        ballRB.velocity = Vector3.zero;
+        ballRB.linearVelocity = Vector3.zero;
         ballRB.angularVelocity = Vector3.zero;
     }
 }

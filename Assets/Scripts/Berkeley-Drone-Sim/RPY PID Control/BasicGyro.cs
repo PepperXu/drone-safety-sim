@@ -25,7 +25,7 @@ public class BasicGyro {
 
         Altitude = transform.position.y;
 
-        VelocityVector = transform.GetComponent<Rigidbody>().velocity;
+        VelocityVector = transform.GetComponent<Rigidbody>().linearVelocity;
         VelocityScalar = VelocityVector.magnitude;
 	}
 }
