@@ -97312,8 +97312,8 @@ GameObject:
   - component: {fileID: 1661648271}
   - component: {fileID: 1661648276}
   - component: {fileID: 1661648275}
-  - component: {fileID: 1661648273}
   - component: {fileID: 1661648272}
+  - component: {fileID: 1661648277}
   m_Layer: 0
   m_Name: FPV
   m_TagString: FPVCam
@@ -97380,22 +97380,6 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
---- !u!114 &1661648273
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1661648270}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3e7180f8755fb45e493bc495c64b62ee, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  droneTransform: {fileID: 1379757937}
-  offset: {x: 0, y: 0, z: 0}
-  temp: 0.3
-  rpLimitRatio: 0.2
 --- !u!124 &1661648275
 Behaviour:
   m_ObjectHideFlags: 0
@@ -97455,6 +97439,21 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
+--- !u!114 &1661648277
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1661648270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b628fd2a0d1d7647a3c450e539c38a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  offset: {x: 0, y: 0, z: 0.4}
+  temp: 0.857
+  rpLimitRatio: 0.804
 --- !u!1 &1662199937
 GameObject:
   m_ObjectHideFlags: 0
