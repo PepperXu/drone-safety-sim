@@ -79,6 +79,7 @@ public class VelocityControl : MonoBehaviour {
             starting_position = droneTransform.position;
             starting_angles = droneTransform.eulerAngles;
         }
+        ResetVelocityControl();
     }
     // Use this for initialization
     void OnEnable () {

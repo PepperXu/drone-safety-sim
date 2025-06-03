@@ -71,6 +71,7 @@ public class FlightPlanning : MonoBehaviour
     // Start is called before the first frame update
 
     void OnEnable(){
+        Communication.waypoints = new Waypoint[0];
         DroneManager.resetAllEvent.AddListener(ResetPathPlanning);
     }
 
