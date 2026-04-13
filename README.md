@@ -6,6 +6,8 @@ A mixed-reality drone inspection simulator for studying how information visualiz
 
 **Paper:** [SafeSpect: Safety-First Augmented Reality Heads-up Display for Drone Inspections](https://arxiv.org/abs/2504.16533)
 
+> **Developed by [Pepper Xu](https://pepperxu.github.io)** — visit for more projects and research.
+
 ---
 
 ## Overview
