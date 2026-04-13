@@ -11,7 +11,7 @@ public class EventTriggerDetection : MonoBehaviour {
     [SerializeField] PositionalSensorSimulator pss;
 
 
-    float normalDriftStrength = 10f, strongDriftStrength = 50f;
+    float normalDriftStrength = 5f, strongDriftStrength = 30f;
     //float windDuration = 20f, windDurationLong = 30f;
     float signalLostRecoverDuration = 5f;
     //int signalNormalIndex = 1, signalLostIndex = 0;

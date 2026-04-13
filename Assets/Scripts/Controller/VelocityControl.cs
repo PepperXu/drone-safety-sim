@@ -20,7 +20,7 @@ public class VelocityControl : MonoBehaviour {
 
     private float max_pitch = 0.175f; // 10 Degrees in radians, otherwise small-angle approximation dies 
     private float max_roll = 0.175f; // 10 Degrees in radians, otherwise small-angle approximation dies
-    private float max_alpha = 10.0f;
+    private float max_alpha = 20.0f;
     //must set this
     private float desired_height = 0.0f;
     private float desired_vx = 0.0f;
@@ -79,6 +79,8 @@ public class VelocityControl : MonoBehaviour {
             starting_position = droneTransform.position;
             starting_angles = droneTransform.eulerAngles;
         }
+        
+        Communication.ResetConstProps();
         ResetVelocityControl();
     }
     // Use this for initialization
@@ -121,7 +123,6 @@ public class VelocityControl : MonoBehaviour {
         //desired_height = landedHeight;
         //Communication.constProps.landedHeight = landedHeight;
         Communication.ResetCollision();
-        Communication.ResetConstProps();
         if(audioSource)
             audioSource.Stop();
     }

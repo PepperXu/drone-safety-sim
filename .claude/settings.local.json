@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Skill(update-config)",
+      "Bash(adb logcat:*)",
+      "Bash(adb shell:*)"
+    ]
+  }
+}

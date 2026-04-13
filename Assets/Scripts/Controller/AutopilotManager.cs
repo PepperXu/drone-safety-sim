@@ -29,7 +29,7 @@ public class AutopilotManager : MonoBehaviour
     const float waitTime = 0.2f;
     float waitTimer = 0f;
 
-    float autopilot_max_speed = 5.0f;
+    float autopilot_max_speed = 3.0f;
     float autopilot_slowing_start_dist = 5.0f;
     //public Vector3 vectorToBuildingSurface;
 
