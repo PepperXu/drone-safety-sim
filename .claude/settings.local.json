@@ -4,7 +4,9 @@
       "Bash(xargs grep:*)",
       "Skill(update-config)",
       "Bash(adb logcat:*)",
-      "Bash(adb shell:*)"
+      "Bash(adb shell:*)",
+      "WebSearch",
+      "Bash(claude mcp:*)"
     ]
   }
 }
