@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Development
 
-This is a Unity project — use the Unity Editor (version 6000.0.40f1) to build and run. There are no CLI build commands in the repository.
+This is a Unity project — use the Unity Editor (version 6000.4.0f1) to build and run. There are no CLI build commands in the repository.
 
 - Open the project in Unity Hub with Unity 6000.4.0f1
 - Main playable scene: `Assets/Scenes/DroneSim.unity`
@@ -72,12 +72,13 @@ Landed → TakingOff → Hovering/Navigating → Landing → Landed
 | Folder | Responsibility |
 |--------|---------------|
 | `Core/` | `DroneManager` (mission state), `Communication` (global data bus), `StateFinder` (physics → pose) |
-| `Controller/` | `VelocityControl` (PID flight), `AutopilotManager` (waypoint following), `ExperimentServer` (TCP logging), wind control |
-| `SystemModules/` | `Battery`, `CollisionSensing`, `PositionalSensorSimulator`, `FlightPlanning` (inspection grid) |
-| `InputModule/` | XR controller input mapping, ray interaction, event zone detection |
-| `Visualization/` | HUD updating, 3D world overlays, control visualizations, adaptive vis mode switching |
-| `Utilities/` | Billboard effects, auto-decay, text binding, debug helpers |
-| `Editor/` | Custom Unity Inspector UIs for collision geometry, config selection, data visualization |
+| `Controller/` | `VelocityControl` (PID flight), `AutopilotManager` (waypoint following), `ExperimentServer` (TCP logging), `WindControl`, `CameraController`, `FPVCameraScript` (frame-buffer latency) |
+| `SystemModules/` | `Battery`, `CollisionSensing`, `PositionalSensorSimulator`, `FlightPlanning` (inspection grid), `RandomPulseNoise` (wind forces) |
+| `InputModule/` | `InputControl` (XR controller input), `CustomRayController` (ray interaction), `EventTriggerDetection` (zone detection), `InteractiveCamera` |
+| `Visualization/` | `UIUpdater` (HUD), `WorldVisUpdater` (3D overlays), `ControlVisUpdater`, `VisType` (adaptive vis mode switching) |
+| `Utilities/` | `FaceCamera` (billboard), `AutoDecay`, `UIAutoDecay`, `UpdateUIText`, `DebugText`, `WorldUIScaler`, `ShowKeyboard`, `ActivateHandAnimation`, `EnumerableExtensions` |
+| `Editor/` | `CollisionCalculationEditor`, `ConfigManagerEditor`, `DataVisualizationEditor`, `UpdateMeshReferencing` — custom Inspector UIs |
+| *(root)* | `ConfigManager`, `Waypoint`, `WaypointNext`, `Vehicle`, `TrafficSimulation`, `DefectsData`, `DefectsRandomizer`, `DataVisualization`, `CollisionCalculation`, `BodyTracking`, `ExperimentMonitor` |
 
 ## Sensor Simulation
 
