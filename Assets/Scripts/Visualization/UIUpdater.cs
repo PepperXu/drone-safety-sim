@@ -56,6 +56,9 @@ public class UIUpdater : MonoBehaviour
     [SerializeField] Transform bodyAnchor;
     //[SerializeField] Transform droneAnchor;
 
+    [Tooltip("Enable web/non-XR UI positioning. Overrides anchor-based repositioning for each condition.")]
+    [SerializeField] bool webMode = false;
+
     [Header("Buttons")]
     [SerializeField] Toggle autoPilotToggle;
 
@@ -242,70 +245,139 @@ public class UIUpdater : MonoBehaviour
     {
         while (true)
         {
-            if(VisType.globalVisType == VisType.VisualizationType.TwoDOnly){
-                if(uiAnchor.parent != handAnchor){
-                    uiAnchor.parent = handAnchor;
-                    uiAnchor.localPosition = posHand;
-                    uiAnchor.localEulerAngles = angHand;
-                    uiAnchor.localScale = scaleHand;
-                
-                    SatelliteUI.SetActive(true);
-                }
-            } else if(VisType.globalVisType == VisType.VisualizationType.MissionOnly || VisType.globalVisType == VisType.VisualizationType.Both){
-                if(uiAnchor.parent != headAnchor){
-                    uiAnchor.parent = headAnchor;
-                    uiAnchor.localPosition = posLOS;
-                    uiAnchor.localEulerAngles = angLOS;
-                    uiAnchor.localScale = scaleHead;
-                    
-                    SatelliteUI.SetActive(false);
-                }
-                //Vector3 targetPos, targetAng;
-                //if(VisType.globalVisType == VisType.VisualizationType.MissionOnly)
-                //{
-                //    targetPos = posLOS;
-                //    targetAng = angLOS;
-                //} else
-                //{
-                //    targetPos = posLow;
-                //    targetAng = angLow;
-                //}
-                //
-                //if((uiAnchor.localPosition - targetPos).magnitude > 0.05f)
-                //{
-                //    uiAnchor.localPosition = Vector3.MoveTowards(uiAnchor.localPosition, targetPos, 0.5f * Time.deltaTime);
-                //}
-                //if ((uiAnchor.localEulerAngles - targetAng).magnitude > 0.5f)
-                //{
-                //    uiAnchor.localRotation = Quaternion.RotateTowards(uiAnchor.localRotation, Quaternion.Euler(targetAng), 40f * Time.deltaTime);
-                //}
-            } else
+            // Web/non-XR: skip repositioning if anchors are not wired up
+            if (headAnchor == null || handAnchor == null || bodyAnchor == null)
             {
-                if (uiAnchor.parent != bodyAnchor.parent)
-                {
-                    if (uiAnchor.parent == handAnchor)
-                    {
-                        uiAnchor.parent = bodyAnchor.parent;
-                        uiAnchor.position = bodyAnchor.position + bodyAnchor.forward * posLow.z + bodyAnchor.up * posLow.y + bodyAnchor.right * posLow.x;
-                        uiAnchor.eulerAngles = bodyAnchor.eulerAngles + angLow;
-                        uiAnchor.localScale = scaleHead;
-                    } else
-                    {
-                        uiAnchor.parent = bodyAnchor.parent;
-                    }
-                    bodyAnchor.eulerAngles = headAnchor.eulerAngles.y * Vector3.up;
-                    SatelliteUI.SetActive(false);
-                }
+                yield return new WaitForEndOfFrame();
+                continue;
+            }
 
-                Vector3 targetPos = bodyAnchor.position + bodyAnchor.forward * posLow.z + bodyAnchor.up * posLow.y + bodyAnchor.right * posLow.x;
-                Vector3 targetAng = bodyAnchor.eulerAngles + angLow;
-                if ((uiAnchor.position - targetPos).magnitude > 0.05f)
+            if (webMode)
+            {
+                if (VisType.globalVisType == VisType.VisualizationType.TwoDOnly)
                 {
-                    uiAnchor.position = Vector3.MoveTowards(uiAnchor.position, targetPos, 0.5f * Time.deltaTime);
+                    // World-fixed: place the UI once at a position slightly below the horizontal
+                    // line of sight toward the building, then leave it there (parent=null = world-anchored).
+                    if (uiAnchor.parent != null)
+                    {
+                        Vector3 flatFwd = Vector3.ProjectOnPlane(headAnchor.forward, Vector3.up).normalized;
+                        if (flatFwd == Vector3.zero) flatFwd = Vector3.forward;
+                        uiAnchor.parent = null;
+                        uiAnchor.position = headAnchor.position
+                            + flatFwd    * posLOS.z
+                            + Vector3.down * Mathf.Abs(posLOS.y);
+                        uiAnchor.rotation = Quaternion.LookRotation(flatFwd, Vector3.up)
+                            * Quaternion.Euler(angLOS.x, 0f, 0f);
+                        uiAnchor.localScale = scaleHead;
+                        SatelliteUI.SetActive(true);
+                    }
                 }
-                if ((uiAnchor.eulerAngles - targetAng).magnitude > 1f)
+                else if (VisType.globalVisType == VisType.VisualizationType.MissionOnly ||
+                         VisType.globalVisType == VisType.VisualizationType.Both)
                 {
-                    uiAnchor.rotation = Quaternion.RotateTowards(uiAnchor.rotation, Quaternion.Euler(targetAng), 40f * Time.deltaTime);
+                    // Head-locked: parent to camera, instantly follows user's full gaze.
+                    if (uiAnchor.parent != headAnchor)
+                    {
+                        uiAnchor.parent = headAnchor;
+                        uiAnchor.localPosition = posLOS;
+                        uiAnchor.localEulerAngles = angLOS;
+                        uiAnchor.localScale = scaleHead;
+                        SatelliteUI.SetActive(false);
+                    }
+                }
+                else
+                {
+                    // Adaptive: smooth follow of the camera's horizontal direction.
+                    // Parent to headAnchor's parent so we can animate in world space.
+                    Transform webAnchorParent = headAnchor.parent != null ? headAnchor.parent : headAnchor;
+                    if (uiAnchor.parent != webAnchorParent)
+                    {
+                        uiAnchor.parent = webAnchorParent;
+                        uiAnchor.localScale = scaleHead;
+                        SatelliteUI.SetActive(false);
+                    }
+                    Vector3 flatFwd = Vector3.ProjectOnPlane(headAnchor.forward, Vector3.up).normalized;
+                    if (flatFwd == Vector3.zero) flatFwd = Vector3.forward;
+                    Vector3 flatRight = Vector3.Cross(Vector3.up, flatFwd);
+                    Vector3 targetPos = headAnchor.position
+                        + flatFwd    * posLow.z
+                        + Vector3.up * posLow.y
+                        + flatRight  * posLow.x;
+                    Quaternion targetRot = Quaternion.LookRotation(flatFwd, Vector3.up)
+                        * Quaternion.Euler(angLow.x, 0f, 0f);
+                    if ((uiAnchor.position - targetPos).magnitude > 0.05f)
+                        uiAnchor.position = Vector3.MoveTowards(uiAnchor.position, targetPos, 0.5f * Time.deltaTime);
+                    if (Quaternion.Angle(uiAnchor.rotation, targetRot) > 1f)
+                        uiAnchor.rotation = Quaternion.RotateTowards(uiAnchor.rotation, targetRot, 40f * Time.deltaTime);
+                }
+            }
+            else
+            {
+                if(VisType.globalVisType == VisType.VisualizationType.TwoDOnly){
+                    if(uiAnchor.parent != handAnchor){
+                        uiAnchor.parent = handAnchor;
+                        uiAnchor.localPosition = posHand;
+                        uiAnchor.localEulerAngles = angHand;
+                        uiAnchor.localScale = scaleHand;
+
+                        SatelliteUI.SetActive(true);
+                    }
+                } else if(VisType.globalVisType == VisType.VisualizationType.MissionOnly || VisType.globalVisType == VisType.VisualizationType.Both){
+                    if(uiAnchor.parent != headAnchor){
+                        uiAnchor.parent = headAnchor;
+                        uiAnchor.localPosition = posLOS;
+                        uiAnchor.localEulerAngles = angLOS;
+                        uiAnchor.localScale = scaleHead;
+
+                        SatelliteUI.SetActive(false);
+                    }
+                    //Vector3 targetPos, targetAng;
+                    //if(VisType.globalVisType == VisType.VisualizationType.MissionOnly)
+                    //{
+                    //    targetPos = posLOS;
+                    //    targetAng = angLOS;
+                    //} else
+                    //{
+                    //    targetPos = posLow;
+                    //    targetAng = angLow;
+                    //}
+                    //
+                    //if((uiAnchor.localPosition - targetPos).magnitude > 0.05f)
+                    //{
+                    //    uiAnchor.localPosition = Vector3.MoveTowards(uiAnchor.localPosition, targetPos, 0.5f * Time.deltaTime);
+                    //}
+                    //if ((uiAnchor.localEulerAngles - targetAng).magnitude > 0.5f)
+                    //{
+                    //    uiAnchor.localRotation = Quaternion.RotateTowards(uiAnchor.localRotation, Quaternion.Euler(targetAng), 40f * Time.deltaTime);
+                    //}
+                } else
+                {
+                    if (uiAnchor.parent != bodyAnchor.parent)
+                    {
+                        if (uiAnchor.parent == handAnchor)
+                        {
+                            uiAnchor.parent = bodyAnchor.parent;
+                            uiAnchor.position = bodyAnchor.position + bodyAnchor.forward * posLow.z + bodyAnchor.up * posLow.y + bodyAnchor.right * posLow.x;
+                            uiAnchor.eulerAngles = bodyAnchor.eulerAngles + angLow;
+                            uiAnchor.localScale = scaleHead;
+                        } else
+                        {
+                            uiAnchor.parent = bodyAnchor.parent;
+                        }
+                        bodyAnchor.eulerAngles = headAnchor.eulerAngles.y * Vector3.up;
+                        SatelliteUI.SetActive(false);
+                    }
+
+                    Vector3 targetPos = bodyAnchor.position + bodyAnchor.forward * posLow.z + bodyAnchor.up * posLow.y + bodyAnchor.right * posLow.x;
+                    Vector3 targetAng = bodyAnchor.eulerAngles + angLow;
+                    if ((uiAnchor.position - targetPos).magnitude > 0.05f)
+                    {
+                        uiAnchor.position = Vector3.MoveTowards(uiAnchor.position, targetPos, 0.5f * Time.deltaTime);
+                    }
+                    if ((uiAnchor.eulerAngles - targetAng).magnitude > 1f)
+                    {
+                        uiAnchor.rotation = Quaternion.RotateTowards(uiAnchor.rotation, Quaternion.Euler(targetAng), 40f * Time.deltaTime);
+                    }
                 }
             }
             //else {
@@ -397,14 +469,18 @@ public class UIUpdater : MonoBehaviour
 
     void UpdateCompassUI()
     {
-        float northAngle = -headAnchor.transform.eulerAngles.y;
+        // Web/non-XR: fall back to Camera.main when headAnchor is not wired
+        Transform referenceTransform = (headAnchor != null) ? headAnchor : Camera.main?.transform;
+        if (referenceTransform == null) return;
+
+        float northAngle = -referenceTransform.eulerAngles.y;
         northAngle = NormalizeAngle(northAngle);
         northIcon.localEulerAngles = new Vector3(0f, 0f, -northAngle);
-       
+
         float relativeHeading = Communication.realPose.Angles.y - Communication.realPose.Angles.y;
         relativeHeading = NormalizeAngle(relativeHeading);
         headingIcon.localEulerAngles = new Vector3(0f, 0f, -relativeHeading);
-        Vector3 relativeOffsetLocal = headAnchor.InverseTransformPoint(Communication.realPose.WorldPosition);
+        Vector3 relativeOffsetLocal = referenceTransform.InverseTransformPoint(Communication.realPose.WorldPosition);
         Vector2 relativeOffset2D = new Vector2(relativeOffsetLocal.x, relativeOffsetLocal.z);
         if (relativeOffset2D.magnitude <= 35f)
         {

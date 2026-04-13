@@ -47,8 +47,17 @@ public class InputControl : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        InputDevice rightController = rightRayController.GetController();
-		InputDevice leftController = leftRayController.GetController();
+		InputDevice rightController = new InputDevice();
+		InputDevice leftController = new InputDevice();
+		if (rightRayController)
+		{
+			rightController = rightRayController.GetController();
+		}
+        	
+		if(leftRayController)
+		{
+			leftController = leftRayController.GetController();
+		}
 
         if (leftController.isValid)
         {

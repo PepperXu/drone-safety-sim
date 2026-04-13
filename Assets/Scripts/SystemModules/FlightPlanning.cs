@@ -83,6 +83,7 @@ public class FlightPlanning : MonoBehaviour
         pathPlanned = false;
         UpdateBoundsGeometry();
         //SetStartingPoint(0);
+        if(planningUI)
         planningUI.SetActive(true);
         monitoringUI.SetActive(false);
         if(autoPlan){
@@ -289,6 +290,7 @@ public class FlightPlanning : MonoBehaviour
     void FinishPlanning(){
         if(pathPlanned){
             DroneManager.finish_planning_flag = true;
+            if(planningUI)
             planningUI.SetActive(false);
             monitoringUI.SetActive(true);
             Communication.waypoints = wpList.ToArray(); 

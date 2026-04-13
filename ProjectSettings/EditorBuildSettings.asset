@@ -5,9 +5,12 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/DroneSim.unity
     guid: 9353d50741eeb41069e90b8c7bedfe5a
+  - enabled: 1
+    path: Assets/Scenes/Web.unity
+    guid: 80b6ba188e9469b42875d097b0d0fb17
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: c57d4159e82eed349a1c29137e1e143c,
       type: 2}

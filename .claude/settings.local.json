@@ -6,7 +6,16 @@
       "Bash(adb logcat:*)",
       "Bash(adb shell:*)",
       "WebSearch",
-      "Bash(claude mcp:*)"
+      "Bash(claude mcp:*)",
+      "Bash(grep -r \"UNITY_WEBGL\\\\|NETCODE_FOR_GAMEOBJECTS\\\\|com.unity.xr\" ProjectSettings/*.asset)",
+      "Bash(grep -r \"^using\\\\|^namespace\" /d/UnityRepos/drone-safety-sim/Assets/Scripts/InputModule/*.cs)",
+      "mcp__unity-mcp__Unity_ManageScene",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(item['text'][:5000]\\) for item in data[:3]]\")",
+      "Bash(python3 -c \" import json with open\\(r'C:\\\\Users\\\\XPS83\\\\.claude\\\\projects\\\\D--UnityRepos-drone-safety-sim\\\\2232f35d-1bb7-433a-910b-71904c2bc368\\\\tool-results\\\\mcp-unity-mcp-Unity_ManageScene-1776079251730.txt'\\) as f: data = json.load\\(f\\) for item in data: print\\(item['text'][:8000]\\) break \")",
+      "Bash(python:*)",
+      "mcp__unity-mcp__Unity_ManageGameObject",
+      "mcp__unity-mcp__Unity_RunCommand",
+      "mcp__unity-mcp__Unity_ManageEditor"
     ]
   }
 }

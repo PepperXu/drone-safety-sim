@@ -116,9 +116,11 @@ public class ExperimentServer : MonoBehaviour
     void Start()
     {
 		//Networking: to be removed...
-		tcpListenerThread = new Thread (new ThreadStart(ListenForIncommingRequests)); 		
-		tcpListenerThread.IsBackground = true; 		
-		tcpListenerThread.Start(); 
+#if !UNITY_WEBGL
+		tcpListenerThread = new Thread (new ThreadStart(ListenForIncommingRequests));
+		tcpListenerThread.IsBackground = true;
+		tcpListenerThread.Start();
+#endif
 
 
 		//currentBufferedVisCondition = currentVisCondition;
@@ -129,7 +131,8 @@ public class ExperimentServer : MonoBehaviour
 
 	IEnumerator DelayedInitializeTrackingOriginMode(){
 		yield return new WaitForSecondsRealtime(3f);
-		xrOrigin.RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Floor;
+		if (xrOrigin != null)
+			xrOrigin.RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Floor;
 	}
 
     // Update is called once per frame
@@ -337,6 +340,9 @@ public class ExperimentServer : MonoBehaviour
         droneManager.ResetAllStates();
 		MonitorUI.SetActive(false);
 		EXPUI.SetActive(true);
+#if UNITY_WEBGL || UNITY_EDITOR
+		WebPlayerController.SetUIMode(true);
+#endif
     }
 
 	public void StartExperiment()
@@ -345,6 +351,9 @@ public class ExperimentServer : MonoBehaviour
         MonitorUI.SetActive(true);
         EXPUI.SetActive(false);
 		StartRecording();
+#if UNITY_WEBGL || UNITY_EDITOR
+		WebPlayerController.SetUIMode(false);
+#endif
     }
 
 	public void UpdateVisCondition(int index)
@@ -513,12 +522,14 @@ public class ExperimentServer : MonoBehaviour
 	}
 
 	private void OnApplicationQuit() {
+#if !UNITY_WEBGL
 		try{
 			tcpListener.Stop();
 		}
 		catch(Exception e){
 			Debug.Log(e.Message);
 		}
+#endif
 	}
 #endregion
 	void StartRecording(){
