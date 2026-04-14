@@ -141,22 +141,6 @@ public class ExperimentServer : MonoBehaviour
 		if(isRecording)
 			expTimer += Time.deltaTime;
 		
-		
-
-        //if (VelocityControl.currentFlightState == VelocityControl.FlightState.TakingOff && !isRecording){
-		//	//StartRecording();
-		//	
-		//}
-
-		//if(VelocityControl.currentFlightState == VelocityControl.FlightState.Landed && isRecording){
-		//	StopRecording();
-		//}
-//
-		//if(currentVisCondition != currentBufferedVisCondition){
-		//	RecordData("Switch Visualization Condition to", visConditionString[(int)currentVisCondition] , "");
-		//	currentBufferedVisCondition = currentVisCondition;
-		//}
-
 		if(incomingMsgList.Count > 0)
 			ProcessClientMessage();
         
@@ -187,24 +171,7 @@ public class ExperimentServer : MonoBehaviour
 		if(Input.GetKeyDown(KeyCode.Space)){
 			Debug.Log(msgString);
 		}
-		if(DroneManager.currentMissionState == DroneManager.MissionState.Planning){
-        	
-        	//if(Input.GetKeyDown(KeyCode.Alpha1)){
-        	//    flightPlanning.SetStartingPoint(1);
-        	//}
-        	//if(Input.GetKeyDown(KeyCode.Alpha2)){
-        	//    flightPlanning.SetStartingPoint(2);
-        	//}
-        	//if(Input.GetKeyDown(KeyCode.Alpha3)){
-        	//    flightPlanning.SetStartingPoint(3);
-        	//}
-        	//if(Input.GetKeyDown(KeyCode.Alpha4)){
-        	//    flightPlanning.SetStartingPoint(4);
-        	//}
-        	//if(Input.GetKeyDown(KeyCode.Alpha0)){
-        	//    flightPlanning.SetStartingPoint(0);
-        	//}
-		} else {
+		if(DroneManager.currentMissionState != DroneManager.MissionState.Planning){
 			if(Input.GetKeyDown(KeyCode.Alpha1)){
 				UpdateVisCondition(0);
         	}
@@ -215,117 +182,9 @@ public class ExperimentServer : MonoBehaviour
         	if(Input.GetKeyDown(KeyCode.Alpha3)){
         	    UpdateVisCondition(2);
         	}
-            //if (Input.GetKeyDown(KeyCode.F1))
-            //{
-            //    UpdateConfig(0);
-            //}
-            //if (Input.GetKeyDown(KeyCode.F2))
-            //{
-            //    UpdateConfig(1);
-            //}
-            //if (Input.GetKeyDown(KeyCode.F3))
-            //{
-            //    UpdateConfig(2);
-            //}
-            //if (Input.GetKeyDown(KeyCode.F4))
-            //{
-            //    UpdateConfig(3);
-            //}
-            //if (Input.GetKeyDown(KeyCode.F5))
-            //{
-            //    UpdateConfig(4);
-            //}
-            //if (Input.GetKeyDown(KeyCode.F6))
-            //{
-            //    UpdateConfig(5);
-            //}
-            //if (Input.GetKeyDown(KeyCode.Tab)){
-			//	currentDebugMode = (currentDebugMode + 1) % 4;
-			//	string debugModeText = "";
-			//	switch(currentDebugMode){
-			//		case 0:
-			//			debugModeText = "wind turbulence";
-			//			break;
-			//		case 1:
-			//			debugModeText = "reduce battery";
-			//			break;
-			//		case 2:
-			//			debugModeText = "gps instable";
-			//			break;
-			//		case 3:
-			//			debugModeText = "facade config";
-			//			break;
-			//		default:
-			//			break;
-			//	}
-			//	Debug.LogWarning("Current Debug Mode: " + debugModeText);
-			//}
-			//switch(currentDebugMode){
-			//	case 0:
-			//		if(Input.GetKeyDown(KeyCode.F1)){
-			//			randomPulseNoise.strength_mean = 20f;
-			//			randomPulseNoise.wind_change_flag = true;
-        	//		}
-        	//		if(Input.GetKeyDown(KeyCode.F2)){
-        	//		    randomPulseNoise.strength_mean = 40f;
-			//			randomPulseNoise.wind_change_flag = true;
-        	//		}
-        	//		if(Input.GetKeyDown(KeyCode.F3)){
-        	//		    randomPulseNoise.strength_mean = 60f;
-			//			randomPulseNoise.wind_change_flag = true;
-        	//		}
-        	//		if(Input.GetKeyDown(KeyCode.F4)){
-        	//		    randomPulseNoise.strength_mean = 80f;
-			//			randomPulseNoise.wind_change_flag = true;
-        	//		}
-			//		if(Input.GetKeyDown(KeyCode.F5)){
-        	//		    randomPulseNoise.strength_mean = 100f;
-			//			randomPulseNoise.wind_change_flag = true;
-        	//		}
-			//		break;
-			//	case 1:
-			//		if(Input.GetKeyDown(KeyCode.F1)){
-			//			battery.ReduceBatteryCap(0.1f);
-        	//		}
-        	//		if(Input.GetKeyDown(KeyCode.F2)){
-        	//		    battery.ReduceBatteryCap(0.2f);
-        	//		}
-        	//		if(Input.GetKeyDown(KeyCode.F3)){
-        	//		    battery.ReduceBatteryCap(0.3f);
-        	//		}
-			//		break;
-			//	case 2:
-			//		if(Input.GetKeyDown(KeyCode.F1)){
-			//			positionalSensorSimulator.SetGPSLost(false);
-        	//		}
-        	//		if(Input.GetKeyDown(KeyCode.F2)){
-        	//		    positionalSensorSimulator.SetGPSLost(true);
-        	//		}
-        	//		//if(Input.GetKeyDown(KeyCode.F3)){
-        	//		//    positionalSensorSimulator.SetSignalLevel(1);
-        	//		//}
-        	//		//if(Input.GetKeyDown(KeyCode.F4)){
-        	//		//    positionalSensorSimulator.SetSignalLevel(0);
-        	//		//}
-			//		break;
-			//	case 3:
-			//		
-			//		break;
-			//	default:
-			//		break;
-			//}
 			if(Input.GetKeyDown(KeyCode.X)){
 				ResetExperiment();
 			}
-			//if(Input.GetKeyDown(KeyCode.V)){
-			//	flightPlanning.SetIsFromTop(1);
-			//}
-			//if(Input.GetKeyDown(KeyCode.B)){
-			//	flightPlanning.SetIsFromTop(0);
-			//}
-			//if(Input.GetKeyDown(KeyCode.Z)){
-			//	flightPlanning.SetIsTestRun((flightPlanning.GetIsTestRun() + 1)%2);
-			//}
 		}
 	}
 	public void SetPID(string pid)
@@ -342,6 +201,8 @@ public class ExperimentServer : MonoBehaviour
 		EXPUI.SetActive(true);
 #if UNITY_WEBGL || UNITY_EDITOR
 		WebPlayerController.SetUIMode(true);
+		MobileControlsUI.SetUIMode(true);
+		SetMonitorUIRaycasting(true);
 #endif
     }
 
@@ -353,8 +214,18 @@ public class ExperimentServer : MonoBehaviour
 		StartRecording();
 #if UNITY_WEBGL || UNITY_EDITOR
 		WebPlayerController.SetUIMode(false);
+		MobileControlsUI.SetUIMode(false);
+		SetMonitorUIRaycasting(false);
 #endif
     }
+
+	// Enables or disables all GraphicRaycasters on the MonitorUI so clicks
+	// pass through the HUD to the 3D viewport / mobile controls in play mode.
+	private void SetMonitorUIRaycasting(bool enabled)
+	{
+		foreach (var gr in MonitorUI.GetComponentsInChildren<GraphicRaycaster>(true))
+			gr.enabled = enabled;
+	}
 
 	public void UpdateVisCondition(int index)
 	{

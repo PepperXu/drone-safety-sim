@@ -97,10 +97,18 @@ public class InputControl : MonoBehaviour {
 			DroneManager.take_off_flag = true;
 		}
 
-		float pitchAxis = Input.GetAxis("Pitch");
-		float rollAxis = Input.GetAxis ("Roll");
-		float yawAxis = Input.GetAxis ("Yaw");
-		float throttleAxix = Input.GetAxis("Throttle");
+		Vector2 leftStick = MobileControlsUI.GetLeftStickValue();
+		Vector2 rightStick = MobileControlsUI.GetRightStickValue();
+
+		float pitchInput = Input.GetAxis("Pitch");
+		float rollInput = Input.GetAxis("Roll");
+		float yawInput = Input.GetAxis("Yaw");
+		float throttleInput = Input.GetAxis("Throttle");
+
+		float pitchAxis = Mathf.Abs(pitchInput) >= Mathf.Abs(rightStick.y) ? pitchInput : rightStick.y;
+		float rollAxis = Mathf.Abs(rollInput) >= Mathf.Abs(rightStick.x) ? rollInput : rightStick.x;
+		float yawAxis = Mathf.Abs(yawInput) >= Mathf.Abs(leftStick.x) ? yawInput : leftStick.x;
+		float throttleAxix = Mathf.Abs(throttleInput) >= Mathf.Abs(leftStick.y) ? throttleInput : leftStick.y;
 
 		float vx = rollAxis * horizontal_sensitivity;
 		float vy = pitchAxis * horizontal_sensitivity;

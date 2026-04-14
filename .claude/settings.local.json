@@ -15,7 +15,9 @@
       "Bash(python:*)",
       "mcp__unity-mcp__Unity_ManageGameObject",
       "mcp__unity-mcp__Unity_RunCommand",
-      "mcp__unity-mcp__Unity_ManageEditor"
+      "mcp__unity-mcp__Unity_ManageEditor",
+      "mcp__unity-mcp__Unity_ValidateScript",
+      "mcp__unity-mcp__Unity_GetConsoleLogs"
     ]
   }
 }

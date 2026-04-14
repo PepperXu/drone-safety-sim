@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// Web-only player controller. Attach to the Camera GameObject in the Web scene.
@@ -23,6 +24,9 @@ public class WebPlayerController : MonoBehaviour
     [Header("Mark Defect")]
     [SerializeField] private LayerMask fpvCamLayer;
     [SerializeField] private float markDefectRayLength = 50f;
+
+    [Header("Reset")]
+    [SerializeField] private ExperimentServer experimentServer;
 
     // ── Private State ─────────────────────────────────────────────────────────
     private float _yaw;
@@ -75,7 +79,12 @@ public class WebPlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Escape))
             LockCursor(false);
         else if (Input.GetMouseButtonDown(0) && !_cursorLocked)
-            LockCursor(true);
+        {
+            // Don't lock when the click lands on a UI element (buttons, joysticks, etc.)
+            bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+            if (!overUI)
+                LockCursor(true);
+        }
     }
 
     void LockCursor(bool locked)
