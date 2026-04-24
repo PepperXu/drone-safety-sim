@@ -36,6 +36,9 @@ public class ButtonHintsUI : MonoBehaviour
         ("A / D",  "Yaw Left / Right"),
         ("I / K",  "Forward / Backward"),
         ("J / L",  "Strafe Left / Right"),
+        ("",       ""),               // spacer
+        ("Click",  "Lock Mouse Look"),
+        ("Alt",    "Release Cursor"),
     };
 
     private void Awake()

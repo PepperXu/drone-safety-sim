@@ -115,13 +115,18 @@ public class MobileControlsUI : MonoBehaviour
 
         _controlRoot.SetActive(!_uiMode);
 
+        // ── Viewport drag zone (FIRST child → behind all other controls) ──────
+        // Joystick zones and buttons, being later siblings, win raycasts in their
+        // regions; touches elsewhere fall through to this zone for look-around.
+        CreateViewportZone(_controlRoot.transform);
+
         // ── Left joystick (bottom-left) ────────────────────────────────────────
         _leftStick  = CreateJoystick(_controlRoot.transform, false);
 
         // ── Right joystick (bottom-right) ─────────────────────────────────────
         _rightStick = CreateJoystick(_controlRoot.transform, true);
 
-        // ── Action buttons (bottom-centre, above sticks) ──────────────────────
+        // ── Action buttons (top-left corner) ──────────────────────────────────
         CreateActionButtons(_controlRoot.transform);
 
     }
@@ -185,6 +190,27 @@ public class MobileControlsUI : MonoBehaviour
 
         var tracker = new JoystickTracker(zoneGO, baseGO, knobGO, stickMaxRadius);
         return tracker;
+    }
+
+    // ── Viewport drag zone ────────────────────────────────────────────────────
+
+    private void CreateViewportZone(Transform parent)
+    {
+        var zoneGO = new GameObject("ViewportZone");
+        zoneGO.transform.SetParent(parent, false);
+
+        // Stretch to fill the entire screen.
+        var rt = zoneGO.AddComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+
+        // Invisible but raycast-target so EventTrigger receives pointer events.
+        var img = zoneGO.AddComponent<Image>();
+        img.color = new Color(0f, 0f, 0f, 0f);
+
+        new ViewportDragTracker(zoneGO);
     }
 
     // ── Action buttons ────────────────────────────────────────────────────────
@@ -299,6 +325,75 @@ public class MobileControlsUI : MonoBehaviour
     }
 
 
+
+    #endregion
+
+    // ══════════════════════════════════════════════════════════════════════════
+    #region ViewportDragTracker (inner class)
+
+    /// <summary>
+    /// Handles touch-drag on the full-screen viewport zone to rotate the camera.
+    /// Only responds to touch pointers (pointerId >= 0); mouse pointers are left
+    /// to WebPlayerController's cursor-lock mouse-look path on desktop.
+    /// Because this zone is the first (lowest) child of _controlRoot, any touch
+    /// that lands inside a joystick zone or button — which are later siblings and
+    /// therefore win the Unity EventSystem raycast — never reaches this tracker.
+    /// </summary>
+    private class ViewportDragTracker
+    {
+        private int  _touchId  = -1;
+        private bool _dragging = false;
+
+        public ViewportDragTracker(GameObject zone)
+        {
+            var trigger = zone.AddComponent<EventTrigger>();
+            AddEntry(trigger, EventTriggerType.PointerDown, OnPointerDown);
+            AddEntry(trigger, EventTriggerType.Drag,        OnDrag);
+            AddEntry(trigger, EventTriggerType.PointerUp,   OnPointerUp);
+        }
+
+        private void AddEntry(EventTrigger trigger, EventTriggerType type,
+                              UnityEngine.Events.UnityAction<BaseEventData> action)
+        {
+            var entry = new EventTrigger.Entry { eventID = type };
+            entry.callback.AddListener(action);
+            trigger.triggers.Add(entry);
+        }
+
+        private void OnPointerDown(BaseEventData data)
+        {
+            var pdata = (PointerEventData)data;
+            if (pdata.pointerId < 0)
+            {
+                // Mouse click on the viewport area — lock cursor so desktop
+                // mouse-look can start. (IsPointerOverGameObject would normally
+                // block this path because the viewport zone is a raycast target.)
+                WebPlayerController.Instance?.RequestCursorLock();
+                return;
+            }
+            // Touch — start viewport drag.
+            if (_dragging) return;
+            _touchId  = pdata.pointerId;
+            _dragging = true;
+        }
+
+        private void OnDrag(BaseEventData data)
+        {
+            if (!_dragging) return;
+            var pdata = (PointerEventData)data;
+            if (pdata.pointerId != _touchId) return;
+
+            WebPlayerController.Instance?.ApplyLookDelta(pdata.delta.x, pdata.delta.y);
+        }
+
+        private void OnPointerUp(BaseEventData data)
+        {
+            var pdata = (PointerEventData)data;
+            if (pdata.pointerId != _touchId) return;
+            _dragging = false;
+            _touchId  = -1;
+        }
+    }
 
     #endregion
 

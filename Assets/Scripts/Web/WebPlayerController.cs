@@ -28,6 +28,10 @@ public class WebPlayerController : MonoBehaviour
     [Header("Reset")]
     [SerializeField] private ExperimentServer experimentServer;
 
+    // ── Touch Look (Mobile) ───────────────────────────────────────────────────
+    [Header("Touch Look (Mobile)")]
+    [SerializeField] private float touchSensitivity = 0.15f;
+
     // ── Private State ─────────────────────────────────────────────────────────
     private float _yaw;
     private float _pitch;
@@ -36,6 +40,10 @@ public class WebPlayerController : MonoBehaviour
     // True while EXP-UI is showing — keeps cursor visible for UI interaction.
     // Set by ExperimentServer.StartExperiment() / ResetExperiment().
     private static bool _uiMode = true;
+
+    // Singleton — used by MobileControlsUI viewport zone to drive look on mobile.
+    private static WebPlayerController _instance;
+    public  static WebPlayerController Instance => _instance;
 
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -46,6 +54,42 @@ public class WebPlayerController : MonoBehaviour
     public static void SetUIMode(bool uiActive)
     {
         _uiMode = uiActive;
+    }
+
+    /// <summary>
+    /// Called by MobileControlsUI's viewport zone when a mouse button is pressed
+    /// on the viewport area. Locks the cursor so desktop mouse-look can start.
+    /// (The standard HandleCursorLock path is bypassed because the viewport zone
+    /// Image — a full-screen raycast target — always makes IsPointerOverGameObject
+    /// return true, which would otherwise prevent locking.)
+    /// </summary>
+    public void RequestCursorLock()
+    {
+        if (!_uiMode) LockCursor(true);
+    }
+
+    /// <summary>
+    /// Applies a screen-space touch drag delta to camera yaw/pitch.
+    /// Called by MobileControlsUI's viewport zone on mobile; ignored on desktop
+    /// since cursor-lock mouse look handles that path.
+    /// </summary>
+    public void ApplyLookDelta(float screenDeltaX, float screenDeltaY)
+    {
+        if (_uiMode) return;
+        _yaw   += screenDeltaX * touchSensitivity;
+        _pitch -= screenDeltaY * touchSensitivity;
+        _pitch  = Mathf.Clamp(_pitch, pitchMin, pitchMax);
+        transform.eulerAngles = new Vector3(_pitch, _yaw, 0f);
+    }
+
+    void Awake()
+    {
+        _instance = this;
+    }
+
+    void OnDestroy()
+    {
+        if (_instance == this) _instance = null;
     }
 
     void Start()
@@ -73,10 +117,10 @@ public class WebPlayerController : MonoBehaviour
         }
     }
 
-    // ── Cursor lock: Escape to release, click to re-lock ─────────────────────
+    // ── Cursor lock: Alt to release, click to re-lock ────────────────────────
     void HandleCursorLock()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (Input.GetKeyDown(KeyCode.LeftAlt) || Input.GetKeyDown(KeyCode.RightAlt))
             LockCursor(false);
         else if (Input.GetMouseButtonDown(0) && !_cursorLocked)
         {
